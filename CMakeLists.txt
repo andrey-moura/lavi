@@ -35,10 +35,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/modules/andy-file/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/modules/andy-core/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/modules/andy-string/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/modules/binary/CMakeLists.txt)
-include(${CMAKE_CURRENT_LIST_DIR}/modules/andy-widgets/CMakeLists.txt)
 
-include("${CMAKE_CURRENT_LIST_DIR}/src/builtin_libs/drawing_extension/CMakeLists.txt")
-include("${CMAKE_CURRENT_LIST_DIR}/src/builtin_libs/ui_extension/CMakeLists.txt")
 include("${CMAKE_CURRENT_LIST_DIR}/src/builtin_libs/net_extension/CMakeLists.txt")
 
 add_library(andy-lang
