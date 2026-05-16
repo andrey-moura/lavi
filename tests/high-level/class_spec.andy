@@ -14,7 +14,7 @@ describe 'type' do
         it 'should initialize instance variables by the constructor' do
             type Foo
                 var x = null
-                static fn new
+                fn init
                     x = 123
                 end
             end

@@ -19,7 +19,7 @@ std::shared_ptr<andy::lang::structure> create_app_class(andy::lang::interpreter*
 {
     auto AppClass = std::make_shared<andy::lang::structure>("Application");
 
-    AppClass->functions["new"] = std::make_shared<andy::lang::function>("new", [](andy::lang::interpreter* interpreter){
+    AppClass->instance_functions["init"] = std::make_shared<andy::lang::function>("init", [](andy::lang::interpreter* interpreter){
         auto object = interpreter->current_context->self;
         std::shared_ptr<andylang_ui_app> app = std::make_shared<andylang_ui_app>(interpreter, object->derived_instance);
         object->set_native(app);

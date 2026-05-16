@@ -62,7 +62,7 @@ std::shared_ptr<andy::lang::structure> create_window_class(andy::lang::interpret
 {
     auto window_class = std::make_shared<andy::lang::structure>("Window");
 
-    window_class->functions["new"] = std::make_shared<andy::lang::function>("new", std::initializer_list<std::string>{"title"}, [](andy::lang::interpreter* interpreter) {
+    window_class->instance_functions["init"] = std::make_shared<andy::lang::function>("init", std::initializer_list<std::string>{"title"}, [](andy::lang::interpreter* interpreter) {
         auto object = interpreter->current_context->self;
         std::string_view title = interpreter->current_context->positional_params[0]->as<std::string>();
         auto window = std::make_shared<andylang_drawing_window>(title, interpreter, object->shared_from_this());
