@@ -3,12 +3,11 @@ type Debugger
 
   fn init(path)
     executable_path = path
+
+    out 'Initializing debugger for ' + executable_path
   end
 
   fn run
-  end
-
-  fn init
-    out "Executable path: " + executable_path
+    out 'Running debugger for ' + executable_path
   end
 end
