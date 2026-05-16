@@ -135,7 +135,7 @@ void andy::lang::preprocessor::process_include(const std::filesystem::path &__fi
         file_path_string.replace(pos, 1, "\\");
     }
 #endif
-    std::filesystem::path file_path = __lexer.path();
+    std::filesystem::path directive_path = std::filesystem::path(*directive.file_name);
 
     std::vector<std::string> files;
     // auto files = list_files_with_wildcard(file_path.parent_path(), file_path_string);
@@ -155,7 +155,7 @@ void andy::lang::preprocessor::process_include(const std::filesystem::path &__fi
 
     system_include_path.make_preferred();
 
-    include_paths.push_back(file_path.parent_path());
+    include_paths.push_back(directive_path.parent_path());
     include_paths.push_back(system_include_path);
 
     if(!file_path_string.ends_with(".andy")) {
