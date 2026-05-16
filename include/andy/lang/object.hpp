@@ -23,6 +23,8 @@ namespace andy
             object(std::shared_ptr<andy::lang::structure> c);
             ~object();
         public:
+            const std::string& default_string_representation();
+        public:
             std::shared_ptr<object> base_instance = nullptr;
             std::shared_ptr<object> derived_instance = nullptr;
             // #ifdef __ANDY_DEBUG__
@@ -48,6 +50,7 @@ namespace andy
 #ifdef __ANDY_DEBUG__
             int* native_int = (int*)native;
 #endif
+            std::string string_representation_cache;
         public:
             void initialize(andy::lang::interpreter* interpreter);
             void initialize(andy::lang::interpreter* interpreter, andy::lang::function_call new_call);

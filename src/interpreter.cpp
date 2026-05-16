@@ -70,6 +70,14 @@ void andy::lang::interpreter::load(std::shared_ptr<andy::lang::structure> cls)
         return andy::lang::object::create(this, ArrayClass, std::move(subclasses));
     });
 
+    auto to_string_instance_function = cls->instance_functions.find("to_string");
+
+    if(to_string_instance_function == cls->instance_functions.end()) {
+        cls->instance_functions["to_string"] = std::make_shared<andy::lang::function>("to_string", [cls, this](andy::lang::interpreter* interpreter) {
+            return andy::lang::api::to_object(interpreter, interpreter->current_context->self->default_string_representation());
+        });
+    }
+
     cls->cls = cls;
 
     current_context->classes[cls->name] = cls;

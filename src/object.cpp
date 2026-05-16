@@ -9,21 +9,29 @@
 andy::lang::object::object(std::shared_ptr<andy::lang::structure> c)
 {
     cls = c;
-
-    if(cls) {
-        andy::console::log_debug("{}#{} created", cls->name, (void*)this);
-    }
+    andy::console::log_debug(default_string_representation() + " created");
 }
 
 andy::lang::object::~object()
 {
-    if(cls) {
-        if(native_destructor) {
-            native_destructor(this);
-        }
-
-        andy::console::log_debug("{}#{} destroyed", cls->name, (void*)this);
+    if(native_destructor) {
+        native_destructor(this);
     }
+
+    andy::console::log_debug(default_string_representation() + " destroyed");
+}
+
+const std::string& andy::lang::object::default_string_representation()
+{
+    if(string_representation_cache.empty()) {
+        if(cls) {
+            string_representation_cache += cls->name;
+            string_representation_cache.push_back('#');
+        }
+        string_representation_cache += std::to_string((uintptr_t)this);
+    }
+
+    return string_representation_cache;
 }
 
 void andy::lang::object::initialize(andy::lang::interpreter* interpreter)
