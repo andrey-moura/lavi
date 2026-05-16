@@ -285,12 +285,11 @@ void andy::lang::preprocessor::process_if(const std::filesystem::path &__file_na
 
             if(should_include_token) {
                 process_token(__file_name, __lexer, token);
+                continue;
             }
         }
 
-        if(should_include_token) {
-            __lexer.next_token(); // Move the iterator to the next token, so it will be processed in the next iteration.
-        } else {
+        if(!should_include_token) {
             __lexer.mark_unreachable(); // Mark the token as unreachable, so it will be ignored by the parser and the analyzer.
         }
     }
