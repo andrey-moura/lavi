@@ -222,6 +222,11 @@ std::shared_ptr<andy::lang::structure> create_string_class(andy::lang::interpret
         return andy::lang::object::instantiate(interpreter, interpreter->IntegerClass, (int)value.size());
     });
     
-    
+  StringClass->instance_functions["front"] = std::make_shared<andy::lang::function>("front", [](andy::lang::interpreter* interpreter) {
+    const std::string& value = interpreter->current_context->self->as<std::string>();
+    std::string front_char = std::to_string(value.front());
+    return andy::lang::api::to_object(interpreter, front_char);
+  });
+
     return StringClass;
 }
