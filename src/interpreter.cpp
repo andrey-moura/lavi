@@ -443,6 +443,9 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
                 }
 
                 if(!method_to_call) {
+                    if(current_context->self) {
+                        throw std::runtime_error("function '" + std::string(function_name) + "' not found in object of type " + std::string(current_context->self->cls->name));
+                    }
                     throw std::runtime_error("function '" + std::string(function_name) + "' not found in current context");
                 }
 
