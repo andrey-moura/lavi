@@ -1,5 +1,5 @@
 #if __linux__
-  #include 'debugger/linux.andy'
+  #include 'debugger/linux/debugger.andy'
 #else
   throw 'Unsupported platform'
 #end

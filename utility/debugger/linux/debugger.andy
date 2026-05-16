@@ -1,0 +1,25 @@
+#include 'address_from_symbol.andy'
+
+type Debugger
+  var script_path = null
+
+  fn init(path)
+    script_path = path
+  end
+
+  fn address_from_symbol
+    AddressFromSymbol.new(andy_executable_path)
+  end
+
+  fn andy_executable_path
+    '/usr/bin/andy'
+  end
+
+  fn current_node_path_address
+    address_from_symbol
+  end
+
+  fn run
+    out "current_node_path_address: ${current_node_path_address}"
+  end
+end

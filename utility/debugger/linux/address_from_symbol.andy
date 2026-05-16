@@ -1,0 +1,6 @@
+type AddressFromSymbol
+  var executable = null
+  fn init(exe)
+    executable = exe
+  end
+end
