@@ -3,8 +3,8 @@
 var tests_dir = Dir.current.glob('tests/high-level/*_spec.andy')
 
 loop for file in tests_dir
-  if __argv__.size > 2
-    loop for arg in __argv__
+  if __args__.size > 2
+    loop for arg in __args__
       if file.to_string.ends_with?(arg)
         require file
         break
