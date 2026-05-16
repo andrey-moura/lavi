@@ -1,0 +1,151 @@
+#include 'std/tests'
+
+describe 'conditional expressions' do
+  context 'if' do
+    it 'executes the body when condition is true' do
+      var result = null
+      if true
+        result = 'yes'
+      end
+      expect(result).to eq('yes')
+    end
+
+    it 'skips the body when condition is false' do
+      var result = null
+      if false
+        result = 'yes'
+      end
+      expect(result).to eq(null)
+    end
+
+    it 'evaluates an expression as the condition' do
+      var x = 5
+      var result = null
+      if x > 3
+        result = 'greater'
+      end
+      expect(result).to eq('greater')
+    end
+
+    it 'uses a variable as the condition' do
+      var condition = true
+      var result = null
+      if condition
+        result = 'executed'
+      end
+      expect(result).to eq('executed')
+    end
+  end
+
+  context 'else' do
+    it 'executes the else branch when condition is false' do
+      var result = null
+      if false
+        result = 'yes'
+      else
+        result = 'no'
+      end
+      expect(result).to eq('no')
+    end
+
+    it 'skips the else branch when condition is true' do
+      var result = null
+      if true
+        result = 'yes'
+      else
+        result = 'no'
+      end
+      expect(result).to eq('yes')
+    end
+
+    it 'evaluates conditions in order and runs the first matching else if branch' do
+      var x = 5
+      var result = null
+      if x < 0
+        result = 'negative'
+      else if x == 0
+        result = 'zero'
+      else if x < 10
+        result = 'small'
+      else
+        result = 'large'
+      end
+      expect(result).to eq('small')
+    end
+
+    it 'executes the final else when no condition matches' do
+      var x = 20
+      var result = null
+      if x < 0
+        result = 'negative'
+      else if x == 0
+        result = 'zero'
+      else if x < 10
+        result = 'small'
+      else
+        result = 'large'
+      end
+      expect(result).to eq('large')
+    end
+
+    it 'skips remaining branches after the first matching condition' do
+      var x = 0
+      var result = null
+      if x == 0
+        result = 'first'
+      else if x == 0
+        result = 'second'
+      else
+        result = 'third'
+      end
+      expect(result).to eq('first')
+    end
+  end
+
+  context 'unless' do
+    it 'executes the body when condition is false' do
+      var result = null
+      unless false
+        result = 'executed'
+      end
+      expect(result).to eq('executed')
+    end
+
+    it 'skips the body when condition is true' do
+      var result = null
+      unless true
+        result = 'executed'
+      end
+      expect(result).to eq(null)
+    end
+
+    it 'evaluates an expression as the condition' do
+      var x = 2
+      var result = null
+      unless x > 5
+        result = 'not greater'
+      end
+      expect(result).to eq('not greater')
+    end
+
+    it 'executes the else branch when condition is true' do
+      var result = null
+      unless true
+        result = 'skipped'
+      else
+        result = 'fallback'
+      end
+      expect(result).to eq('fallback')
+    end
+
+    it 'skips the else branch when condition is false' do
+      var result = null
+      unless false
+        result = 'executed'
+      else
+        result = 'fallback'
+      end
+      expect(result).to eq('executed')
+    end
+  end
+end
