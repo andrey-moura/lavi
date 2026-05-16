@@ -1,2 +1,0 @@
-var message = File.read 'examples/hello.txt'
-out message

@@ -1,5 +1,0 @@
-var dictionary = {
-    "message": "Hello from a map!"
-};
-
-out dictionary["message"]
