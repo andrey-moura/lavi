@@ -619,6 +619,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword(andy::lang::lexer
         { "within",    &andy::lang::parser::parse_keyword_within    },
         { "throw",     &andy::lang::parser::parse_keyword_throw     },
         { "try",       &andy::lang::parser::parse_keyword_try       },
+        { "enum",      &andy::lang::parser::parse_keyword_enum      },
     };
 
     auto keyword_parser = keyword_parsers.find(token.content);
@@ -1067,4 +1068,39 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_try(andy::lang::l
     try_node.set_end_token(lexer.next_token()); // Consume the closing 'end' token
 
     return try_node;
+}
+
+andy::lang::parser::ast_node andy::lang::parser::parse_keyword_enum(andy::lang::lexer &lexer)
+{
+    ast_node enum_node(ast_node_type::ast_node_enum);
+    enum_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
+
+    auto possible_name_token = lexer.see_next();
+
+    if(possible_name_token.type != andy::lang::lexer::token_type::token_identifier) {
+        throw std::runtime_error(possible_name_token.error_message_at_current_position("Expected enum name after 'enum'"));
+    }
+
+    enum_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname));
+
+    ast_node enum_values(ast_node_type::ast_node_arraydecl);
+
+    while(true) {
+        auto& possible_enum_entry = lexer.see_next();
+
+        if(possible_enum_entry.type == andy::lang::lexer::token_type::token_delimiter && possible_enum_entry.content == "end") {
+            enum_node.set_end_token(lexer.next_token()); // Consume the 'end' token
+            break;
+        }
+
+        if(possible_enum_entry.type != andy::lang::lexer::token_type::token_identifier) {
+            throw std::runtime_error(possible_enum_entry.error_message_at_current_position("Expected enum entry or 'end'"));
+        }
+
+        enum_values.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_valuedecl));
+    }
+
+    enum_node.add_child(std::move(enum_values));
+
+    return enum_node;
 }

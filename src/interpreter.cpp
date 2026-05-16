@@ -215,6 +215,40 @@ static std::shared_ptr<andy::lang::structure> do_execute_classdecl(andy::lang::i
             interpreter->load(child_cls);
         }
         break;
+        case andy::lang::parser::ast_node_type::ast_node_enum: {
+            std::string_view enum_name = class_child.decname();
+            std::string corrected_enum_name_temp;
+            corrected_enum_name_temp.reserve(enum_name.size() + enum_name.size() / 2);
+            for(auto c : enum_name) {
+                c = std::tolower(c);
+                corrected_enum_name_temp.push_back(c);
+            }
+
+            cls->string_holder.push_back(std::move(corrected_enum_name_temp));
+
+            std::string* corrected_enum_name = &cls->string_holder.back();
+
+            cls->instance_variables[cls->string_holder.back()] = nullptr;
+
+            for(const auto& enum_child : class_child.child_from_type(andy::lang::parser::ast_node_type::ast_node_arraydecl)->childrens()) {
+                std::string_view enum_child_name = enum_child.token().content;
+                std::string enum_child_name_question;
+                enum_child_name_question.reserve(enum_child_name.size() + 1);
+                enum_child_name_question.append(enum_child_name);
+                enum_child_name_question.push_back('?');
+                cls->string_holder.push_back(std::move(enum_child_name_question));
+                cls->instance_functions[cls->string_holder.back()] = std::make_shared<andy::lang::function>(cls->string_holder.back(), [enum_name, enum_child_name, corrected_enum_name](andy::lang::interpreter* interpreter) {
+                    auto it = interpreter->current_context->self->variables.find(*corrected_enum_name);
+                    if(it == interpreter->current_context->self->variables.end()) {
+                        andy::lang::error::internal("Variable {} not found in object of class {} while evaluating {}?", *corrected_enum_name, interpreter->current_context->self->cls->name, enum_child_name);
+                        exit(1);
+                    }
+
+                    return andy::lang::api::to_object(interpreter, it->second->as<std::string>() == enum_child_name);
+                });
+            }
+        }
+        break;
         default:
             throw std::runtime_error(class_child.token().error_message_at_current_position("unexpected token in class declaration"));
             break;

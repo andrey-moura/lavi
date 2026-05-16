@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deque>
 #include "andy/lang/function.hpp"
 
 namespace andy
@@ -21,6 +22,7 @@ namespace andy
             std::vector<std::shared_ptr<andy::lang::object>> positional_params;
             std::map<std::string_view, std::shared_ptr<andy::lang::object>> named_params;
             std::map<std::string_view, std::shared_ptr<andy::lang::structure>> classes;
+            std::deque<std::string> string_holder;
             
             const andy::lang::parser::ast_node* given_block = nullptr;
 
