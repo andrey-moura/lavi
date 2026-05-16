@@ -1,7 +1,7 @@
 type Debugger
   var executable_path = null
 
-  static fn new(path)
+  fn init(path)
     executable_path = path
   end
 
