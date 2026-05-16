@@ -114,6 +114,7 @@
     "cmake.debugConfig": {
         "args": [
             "/home/andrey/Moonslate/andy-lang/utility/debugger.andy",
+            "/home/andrey/Moonslate/andy-lang/examples/minimal.andy"
         ],
         "cwd": "${workspaceFolder}",
         "visualizerFile": "${workspaceFolder}/natvis.xml",

@@ -16,7 +16,7 @@ type Debugger
   end
 
   fn current_node_path_address
-    address_from_symbol
+    address_from_symbol.current_node_path_address
   end
 
   fn run

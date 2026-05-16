@@ -3,4 +3,8 @@ type AddressFromSymbol
   fn init(exe)
     executable = exe
   end
+
+  fn missing(name, aargs, kwargs)
+    name
+  end
 end
