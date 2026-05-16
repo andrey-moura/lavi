@@ -706,16 +706,8 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_function(andy::la
         case lexer::token_type::token_identifier:
             // Simply use it as the function name
             break;
-        case lexer::token_type::token_keyword:
-            if(identifier_token.content == "new") {
-                // This is a constructor
-                // Use it as the function name
-            } else {
-                throw std::runtime_error(identifier_token.error_message_at_current_position("Illegal use of keyword '" + std::string(identifier_token.content) + "' as function name"));
-            }
-            break;
         default:
-            throw std::runtime_error(identifier_token.error_message_at_current_position("Expected method name after 'function'"));
+            throw std::runtime_error(identifier_token.error_message_at_current_position("Expected function name after 'function'"));
             break;
     }
 

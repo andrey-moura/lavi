@@ -366,9 +366,9 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
         }
     } else {
         if(is_new) {
-            auto it = current_context->cls->functions.find("new");
+            auto it = current_context->functions.find("init");
 
-            if(it != current_context->cls->functions.end()) {
+            if(it != current_context->functions.end()) {
                 method_to_call = it->second.get();
             }
         } else {
@@ -392,15 +392,6 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
                         method_to_call = it->second.get();
                         break;
                     }
-                }
-            }
-
-            if(!method_to_call) {
-                if(auto inline_it = current_context->inline_functions.find("new"); inline_it != current_context->inline_functions.end()) {
-                    auto self_ptr = current_context->self->shared_from_this();
-                    ret = (*inline_it->second)(this, self_ptr, source_code);
-                    pop_context_from_node_object_if_any(this, source_code);
-                    return ret;
                 }
             }
         }
@@ -492,10 +483,10 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
         } else if(is_new) {
             // Default constructor, no function body to execute, just need to check the parameters and set the self variable.
             if(current_context->positional_params.size() != 0) {
-                throw std::runtime_error("default constructor expects 0 parameters, but " + std::to_string(current_context->positional_params.size()) + " were given");
+                throw std::runtime_error("init expects 0 parameters, but " + std::to_string(current_context->positional_params.size()) + " were given");
             }
             if(current_context->named_params.size() != 0) {
-                throw std::runtime_error("default constructor does not expect named parameters, but " + std::to_string(current_context->named_params.size()) + " were given");
+                throw std::runtime_error("init does not expect named parameters, but " + std::to_string(current_context->named_params.size()) + " were given");
             }
 
             if(current_context->self->cls->base) {
