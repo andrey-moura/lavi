@@ -547,10 +547,6 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
         }
 
         if(is_new) {
-            if(ret) {
-                throw std::runtime_error("constructor should not return a value");
-            }
-
             ret = current_context->self->shared_from_this();
         }
 
