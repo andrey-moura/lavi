@@ -346,6 +346,7 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
     bool is_super = function_name == "super";
     bool is_assignment = function_name == "=";
     andy::lang::function* method_to_call = nullptr;
+    bool calling_function_same_object = false;
 
     if(is_assignment && !current_context->self) {
         throw std::runtime_error("assignment operator '=' can only be used with a variable");
@@ -384,6 +385,12 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
 
             if(it != current_context->functions.end()) {
                 method_to_call = it->second.get();
+                if(current_context->self) {
+                    // If the method is found in the current context's functions, it means we are
+                    // calling a function in the same object, so we set the flag to true to set
+                    // the current_context->self as the self for the called function.
+                    calling_function_same_object = true;
+                }
             } else if(current_context->cls) {
                 auto it = current_context->cls->functions.find(function_name);
 
@@ -454,7 +461,12 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
         // the function in the object and its class, so we don't need to push it again. If we don't have an
         // object we need to push the context to execute the function in it's own context.
         if(!is_new && !source_code.fn_object()) {
-            push_context();
+            if(calling_function_same_object) {
+                push_context_with_object(current_context->self->shared_from_this());
+            } else {
+                // Creates a clean new context
+                push_context();
+            }
         }
 
         current_context->caller_node = &source_code;
