@@ -8,8 +8,21 @@ namespace CXX
       tokens = tokenize
     end
 
+    fn peek_char
+      file.front
+    end
+
+    fn discard_whitespaces
+      var c = peek_char
+    end
+
+    fn read_next_token
+      discard_whitespaces
+    end
+
     fn tokenize
       // Placeholder for actual tokenization logic
+      read_next_token
       return ["token1", "token2", "token3"]
     end
   end

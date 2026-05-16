@@ -7,8 +7,8 @@ end
 
 var cxx_file_path = __args__[2]
 
-unless true
-  out "File not found: ${cxx_file_path}"
+unless File.exists?(cxx_file_path)
+  out "Input file '${cxx_file_path}' not found."
   return 1
 end
 
