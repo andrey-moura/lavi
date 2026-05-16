@@ -151,7 +151,7 @@ Implements the object-oriented features:
 ## Continuous Integration
 
 The project uses GitHub Actions with workflows for:
-- Ubuntu 18.04, 22.04, 24.04
+- 22.04, 24.04
 - Windows Server 2022
 - WebAssembly builds
 
