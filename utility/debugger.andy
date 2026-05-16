@@ -12,4 +12,4 @@ end
 
 var debugger = Debugger.new(__argv__[2])
 
-debugger.init
+debugger.run
