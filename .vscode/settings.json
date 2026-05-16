@@ -113,7 +113,8 @@
     ],
     "cmake.debugConfig": {
         "args": [
-            "tests/high-level/namespace_spec.andy",
+            "utility/cxx2andy.andy",
+            "/usr/include/libelf.h"
         ],
         "cwd": "${workspaceFolder}",
         "visualizerFile": "${workspaceFolder}/natvis.xml",

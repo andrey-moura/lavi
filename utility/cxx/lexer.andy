@@ -1,0 +1,16 @@
+namespace CXX
+  type Lexer
+    var file = null
+    var tokens = null
+
+    fn init(f)
+      file = f
+      tokens = tokenize
+    end
+
+    fn tokenize
+      // Placeholder for actual tokenization logic
+      return ["token1", "token2", "token3"]
+    end
+  end
+end

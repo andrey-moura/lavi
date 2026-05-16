@@ -1,0 +1,25 @@
+#include 'cxx/lexer.andy'
+
+if __args__.size < 3
+  out 'Usage: andy --cxx <file>'
+  return 1
+end
+
+var cxx_file_path = __args__[2]
+
+unless true
+  out "File not found: ${cxx_file_path}"
+  return 1
+end
+
+var cxx_file = File.read(cxx_file_path)
+
+fn debug(message)
+  out message
+end
+
+debug "Tokenizing CXX file ${cxx_file_path}..."
+
+var lexer = CXX.Lexer.new(cxx_file_path)
+
+out lexer.tokens
