@@ -26,7 +26,7 @@ private:
 std::shared_ptr<andy::lang::structure> create_dialog_class(andy::lang::interpreter* interpreter)
 {
     auto dialog_class = std::make_shared<andy::lang::structure>("Dialog");
-    dialog_class->functions["new"] = std::make_shared<andy::lang::function>("new", std::initializer_list<std::string>{"title"}, [](andy::lang::interpreter* interpreter) {
+    dialog_class->instance_functions["init"] = std::make_shared<andy::lang::function>("init", std::initializer_list<std::string>{"title"}, [](andy::lang::interpreter* interpreter) {
         auto object = interpreter->current_context->self;
         std::string_view title = interpreter->current_context->positional_params[0]->as<std::string>();
         auto dialog = std::make_shared<andylang_drawing_dialog>(title, interpreter, object->derived_instance->shared_from_this());

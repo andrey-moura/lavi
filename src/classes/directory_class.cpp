@@ -9,7 +9,7 @@ std::shared_ptr<andy::lang::structure> create_directory_class(andy::lang::interp
 {
     auto DirectoryClass = std::make_shared<andy::lang::structure>("Dir");
 
-    DirectoryClass->functions["new"] = std::make_shared<andy::lang::function>("new", std::initializer_list<std::string>{"path"}, [](andy::lang::interpreter* interpreter) {
+    DirectoryClass->instance_functions["init"] = std::make_shared<andy::lang::function>("init", std::initializer_list<std::string>{"path"}, [](andy::lang::interpreter* interpreter) {
         auto object = interpreter->current_context->self;
         object->set_native<std::filesystem::path>(std::move(std::filesystem::path(interpreter->current_context->positional_params[0]->as<std::string>())));
 

@@ -1,13 +1,13 @@
 type ExpectationNotMet
     var message = null
-    static fn new(msg)
+    fn init(msg)
         message = msg
     end
 end
 
 type EQ
     var expected = null
-    static fn new(value)
+    fn init(value)
         expected = value
     end
 
@@ -22,7 +22,7 @@ end
 
 type Include
     var expected = null
-    static fn new(value)
+    fn init(value)
         expected = value
     end
 
@@ -37,7 +37,7 @@ end
 
 type EndsWith
     var expected = null
-    static fn new(value)
+    fn init(value)
         expected = value
     end
 
@@ -52,7 +52,7 @@ end
 
 type Expect
     var actual = null
-    static fn new(value)
+    fn init(value)
         actual = value
     end
 
