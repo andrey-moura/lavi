@@ -1,12 +1,22 @@
 #include 'token.andy'
+#include 'token_matchers/base.andy'
+#include 'token_matchers/*.andy'
 
 namespace CXX
   type Lexer
     var source = null
     var tokens = null
+    var matchers = null
 
     fn init(f)
       source = f
+      matchers = CXX::TokenMatchers::Base.subclasses.map! do (matcher_class)
+        matcher_class.new
+      end
+
+      out "Lexer initialized with source of length ${source.size}."
+      out "Matchers available: ${matchers}"
+
       tokens = tokenize
     end
 

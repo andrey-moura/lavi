@@ -1,7 +1,9 @@
+#include 'base.andy'
+
 namespace CXX
   namespace TokenMatchers
     // Matcher for end-of-file tokens.
-    type EndOfFileMatcher extends Base
+    type EndOfFileMatcher extends CXX::TokenMatchers::Base
       fn match(token)
         // To be implemented by subclasses.
         return false
