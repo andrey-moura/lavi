@@ -755,7 +755,11 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_while(const
     bool match_condition = source_code.decl_type() == "until";
 
     while(andy::lang::api::is_truthy(this, execute(*source_code.condition())) != match_condition) {
-        push_block_context();
+        if(current_context->self) {
+            push_context_with_object(current_context->self->shared_from_this());
+        } else {
+            push_block_context();
+        }
         execute(*source_code.context());
 
         if(current_context->has_returned) {
