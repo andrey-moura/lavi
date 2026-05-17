@@ -1,0 +1,34 @@
+#include 'std/tests.andy'
+
+describe 'enums' do
+  context 'declaration' do
+    context 'inside a type' do
+      type Car
+        enum Color
+          red
+          green
+          blue
+        end
+      end
+      it 'should allow setting the attribute with a symbol constant' do
+        var car = Car.new
+        car.color = :red
+        expect(car.color).to eq(:red)
+      end
+      it 'should allow setting the attribute with a string constant' do
+        var car = Car.new
+        car.color = "green"
+        expect(car.color).to eq("green")
+      end
+      it 'should create question functions' do
+        var car = Car.new
+        car.color = :blue
+        expect(car.blue?).to eq(true)
+        expect(car.red?).to eq(false)
+        expect(car.red?).to eq(false)
+      end
+      pending 'should not allow setting the attribute with an invalid value' do
+      end
+    end
+  end
+end

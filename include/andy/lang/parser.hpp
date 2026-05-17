@@ -60,7 +60,9 @@ namespace andy
                 ast_node_yield,
                 ast_node_throw,
                 ast_node_try,
-                ast_node_catch
+                ast_node_catch,
+
+                ast_node_enum
             };
             class ast_node
             {
@@ -245,6 +247,7 @@ namespace andy
             andy::lang::parser::ast_node parse_keyword_within(andy::lang::lexer& lexer);
             andy::lang::parser::ast_node parse_keyword_throw(andy::lang::lexer& lexer);
             andy::lang::parser::ast_node parse_keyword_try(andy::lang::lexer& lexer);
+            andy::lang::parser::ast_node parse_keyword_enum(andy::lang::lexer& lexer);
         };
     }
 }; // namespace andy

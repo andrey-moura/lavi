@@ -38,8 +38,8 @@ void andy::lang::object::initialize(andy::lang::interpreter* interpreter)
 {
     self = shared_from_this().get();
     for(auto& instance_variable : cls->instance_variables) {
+        variables[instance_variable.first] = andy::lang::object::create(interpreter, interpreter->NullClass);
         if(instance_variable.second) {
-            variables[instance_variable.first] = andy::lang::object::create(interpreter, interpreter->NullClass);
             interpreter->execute(*instance_variable.second);
         }
     }
