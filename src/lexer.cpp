@@ -615,6 +615,24 @@ void andy::lang::lexer::erase_eof()
     }
 }
 
+std::string andy::lang::lexer::token::human_description() const
+{
+    std::string description;
+    description.reserve(50);
+
+    description += human_type();
+
+    if(type == andy::lang::lexer::token_type::token_eof) {
+        return description;
+    }
+
+    description += " '";
+    description += content;
+    description += "'";
+
+    return description;
+}
+
 std::string andy::lang::lexer::token::error_message_at_current_position(std::string_view what) const
 {
     std::string output(what);
@@ -661,7 +679,7 @@ std::string_view andy::lang::lexer::token::human_type() const
         "delimiter",
         "operator",
         "preprocessor",
-        "eof",
+        "end of file",
     };
 
     return types[(int)type];

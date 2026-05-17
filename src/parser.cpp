@@ -38,7 +38,7 @@ andy::lang::parser::ast_node extract_context(andy::lang::lexer &lexer, andy::lan
             lexer.consume_token();
             continue;
         } else if(next_token.type == andy::lang::lexer::token_type::token_eof) {
-            throw std::runtime_error(next_token.error_message_at_current_position("Unexpected end of file, expecting 'end'"));
+            throw andy::lang::parser::unexpected_token_error(next_token, "end");
         } else if (next_token.type == andy::lang::lexer::token_type::token_keyword && break_on_keywords) {
             bool should_break = false;
             for (const auto& keyword : *break_on_keywords) {
@@ -1103,4 +1103,36 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_enum(andy::lang::
     enum_node.add_child(std::move(enum_values));
 
     return enum_node;
+}
+
+andy::lang::parser::exception::exception(std::string message, const andy::lang::lexer::token& token)
+    : m_token(token), m_message(std::move(message)), std::exception()
+{
+}
+
+andy::lang::parser::exception::exception(const andy::lang::lexer::token& token)
+    : m_token(token), std::exception()
+{
+}
+
+andy::lang::parser::unexpected_token_error::unexpected_token_error(const andy::lang::lexer::token& token, std::string_view expected)
+    : andy::lang::parser::exception(token), m_expected(expected)
+{
+    m_message = generate_message();
+}
+
+std::string andy::lang::parser::unexpected_token_error::generate_message() const
+{
+    std::string message;
+    message.reserve(100);
+    message = "Syntax error: unexpected " + token().human_description();
+    if(!m_expected.empty()) {
+        message += ", expected '";
+        message += m_expected;
+        message += "'";
+    }
+    message += " at ";
+    message += token().human_start_position();
+
+    return message;
 }

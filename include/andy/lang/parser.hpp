@@ -19,6 +19,31 @@ namespace andy
             parser();
             ~parser() = default;
         public:
+            class exception : public std::exception
+            {
+            public:
+                exception(
+                    std::string message,
+                    const andy::lang::lexer::token& token
+                );
+                exception(const andy::lang::lexer::token& token);
+            protected:
+                const andy::lang::lexer::token& m_token;
+                std::string m_message;
+            public:
+                const andy::lang::lexer::token& token() const { return m_token; }
+                const char* what() const noexcept override { return m_message.c_str(); }
+            };
+            class unexpected_token_error : public andy::lang::parser::exception
+            {
+            public:
+                unexpected_token_error(const andy::lang::lexer::token& token, std::string_view expected = "");
+            private:
+                std::string_view m_expected;
+            private:
+                std::string generate_message() const;
+            };
+        public:
             enum ast_node_type {
                 ast_node_undefined,
 
