@@ -1,3 +1,5 @@
+#include 'token.andy'
+
 namespace CXX
   type Lexer
     var source = null
@@ -16,16 +18,53 @@ namespace CXX
       source.pop_front
     end
 
+    fn read
+      discard
+    end
+
+    fn whitespaces
+      {
+        " ": true,
+        "\t": true,
+        "\n": true,
+        "\r": true,
+      }
+    end
+
+    fn whitespace?
+      whitespaces[see_char]
+    end
+
     fn discard_whitespaces
-      var c = see_char
-      loop while c == " " || c == "\t" || c == "\r" || c == "\n"
+      loop while whitespace?
+        out "Discarding whitespace: '${see_char}'"
         discard
-        c = see_char
       end
+    end
+
+    fn push_token(kind)
+      tokens.push(Token.new(kind))
     end
 
     fn read_next_token
       discard_whitespaces
+
+      if source.empty?
+        push_token(:eof)
+        return
+      end
+
+      if (source.size >= 2) && (source[0] == "/") && (source[1] == "*")
+        discard
+        discard
+
+        loop until (source.size >= 2) && (source[0] == "*") && (source[1] == "/")
+          read
+        end
+
+        discard
+        discard
+      end
     end
 
     fn tokenize
