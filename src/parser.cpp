@@ -195,12 +195,17 @@ andy::lang::parser::ast_node andy::lang::parser::extract_fn_call_params(andy::la
 
 andy::lang::parser::ast_node andy::lang::parser::parse_delimiter(andy::lang::lexer &lexer)
 {
-    const andy::lang::lexer::token& token = lexer.next_token();
+    const andy::lang::lexer::token& token = lexer.see_next();
 
     if(token.content == ";") {
         // ; in the middle of the code is considered a whitespace
+        lexer.consume_token();
         return parse_node(lexer);
-    } else {
+    } else if(token.content == "{") {
+        // By now we assuming that every '{' in the middle of the code is a Hash declaration
+        return parse_identifier_or_literal(lexer);
+    }
+    else {
         throw std::runtime_error(token.error_message_at_current_position("Unexpected delimiter"));
     }
 
