@@ -83,15 +83,15 @@ namespace andy
                 } else if constexpr(std::is_same_v<T, std::vector<std::shared_ptr<andy::lang::object>>>) {
                     auto obj = andy::lang::object::instantiate(interpreter, interpreter->ArrayClass, std::move(value));
                     return obj;
-                } else if constexpr(std::is_same_v<T, andy::lang::dictionary>) {
-                    auto obj = andy::lang::object::instantiate(interpreter, interpreter->DictionaryClass, std::move(value));
+                } else if constexpr(std::is_same_v<T, andy::lang::hash>) {
+                    auto obj = andy::lang::object::instantiate(interpreter, interpreter->HashClass, std::move(value));
                     return obj;
                 } else if constexpr(std::is_same_v<T, std::map<std::string, std::shared_ptr<andy::lang::object>>> || std::is_same_v<T, std::map<std::string_view, std::shared_ptr<andy::lang::object>>>) {
-                    andy::lang::dictionary dict;
+                    andy::lang::hash hash(interpreter);
                     for(auto& [key, val] : value) {
-                        dict.emplace_back(to_object(interpreter, key), std::move(val));
+                        hash.set(to_object(interpreter, key), std::move(val));
                     }
-                    auto obj = andy::lang::object::instantiate(interpreter, interpreter->DictionaryClass, std::move(dict));
+                    auto obj = andy::lang::object::instantiate(interpreter, interpreter->HashClass, std::move(hash));
                     return obj;
                 } else if constexpr(std::is_same_v<T, const char*> || std::is_same_v<T, char*> || std::is_same_v<T, std::string_view>) {
                     return to_object(interpreter, std::string(value));

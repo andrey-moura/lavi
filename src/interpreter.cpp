@@ -25,7 +25,9 @@ andy::lang::function execute_method_definition(const andy::lang::parser::ast_nod
         for(auto& param : params_node->childrens()) {
             andy::lang::fn_parameter fn_param;
             if(param.type() == andy::lang::parser::ast_node_type::ast_node_pair) {
-                fn_param.name = param.child_content_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
+                auto* declname = param.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
+
+                fn_param.name = declname->childrens().front().token().content;
                 fn_param.default_value_node = param.child_from_type(andy::lang::parser::ast_node_type::ast_node_valuedecl);
                 fn_param.named = true;
                 fn_param.has_default_value = fn_param.default_value_node != nullptr;
@@ -77,6 +79,20 @@ void andy::lang::interpreter::load(std::shared_ptr<andy::lang::structure> cls)
             return andy::lang::api::to_object(interpreter, interpreter->current_context->self->default_string_representation());
         });
     }
+
+    auto hash_instance_function = cls->instance_functions.find("hash");
+
+    if(hash_instance_function == cls->instance_functions.end()) {
+        cls->instance_functions["hash"] = std::make_shared<andy::lang::function>("hash", [cls, this](andy::lang::interpreter* interpreter) {
+            // Default hash: the pointer of the object
+            auto object = interpreter->current_context->self;
+            void* ptr = object;
+            std::hash<void*> hasher;
+            size_t hash_value = hasher(ptr);
+            return andy::lang::api::to_object(interpreter, (int)hash_value);
+        });
+    }
+
     auto eq_instance_function = cls->instance_functions.find("==");
 
     if(eq_instance_function == cls->instance_functions.end()) {
@@ -359,7 +375,7 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
             const andy::lang::parser::ast_node* name = nullptr;
             if(param.type() == andy::lang::parser::ast_node_type::ast_node_pair) {
                 value_node = param.child_from_type(andy::lang::parser::ast_node_type::ast_node_valuedecl);
-                name = param.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
+                name = param.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname)->childrens().data();
             }
 
             std::shared_ptr<andy::lang::object> value = nullptr;
@@ -638,6 +654,23 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_arraydecl(c
     return andy::lang::object::instantiate(this, ArrayClass, std::move(array));
 }
 
+std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_hashdecl(const andy::lang::parser::ast_node& source_code)
+{
+    andy::lang::hash hash(this);
+
+    for(auto& child : source_code.childrens()) {
+        auto key_node = child.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
+        auto value_node = child.child_from_type(andy::lang::parser::ast_node_type::ast_node_valuedecl);
+
+        std::shared_ptr<andy::lang::object> key = node_to_object(key_node->childrens().front());
+        std::shared_ptr<andy::lang::object> value = node_to_object(*value_node);
+
+        hash.set(std::move(key), std::move(value));
+    }
+
+    return andy::lang::object::instantiate(this, HashClass, std::move(hash));
+}
+
 std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_interpolated_string(const andy::lang::parser::ast_node& source_code) 
 {
     std::string str;
@@ -785,12 +818,12 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_foreach(con
 {
     auto* valuedecl = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_valuedecl);
 
-    std::shared_ptr<andy::lang::object> array_or_dictionary = node_to_object(valuedecl->childrens().front());
+    std::shared_ptr<andy::lang::object> array_or_hash = node_to_object(valuedecl->childrens().front());
 
     auto* vardecl = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_vardecl);
 
-    if(array_or_dictionary->cls == ArrayClass) {
-        std::vector<std::shared_ptr<andy::lang::object>>& array_values = array_or_dictionary->as<std::vector<std::shared_ptr<andy::lang::object>>>();
+    if(array_or_hash->cls == ArrayClass) {
+        std::vector<std::shared_ptr<andy::lang::object>>& array_values = array_or_hash->as<std::vector<std::shared_ptr<andy::lang::object>>>();
         for(auto& value : array_values) {
             push_block_context();
 
@@ -799,10 +832,16 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_foreach(con
 
             pop_context();
         }
-    } else if(array_or_dictionary->cls == DictionaryClass) {
-        andy::lang::dictionary& dictionary_values = array_or_dictionary->as<andy::lang::dictionary>();
-        for(auto& [key, value] : dictionary_values) {
+    } else if(array_or_hash->cls == HashClass) {
+        andy::lang::hash& hash_values = array_or_hash->as<andy::lang::hash>();
+        for(auto& key : hash_values.keys) {
+            if(!key) {
+                continue;
+            }
+
             push_block_context();
+
+            auto value = hash_values.get(key);
 
             std::vector<std::shared_ptr<andy::lang::object>> params = { key, value };
             std::shared_ptr<andy::lang::object> params_object = andy::lang::object::instantiate(this, ArrayClass, params);
@@ -814,7 +853,7 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_foreach(con
             pop_context();
         }
     } else {
-        throw std::runtime_error("foreach should iterate over an array or a dictionary");
+        throw std::runtime_error("foreach should iterate over an array or a hash");
     }
     return nullptr;
 }
@@ -985,6 +1024,7 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute(const andy:
         { andy::lang::parser::ast_node_type::ast_node_fn_call,             &andy::lang::interpreter::execute_fn_call             },
         { andy::lang::parser::ast_node_type::ast_node_interpolated_string, &andy::lang::interpreter::execute_interpolated_string },
         { andy::lang::parser::ast_node_type::ast_node_arraydecl,           &andy::lang::interpreter::execute_arraydecl           },
+        { andy::lang::parser::ast_node_type::ast_node_hashdecl,            &andy::lang::interpreter::execute_hashdecl            },
         { andy::lang::parser::ast_node_type::ast_node_vardecl,             &andy::lang::interpreter::execute_vardecl             },
         { andy::lang::parser::ast_node_type::ast_node_declname,            &andy::lang::interpreter::execute_declname            },
         { andy::lang::parser::ast_node_type::ast_node_conditional,         &andy::lang::interpreter::execute_conditional         },
@@ -1218,8 +1258,8 @@ const std::shared_ptr<andy::lang::object> andy::lang::interpreter::node_to_objec
     } else if(node.type() == andy::lang::parser::ast_node_type::ast_node_arraydecl) {
         // Logic moved to execute_arraydecl to support array literals in more places
         return execute(node);
-    } else if(node.type() == andy::lang::parser::ast_node_type::ast_node_dictionarydecl) {
-        andy::lang::dictionary map;
+    } else if(node.type() == andy::lang::parser::ast_node_type::ast_node_hashdecl) {
+        andy::lang::hash map(this);
 
         for(auto& child : node.childrens()) {
             const andy::lang::parser::ast_node* name_node = child.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
@@ -1228,10 +1268,10 @@ const std::shared_ptr<andy::lang::object> andy::lang::interpreter::node_to_objec
             std::shared_ptr<andy::lang::object> key   = node_to_object(name_node->childrens().front());
             std::shared_ptr<andy::lang::object> value = node_to_object(value_node->childrens().front());
 
-            map.push_back({ key, value });
+            map.set(key, value);
         }
 
-        return andy::lang::object::instantiate(this, DictionaryClass, std::move(map));
+        return andy::lang::object::instantiate(this, HashClass, std::move(map));
     } else if(node.type() == andy::lang::parser::ast_node_type::ast_node_interpolated_string) {
         return execute(node);
     }
