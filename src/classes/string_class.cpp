@@ -6,6 +6,30 @@ std::shared_ptr<andy::lang::structure> create_string_class(andy::lang::interpret
 {
     auto StringClass = std::make_shared<andy::lang::structure>("String");
 
+    StringClass->instance_functions["inspect"] = std::make_shared<andy::lang::function>("inspect", [StringClass](andy::lang::interpreter* interpreter) {
+        const std::string& value = interpreter->current_context->self->as<std::string>();
+        std::string result = "\"";
+        result.reserve(value.size() + (value.size() / 2) + 2); // Reserve some extra space for escaped characters
+        for(char c : value) {
+            switch(c) {
+                case '\n': result += "\\n"; break;
+                case '\t': result += "\\t"; break;
+                case '\r': result += "\\r"; break;
+                case '\\': result += "\\\\"; break;
+                case '\"': result += "\\\""; break;
+                default: result += c; break;
+            }
+        }
+        result += "\"";
+        return andy::lang::object::instantiate(interpreter, StringClass, std::move(result));
+    });
+
+    StringClass->instance_functions["hash"] = std::make_shared<andy::lang::function>("hash", [StringClass](andy::lang::interpreter* interpreter) {
+        const std::string& value = interpreter->current_context->self->as<std::string>();
+        size_t hash_value = std::hash<std::string>{}(value);
+        return andy::lang::object::instantiate(interpreter, interpreter->IntegerClass, (int)hash_value);
+    });
+
     StringClass->instance_functions["*"] = std::make_shared<andy::lang::function>("*", std::initializer_list<std::string>{"what"}, [StringClass](andy::lang::interpreter* interpreter) {
         const std::string& value = interpreter->current_context->self->as<std::string>();
         const auto& params = interpreter->current_context->positional_params;

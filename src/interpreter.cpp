@@ -77,6 +77,27 @@ void andy::lang::interpreter::load(std::shared_ptr<andy::lang::structure> cls)
             return andy::lang::api::to_object(interpreter, interpreter->current_context->self->default_string_representation());
         });
     }
+    auto eq_instance_function = cls->instance_functions.find("==");
+
+    if(eq_instance_function == cls->instance_functions.end()) {
+        cls->instance_functions["=="] = std::make_shared<andy::lang::function>("==", [cls, this](andy::lang::interpreter* interpreter) {
+            auto object = interpreter->current_context->self;
+            auto other_object = interpreter->current_context->positional_params[0].get();
+
+            // Default equality: compare the pointers of the objects
+            return andy::lang::api::to_object(interpreter, object == other_object);
+        });
+    }
+
+    auto inspect_instance_function = cls->instance_functions.find("inspect");
+
+    if(inspect_instance_function == cls->instance_functions.end()) {
+        cls->instance_functions["inspect"] = std::make_shared<andy::lang::function>("inspect", [cls, this](andy::lang::interpreter* interpreter) {
+            auto object = interpreter->current_context->self;
+            std::string result = object->default_string_representation();
+            return andy::lang::api::to_object(interpreter, std::move(result));
+        });
+    }
 
     cls->cls = cls;
 
