@@ -1,0 +1,7 @@
+namespace CXX
+  type Token
+    enum Kind
+      eof
+    end
+  end
+end
