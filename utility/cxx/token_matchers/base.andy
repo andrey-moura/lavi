@@ -1,0 +1,11 @@
+namespace CXX
+  namespace TokenMatchers
+    // Base class for token matchers.
+    type Base
+      fn match(token)
+        // To be implemented by subclasses.
+        return false
+      end
+    end
+  end
+end

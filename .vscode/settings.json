@@ -113,8 +113,7 @@
     ],
     "cmake.debugConfig": {
         "args": [
-            "utility/cxx2andy.andy",
-            "/usr/include/libelf.h"
+            "/home/andrey/Moonslate/andy-lang/utility/cxx/token_matchers/base.andy",
         ],
         "cwd": "${workspaceFolder}",
         "visualizerFile": "${workspaceFolder}/natvis.xml",

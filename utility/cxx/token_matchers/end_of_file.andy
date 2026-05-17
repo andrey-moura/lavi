@@ -1,0 +1,11 @@
+namespace CXX
+  namespace TokenMatchers
+    // Matcher for end-of-file tokens.
+    type EndOfFileMatcher extends Base
+      fn match(token)
+        // To be implemented by subclasses.
+        return false
+      end
+    end
+  end
+end

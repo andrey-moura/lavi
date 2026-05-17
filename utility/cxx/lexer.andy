@@ -37,7 +37,6 @@ namespace CXX
 
     fn discard_whitespaces
       loop while whitespace?
-        out "Discarding whitespace: '${see_char}'"
         discard
       end
     end
