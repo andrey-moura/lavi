@@ -48,6 +48,23 @@ std::shared_ptr<andy::lang::structure> create_string_class(andy::lang::interpret
         return andy::lang::object::instantiate(interpreter, StringClass, result);
     });
 
+    StringClass->instance_functions["[]"] = std::make_shared<andy::lang::function>("[]", std::initializer_list<std::string>{"what"}, [StringClass](andy::lang::interpreter* interpreter) {
+        const std::string& value = interpreter->current_context->self->as<std::string>();
+        const auto& params = interpreter->current_context->positional_params;
+
+        if(params[0]->cls != interpreter->IntegerClass) {
+            throw std::runtime_error("undefined operator [] (" + std::string(interpreter->current_context->self->cls->name) + ", " + std::string(params[0]->cls->name) + ")");
+        }
+
+        int index = params[0]->as<int>();
+
+        if(index < 0 || (size_t)index >= value.size()) {
+            return std::make_shared<andy::lang::object>(interpreter->NullClass);
+        }
+
+        return andy::lang::api::to_object(interpreter, std::move(std::string(1, value[index])));
+    });
+
         StringClass->instance_functions["present?"] = std::make_shared<andy::lang::function>("present?", [](andy::lang::interpreter* interpreter) {
             const std::string& value = interpreter->current_context->self->as<std::string>();
 
@@ -180,11 +197,7 @@ std::shared_ptr<andy::lang::structure> create_string_class(andy::lang::interpret
             const std::string& value = interpreter->current_context->self->as<std::string>();
             const std::string& other = interpreter->current_context->positional_params[0]->as<std::string>();
 
-            if(value == other) {
-                return std::make_shared<andy::lang::object>(interpreter->TrueClass);
-            }
-
-            return std::make_shared<andy::lang::object>(interpreter->FalseClass);
+            return andy::lang::api::to_object(interpreter, value == other);
         });
 
         StringClass->instance_functions["!="] = std::make_shared<andy::lang::function>("!=", std::initializer_list<std::string>{"other"}, [](andy::lang::interpreter* interpreter) {
@@ -252,6 +265,13 @@ std::shared_ptr<andy::lang::structure> create_string_class(andy::lang::interpret
     result.push_back(value.front());
 
     return andy::lang::api::to_object(interpreter, result);
+  });
+
+  StringClass->instance_functions["pop_front"] = std::make_shared<andy::lang::function>("pop_front", [](andy::lang::interpreter* interpreter) {
+    std::string& value = interpreter->current_context->self->as<std::string>();
+    value.erase(value.begin());
+
+    return nullptr;
   });
 
     return StringClass;

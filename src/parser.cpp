@@ -195,12 +195,17 @@ andy::lang::parser::ast_node andy::lang::parser::extract_fn_call_params(andy::la
 
 andy::lang::parser::ast_node andy::lang::parser::parse_delimiter(andy::lang::lexer &lexer)
 {
-    const andy::lang::lexer::token& token = lexer.next_token();
+    const andy::lang::lexer::token& token = lexer.see_next();
 
     if(token.content == ";") {
         // ; in the middle of the code is considered a whitespace
+        lexer.consume_token();
         return parse_node(lexer);
-    } else {
+    } else if(token.content == "{") {
+        // By now we assuming that every '{' in the middle of the code is a Hash declaration
+        return parse_identifier_or_literal(lexer);
+    }
+    else {
         throw std::runtime_error(token.error_message_at_current_position("Unexpected delimiter"));
     }
 
@@ -744,6 +749,16 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_function(andy::la
 
 andy::lang::parser::ast_node andy::lang::parser::parse_keyword_return(andy::lang::lexer &lexer) {
     ast_node return_node(std::move(lexer.next_token()), ast_node_type::ast_node_fn_return);
+
+    auto possible_return_value = lexer.see_next();
+
+    if(possible_return_value.start.line != return_node.token().start.line) {
+        return return_node; // No return value, just return the return node
+    }
+
+    if(possible_return_value.type == lexer::token_type::token_keyword) {
+        throw std::runtime_error(possible_return_value.error_message_at_current_position("Unexpected keyword after 'return'"));
+    }
 
     return_node.add_child(std::move(parse_identifier_or_literal(lexer)));
 

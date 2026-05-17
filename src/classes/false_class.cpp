@@ -31,6 +31,10 @@ std::shared_ptr<andy::lang::structure> create_false_class(andy::lang::interprete
                 auto other = interpreter->current_context->positional_params[0];
         return std::make_shared<andy::lang::object>(other->cls == FalseClass ? interpreter->TrueClass : interpreter->FalseClass);
     });
+
+    FalseClass->instance_functions["&&"] = std::make_shared<andy::lang::function>("&&", std::initializer_list<std::string>{"other"}, [FalseClass](andy::lang::interpreter* interpreter) {
+        return andy::lang::api::to_object(interpreter, false);
+    });
     
     return FalseClass;
 }
