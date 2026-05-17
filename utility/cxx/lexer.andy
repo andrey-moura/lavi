@@ -1,20 +1,27 @@
 namespace CXX
   type Lexer
-    var file = null
+    var source = null
     var tokens = null
 
     fn init(f)
-      file = f
+      source = f
       tokens = tokenize
     end
 
-    fn peek_char
-      file.front
+    fn see_char
+      source.front
+    end
+
+    fn discard
+      source.pop_front
     end
 
     fn discard_whitespaces
-      var c = peek_char
-      out "Peeking char: '${c}'"
+      var c = see_char
+      loop while c == " " || c == "\t" || c == "\r" || c == "\n"
+        discard
+        c = see_char
+      end
     end
 
     fn read_next_token
