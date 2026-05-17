@@ -128,7 +128,17 @@ andy::lang::parser::ast_node andy::lang::parser::extract_pair(andy::lang::lexer 
     // Parse the key
     ast_node pair_node(ast_node_type::ast_node_pair);
 
-    ast_node key_node = ast_node(lexer.next_token(), ast_node_type::ast_node_declname);
+    auto& key_token = lexer.next_token();
+
+    if(key_token.type == andy::lang::lexer::token_type::token_identifier) {
+        key_token.type = andy::lang::lexer::token_type::token_literal;
+        key_token.kind = andy::lang::lexer::token_kind::token_string;
+        key_token.string_literal = key_token.content;
+    }
+
+    ast_node key_node = ast_node(ast_node_type::ast_node_declname);
+    key_node.add_child(ast_node(std::move(key_token), ast_node_type::ast_node_valuedecl));
+
     pair_node.add_child(std::move(key_node));
     
     // Consume the ':' token
@@ -370,6 +380,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(and
     andy::lang::lexer::token identifier_or_literal;
 
     switch(token.type) {
+        case andy::lang::lexer::token_type::token_literal:
         case andy::lang::lexer::token_type::token_identifier: {
             auto possible_colon = lexer.see_next(1);
             if(possible_colon.type == andy::lang::lexer::token_type::token_delimiter && possible_colon.content == ":") {
@@ -378,9 +389,6 @@ andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(and
             identifier_or_literal = std::move(lexer.next_token());
             break;
         }
-        case andy::lang::lexer::token_type::token_literal:
-            identifier_or_literal = std::move(lexer.next_token());
-            break;
         case andy::lang::lexer::token_type::token_operator:
             // The lexer sees array as operator and we need to handle it here
             if(token.content == "[") {
@@ -389,7 +397,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(and
                 while(true) {
                     ast_node value_node = parse_identifier_or_literal(lexer);
 
-                    if(value_node.type() != ast_node_type::ast_node_valuedecl && value_node.type() != ast_node_type::ast_node_dictionarydecl && value_node.type() != ast_node_type::ast_node_arraydecl) {
+                    if(value_node.type() != ast_node_type::ast_node_valuedecl && value_node.type() != ast_node_type::ast_node_hashdecl && value_node.type() != ast_node_type::ast_node_arraydecl) {
                         throw std::runtime_error(token.error_message_at_current_position("Expected value in array"));
                     }
 
@@ -438,40 +446,17 @@ andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(and
             // Can be a map {}
 
             if(token.content == "{") {
-                ast_node map_node(ast_node_type::ast_node_dictionarydecl);
+                ast_node map_node(ast_node_type::ast_node_hashdecl);
 
                 // The token was seen, so we need to consume it
                 lexer.consume_token();
 
                 while(true) {
-                    ast_node key_node = parse_identifier_or_literal(lexer);
+                    ast_node pair_node = parse_identifier_or_literal(lexer);
 
-                    if(key_node.type() != ast_node_type::ast_node_valuedecl) {
-                        throw std::runtime_error(token.error_message_at_current_position("Expected key in map"));
+                    if(pair_node.type() != andy::lang::parser::ast_node_type::ast_node_pair) {
+                        throw std::runtime_error(token.error_message_at_current_position("Expected key-value pair in map declaration"));
                     }
-
-                    const andy::lang::lexer::token& colon_token = lexer.next_token();
-
-                    if(colon_token.content != ":") {
-                        throw std::runtime_error(colon_token.error_message_at_current_position("Expected ':' after key in map"));
-                    }
-
-                    ast_node value_node = parse_identifier_or_literal(lexer);
-
-                    if(value_node.type() != ast_node_type::ast_node_valuedecl && value_node.type() != ast_node_type::ast_node_dictionarydecl && value_node.type() != ast_node_type::ast_node_arraydecl) {
-                        throw std::runtime_error(token.error_message_at_current_position("Expected value in map"));
-                    }
-
-                    ast_node pair_node = ast_node(ast_node_type::ast_node_valuedecl);
-
-                    ast_node key_value_node = ast_node(ast_node_type::ast_node_declname);
-                    key_value_node.add_child(std::move(key_node));
-
-                    ast_node value_value_node = ast_node(ast_node_type::ast_node_valuedecl);
-                    value_value_node.add_child(std::move(value_node));
-
-                    pair_node.add_child(std::move(key_value_node));
-                    pair_node.add_child(std::move(value_value_node));
 
                     map_node.add_child(std::move(pair_node));
 
@@ -886,7 +871,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_foreach(andy::lan
     auto array_node = parse_identifier_or_literal(lexer);
 
     if(array_node.type() != ast_node_type::ast_node_arraydecl && array_node.type() != ast_node_type::ast_node_declname) {
-        throw std::runtime_error(array_node.token().error_message_at_current_position("Expected array or dictionary after 'in'"));
+        throw std::runtime_error(array_node.token().error_message_at_current_position("Expected array or hash after 'in'"));
     }
 
     ast_node value_node(ast_node_type::ast_node_valuedecl);

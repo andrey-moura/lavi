@@ -17,7 +17,6 @@ std::shared_ptr<andy::lang::structure> create_http_class(andy::lang::interpreter
     });
     response_class->instance_functions["json"] = std::make_shared<andy::lang::function>("json", [](andy::lang::interpreter* interpreter) {
         auto& response = interpreter->current_context->self->as<andy::net::http::response>();
-        andy::lang::dictionary json;
         std::string_view content_type = response.headers["Content-Type"];
         if (!content_type.starts_with("application/json")) {
             throw std::runtime_error("Trying to access response body as JSON, but Content-Type is not application/json");

@@ -52,11 +52,12 @@ add_library(andy-lang
     ${CMAKE_CURRENT_LIST_DIR}/src/builtin_libs.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/function_call.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/std_functions.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/hash.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/andy_config_class.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/array_class.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/class_class.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/classes/dictionary_class.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/classes/hash_class.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/directory_class.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/double_class.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/false_class.cpp

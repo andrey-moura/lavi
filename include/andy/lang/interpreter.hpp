@@ -52,7 +52,7 @@ namespace andy
             std::shared_ptr<andy::lang::object> execute_pair(const andy::lang::parser::ast_node& source_code);
             std::shared_ptr<andy::lang::object> execute_interpolated_string(const andy::lang::parser::ast_node& source_code);
             std::shared_ptr<andy::lang::object> execute_arraydecl(const andy::lang::parser::ast_node& source_code);
-            std::shared_ptr<andy::lang::object> execute_dictionarydecl(const andy::lang::parser::ast_node& source_code);
+            std::shared_ptr<andy::lang::object> execute_hashdecl(const andy::lang::parser::ast_node& source_code);
             std::shared_ptr<andy::lang::object> execute_vardecl(const andy::lang::parser::ast_node& source_code);
             std::shared_ptr<andy::lang::object> execute_decltype(const andy::lang::parser::ast_node& source_code);
             std::shared_ptr<andy::lang::object> execute_declname(const andy::lang::parser::ast_node& source_code);
@@ -96,8 +96,8 @@ namespace andy
             /// @brief The global null class.
             std::shared_ptr<andy::lang::structure> NullClass;
 
-            /// @brief The global dictionary class.
-            std::shared_ptr<andy::lang::structure> DictionaryClass;
+            /// @brief The global hash class.
+            std::shared_ptr<andy::lang::structure> HashClass;
 
             /// @brief The global system class.
             std::shared_ptr<andy::lang::structure> SystemClass;

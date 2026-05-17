@@ -117,7 +117,7 @@ Executes the AST. Manages:
 ### Object System (`src/object.cpp`)
 Implements the object-oriented features:
 - All values are objects
-- Built-in classes: String, Number, Array, Dictionary, File, etc.
+- Built-in classes: String, Number, Array, Hash, File, etc.
 - Instance and class variables
 - Method dispatch
 
