@@ -51,6 +51,7 @@ const static std::vector<std::string_view> keywords_lookup = {
     "break",
     "catch",
     "else",
+    "enum",
     "fn",
     "if",
     "loop",
