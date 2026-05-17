@@ -7,7 +7,7 @@ extern std::shared_ptr<andy::lang::structure> create_false_class(andy::lang::int
 extern std::shared_ptr<andy::lang::structure> create_andy_config_class(andy::lang::interpreter*);
 extern std::shared_ptr<andy::lang::structure> create_array_class(andy::lang::interpreter*);
 extern std::shared_ptr<andy::lang::structure> create_class_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_dictionary_class(andy::lang::interpreter*);
+extern std::shared_ptr<andy::lang::structure> create_hash_class(andy::lang::interpreter*);
 extern std::shared_ptr<andy::lang::structure> create_directory_class(andy::lang::interpreter*);
 extern std::shared_ptr<andy::lang::structure> create_double_class(andy::lang::interpreter*);
 extern std::shared_ptr<andy::lang::structure> create_false_class(andy::lang::interpreter*);
@@ -34,7 +34,7 @@ void andy::lang::structure::create_structures(andy::lang::interpreter* interpret
     interpreter->load(interpreter->FileClass        = create_file_class        (interpreter) );
     interpreter->load(interpreter->ArrayClass       = create_array_class       (interpreter) );
     interpreter->load(interpreter->NullClass        = create_null_class        (interpreter) );
-    interpreter->load(interpreter->DictionaryClass  = create_dictionary_class  (interpreter) );
+    interpreter->load(interpreter->HashClass        = create_hash_class        (interpreter) );
     interpreter->load(interpreter->SystemClass      = create_system_class      (interpreter) );
     interpreter->load(interpreter->PathClass        = create_path_class        (interpreter) );
     interpreter->load(interpreter->AndyConfigClass  = create_andy_config_class (interpreter) );

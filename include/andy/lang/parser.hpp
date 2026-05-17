@@ -40,7 +40,7 @@ namespace andy
                 ast_node_pair,
                 ast_node_interpolated_string,
                 ast_node_arraydecl,
-                ast_node_dictionarydecl,
+                ast_node_hashdecl,
                 ast_node_vardecl,
 
                 ast_node_decltype,

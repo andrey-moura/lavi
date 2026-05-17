@@ -15,7 +15,7 @@ type EQ
         if actual == expected
             return true
         else
-            throw ExpectationNotMet.new("Expected ${expected}, but got ${actual}")
+            throw ExpectationNotMet.new("Expected ${expected.inspect}, but got ${actual.inspect}")
         end
     end
 end
