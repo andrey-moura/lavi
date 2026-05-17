@@ -15,7 +15,7 @@ struct analyzer_error
 {
     std::string_view type;
     std::string message;
-    std::string_view file_name;
+    std::string file_name;
     andy::lang::lexer::token_position start;
     andy::lang::lexer::token_position end;
 };
@@ -114,6 +114,12 @@ struct log_output {
     log_output& operator<<(const T& value) {
         if(enabled) {
             std::cerr << value;
+        }
+        return *this;
+    }
+    log_output& operator<<(std::ostream& (*manip)(std::ostream&)) {
+        if(enabled) {
+            manip(std::cerr);
         }
         return *this;
     }
@@ -322,8 +328,20 @@ int main(int argc, char** argv) {
         
         try {
             root_node = p.parse_all(l);
+        } catch (const andy::lang::parser::exception& e) {
+            const auto& token = e.token();
+
+            debug << e.what() << std::endl;
+
+            errors.push_back({
+                "parse-error",
+                e.what(),
+                token.file_name ? *token.file_name : "",
+                token.start,
+                token.end
+            });
         } catch (const std::exception& e) {
-            (void)e;
+            debug << "Parse error: " << e.what() << std::endl;
         }
 
         size_t i = 0;

@@ -83,6 +83,7 @@ namespace andy
                 std::string error_message_at_current_position(std::string_view what) const;
                 std::string unexpected_eof_message() const;
                 std::string human_start_position() const;
+                std::string human_description() const;
 
                 void merge(const token& other);
             public:
