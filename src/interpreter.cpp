@@ -9,6 +9,16 @@
 #include "andy/lang/lang.hpp"
 #include "andy/lang/api.hpp"
 
+struct andy_lang_runtime_exception {
+    andy_lang_runtime_exception(std::shared_ptr<andy::lang::object> exception_object)
+        : exception_object(std::move(exception_object))
+    {
+        
+    }
+    std::shared_ptr<andy::lang::object> exception_object;
+};
+
+
 andy::lang::function execute_method_definition(const andy::lang::parser::ast_node& class_child)
 {
     std::string_view method_name = class_child.decname();
@@ -891,6 +901,11 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_yield(const
 {
     // Previous block
     auto block = current_context->given_block;
+
+    if(!block) {
+        throw andy_lang_runtime_exception(andy::lang::api::to_object(this, "No block given to yield"));
+    }
+
     // Create a block context whose lexical_parent is the context where the DO...END block
     // was written (captured at call time), not where yield is being executed.
     auto ctx = std::make_shared<interpreter_context>();
@@ -957,15 +972,6 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_else(const 
     auto context = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_context);
     return execute_all(*context);
 }
-
-struct andy_lang_runtime_exception {
-    andy_lang_runtime_exception(std::shared_ptr<andy::lang::object> exception_object)
-        : exception_object(std::move(exception_object))
-    {
-        
-    }
-    std::shared_ptr<andy::lang::object> exception_object;
-};
 
 std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_try(const andy::lang::parser::ast_node& source_code)
 {
