@@ -125,6 +125,14 @@ void andy::lang::interpreter::load(std::shared_ptr<andy::lang::structure> cls)
         });
     }
 
+    auto to_string_function = cls->functions.find("to_string");
+
+    if(to_string_function == cls->functions.end()) {
+        cls->functions["to_string"] = std::make_shared<andy::lang::function>("to_string", [cls, this](andy::lang::interpreter* interpreter) {
+            return andy::lang::api::to_object(interpreter, cls->name);
+        });
+    }
+
     cls->cls = cls;
 
     current_context->classes[cls->name] = cls;
