@@ -998,8 +998,13 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_try(const a
         if(child.type() != andy::lang::parser::ast_node_type::ast_node_catch) {
             continue;
         }
-        std::string_view exception_type = child.decl_type();
-        catchers[exception_type] = &child;
+        auto dectype_node = child.child_from_type(andy::lang::parser::ast_node_type::ast_node_decltype);
+        if(!dectype_node) {
+            catchers["var"] = &child;
+        } else {
+            std::string_view exception_type = child.decl_type();
+            catchers[exception_type] = &child;
+        }
     }
 
     try {
@@ -1014,8 +1019,16 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_try(const a
         }
         auto catcher = catchers.find(e.exception_object->cls->name);
         if(catcher == catchers.end()) {
-            // If we don't have a catcher for the exception type, we have to throw it again to be caught by an outer try...catch or to terminate the program if it's uncaught.
-            throw;
+            // If we don't have a catcher for the exception type, we have to throw it again to be caught by an outer
+            // try...catch or to terminate the program if it's uncaught.
+
+            // But... If we have a catcher for the "variable" decltype, we can use it to catch any exception
+            auto variable_catcher = catchers.find("var");
+            if(variable_catcher != catchers.end()) {
+                catcher = variable_catcher;
+            } else {
+                throw;
+            }
         }
         auto catch_context = catcher->second->child_from_type(andy::lang::parser::ast_node_type::ast_node_context);
         push_block_context();
