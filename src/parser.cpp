@@ -194,7 +194,7 @@ andy::lang::parser::ast_node andy::lang::parser::extract_fn_call_params(andy::la
                 break;
             }
         } else {
-        break;
+            break;
         }
     }
 
@@ -289,9 +289,19 @@ static void extract_fn_yield_block_if_exists(andy::lang::parser::ast_node& node,
         andy::lang::parser::ast_node yield_node(andy::lang::parser::ast_node_type::ast_node_yield_block);
 
         auto& token = lexer.next_token(); // Consume the 'do' token
+        auto& possible_block_params = lexer.see_next();
+
+        if(possible_block_params.type == andy::lang::lexer::token_type::token_delimiter && possible_block_params.content == "(") {
+            // The block has parameters, we need to extract them before extracting the block itself
+            // ex: items.map do (item) ... end
+            lexer.consume_token(); // Consume the '(' token
+            andy::lang::parser::ast_node params_node = parser.extract_fn_call_params(lexer);
+            yield_node.add_child(std::move(params_node));
+            lexer.consume_token(); // Consume the ')' token
+        }
+
         andy::lang::parser::ast_node yield_context = extract_context(lexer, parser);
         yield_context.set_token(std::move(token));
-
         yield_context.set_end_token(lexer.next_token());
 
         yield_node.add_child(std::move(yield_context));
@@ -987,6 +997,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_yield(andy::lang:
     if(next_token.type == andy::lang::lexer::token_type::token_delimiter && next_token.content == "(") {
         lexer.consume_token(); // Consume the '(' token
         node.add_child(extract_fn_call_params(lexer));
+        lexer.consume_token(); // Consume the ')' token
     }
 
     return node;
