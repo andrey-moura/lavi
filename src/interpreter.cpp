@@ -74,12 +74,10 @@ void andy::lang::interpreter::load(std::shared_ptr<andy::lang::structure> cls)
         subclasses.reserve(cls->deriveds.size());
 
         for(auto& cls : cls->deriveds) {
-            std::vector<std::shared_ptr<andy::lang::object>> params = { andy::lang::object::create(this, StringClass, cls->name) };
-            auto c = andy::lang::object::instantiate(this, ClassClass, nullptr, params);
-            subclasses.push_back(c);
+            subclasses.push_back(andy::lang::api::to_object(interpreter, cls));
         }
 
-        return andy::lang::object::create(this, ArrayClass, std::move(subclasses));
+        return andy::lang::api::to_object(interpreter, std::move(subclasses));
     });
 
     auto to_string_instance_function = cls->instance_functions.find("to_string");
