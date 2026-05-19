@@ -218,7 +218,11 @@ static std::shared_ptr<andy::lang::structure> do_execute_classdecl(andy::lang::i
 {
     std::string_view class_name = source_code.decname();
 
-    auto cls = std::make_shared<andy::lang::structure>(class_name);
+    auto cls = interpreter->find_class(class_name);
+
+    if (!cls) {
+        cls = std::make_shared<andy::lang::structure>(class_name);
+    }
 
     auto baseclass_node = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_classdecl_base);
 
@@ -246,6 +250,8 @@ static std::shared_ptr<andy::lang::structure> do_execute_classdecl(andy::lang::i
         cls->base = base_class;
         base_class->deriveds.push_back(cls);
     }
+
+    interpreter->push_context_with_object(andy::lang::api::to_object(interpreter, cls));
 
     for(const auto& class_child : source_code.context()->childrens()) {
         switch (class_child.type())
@@ -309,6 +315,9 @@ static std::shared_ptr<andy::lang::structure> do_execute_classdecl(andy::lang::i
             break;
         }
     }
+
+    interpreter->pop_context();
+
     return cls;
 }
 
