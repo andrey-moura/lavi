@@ -157,8 +157,16 @@ andy::lang::parser::ast_node andy::lang::parser::extract_fn_call_params(andy::la
     ast_node params_node(ast_node_type::ast_node_fn_params);
 
     while(true) {
-        ast_node param_node = parse_identifier_or_literal(lexer);
-        params_node.add_child(std::move(param_node));
+        auto& possible_yield = lexer.see_next();
+
+        if(possible_yield.type == andy::lang::lexer::token_type::token_keyword && possible_yield.content == "yield")
+        {
+            ast_node param_node = parse_keyword(lexer);
+            params_node.add_child(std::move(param_node));
+        } else {
+            ast_node param_node = parse_identifier_or_literal(lexer);
+            params_node.add_child(std::move(param_node));
+        }
 
         auto& token = lexer.see_next();
 
@@ -257,7 +265,9 @@ static bool is_no_parentheses_function_call(const andy::lang::lexer::token& toke
 
     auto& next_token = lexer.see_next();
 
-    return is_identifier_or_literal(next_token) && is_on_same_line(token, next_token);
+    bool is_identifier_or_literal_or_yield = is_identifier_or_literal(next_token) || (next_token.type == andy::lang::lexer::token_type::token_keyword && next_token.content == "yield");
+
+    return is_identifier_or_literal_or_yield && is_on_same_line(token, next_token);
 }
 
 static bool is_any_function_call(const andy::lang::lexer::token& token, const andy::lang::lexer& lexer)
@@ -535,7 +545,8 @@ andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(and
             }
         } else if (auto& next_token = lexer.see_next();
                   (next_token.type == andy::lang::lexer::token_type::token_identifier && next_token.content != "do") ||
-                  next_token.type == andy::lang::lexer::token_type::token_literal) {
+                  next_token.type == andy::lang::lexer::token_type::token_literal ||
+                    (next_token.type == andy::lang::lexer::token_type::token_keyword && next_token.content == "yield")) {
             // fn call with literal or identifier
             ast_node params_node = extract_fn_call_params(lexer);
             fn_node.add_child(std::move(params_node));
