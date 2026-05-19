@@ -1060,7 +1060,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_try(andy::lang::l
             lexer.consume_token(); // Consume the ')' token
         }
 
-        ast_node catch_context = extract_context(lexer, *this);
+        ast_node catch_context = extract_context(lexer, *this, &valid_following_tokens);
         catch_node.add_child(std::move(catch_context));
 
         try_node.add_child(std::move(catch_node));
