@@ -95,18 +95,40 @@ namespace andy
 
                 interpreter->current_context->positional_params = std::move(positional_params);
 
-                auto run_it = object->cls->instance_functions.find(function_name);
+                std::shared_ptr<andy::lang::function> function = nullptr;
 
-                if(run_it == object->cls->instance_functions.end()) {
-                    throw std::runtime_error("function '" + std::string(function_name) + "' is not defined in type " + std::string(object->cls->name));
+                if(interpreter->current_context->self)
+                {
+                    auto run_it = interpreter->current_context->cls->instance_functions.find(function_name);
+
+                    if(run_it != interpreter->current_context->cls->instance_functions.end()) {
+                        function = run_it->second;
+                    }
+                } else if(interpreter->current_context->cls)
+                {
+                    auto run_it = interpreter->current_context->cls->functions.find(function_name);
+
+                    if(run_it != interpreter->current_context->cls->functions.end()) {
+                        function = run_it->second;
+                    }
+                }
+
+                if(!function) {
+                    if(interpreter->current_context->self) {
+                        throw std::runtime_error("function '" + std::string(function_name) + "' is not defined in object of type " + std::string(interpreter->current_context->cls->name));
+                    } else if(interpreter->current_context->cls) {
+                        throw std::runtime_error("function '" + std::string(function_name) + "' is not defined in class " + std::string(interpreter->current_context->cls->name));
+                    } else {
+                        throw std::runtime_error("function '" + std::string(function_name) + "' is not defined in current context");
+                    }
                 }
 
                 std::shared_ptr<andy::lang::object> ret = nullptr;
 
-                if(run_it->second->block_ast.childrens().size()) {
-                    ret = interpreter->execute(run_it->second->block_ast);
-                } else if(run_it->second->native_function) {
-                    ret = run_it->second->native_function(interpreter);
+                if(function->block_ast.childrens().size()) {
+                    ret = interpreter->execute(function->block_ast);
+                } else if(function->native_function) {
+                    ret = function->native_function(interpreter);
                 }
 
                 interpreter->pop_context();
