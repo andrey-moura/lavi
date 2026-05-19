@@ -1023,31 +1023,48 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_try(andy::lang::l
         if(possible_parenthesis_token.type == andy::lang::lexer::token_type::token_delimiter && possible_parenthesis_token.content == "(") {
             /*
                 catch(ExceptionClass variable_name)
-                        ^ '(' token
+                     ^ '(' token
             */
             lexer.consume_token(); // Consume the '(' token
 
-            const auto& possible_class = lexer.see_next();
+            const auto& possible_or_variable_name_class = lexer.see_next();
             /*
                 catch(ExceptionClass variable_name)
-                        ^^^^^^^^^^^^^^ Exception class
+                      ^^^^^^^^^^^^^^ Exception class
             */
-            if(possible_class.type != andy::lang::lexer::token_type::token_identifier) {
-                throw std::runtime_error(possible_class.error_message_at_current_position("Expected exception class or variable name after 'catch'"));
+            /*
+                catch(variable_name)
+                      ^^^^^^^^^^^^^ Variable
+            */
+
+            if(possible_or_variable_name_class.type != andy::lang::lexer::token_type::token_identifier) {
+                throw std::runtime_error(possible_or_variable_name_class.error_message_at_current_position("Expected exception class or variable name after 'catch'"));
             }
 
-            catch_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
-
-            const auto& possible_variable_name_token = lexer.see_next();
+            const auto& possible_variable_name_token = lexer.see_next(1);
+            /*
+                catch(variable_name)
+                      ^^^^^^^^^^^^^ Variable name
+            */
             /*
                 catch(ExceptionClass variable_name)
-                                        ^^^^^^^^^^^^^ Variable name
+                                     ^^^^^^^^^^^^^ Variable name
             */
-            if(possible_variable_name_token.type != andy::lang::lexer::token_type::token_identifier) {
-                throw std::runtime_error(possible_variable_name_token.error_message_at_current_position("Expected variable name after exception class in 'catch'"));
+            if(possible_variable_name_token.type == andy::lang::lexer::token_type::token_identifier)
+            {
+                /*
+                  catch(ExceptionClass variable_name)
+                                       ^^^^^^^^^^^^^ Variable name
+                */
+                catch_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
+                catch_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname));
+            } else {
+                /*
+                    catch(variable_name)
+                          ^^^^^^^^^^^^^ Variable name
+                */
+                catch_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname));
             }
-
-            catch_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname));
 
             const auto& possible_closing_parenthesis = lexer.see_next();
             /*
@@ -1057,6 +1074,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_try(andy::lang::l
             if(possible_closing_parenthesis.type != andy::lang::lexer::token_type::token_delimiter || possible_closing_parenthesis.content != ")") {
                 throw std::runtime_error(possible_closing_parenthesis.error_message_at_current_position("Expected closing ')' after exception class and variable name in 'catch'"));
             }
+
             lexer.consume_token(); // Consume the ')' token
         }
 
