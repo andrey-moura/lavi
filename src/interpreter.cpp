@@ -929,7 +929,7 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_yield(const
     stack.push_back(ctx);
     update_current_context();
 
-    std::shared_ptr<andy::lang::object> ret = execute(*block);
+    std::shared_ptr<andy::lang::object> ret = execute(*block->block());
     pop_context();
     return ret;
 }
