@@ -53,10 +53,8 @@ sudo cmake --install build --config Release  # Linux
 ```
 
 ### Running Tests
-
-```bash
-build/andy-test tests
-```
+  - To run the tests for the full project, use the command `build/andy --tests`
+  - To run a specific test file, use `build/andy --tests tests/high-level/your_test.andy`
 
 Tests are written in C++ (using a custom testing framework) and in Andy language itself.
 
@@ -66,12 +64,13 @@ Tests are written in C++ (using a custom testing framework) and in Andy language
 
 - **Standard**: C++20
 - **Style**: 
-  - Use 4 spaces for indentation (no tabs)
+  - Use 2 spaces for indentation (no tabs)
   - Opening braces on the following line for functions and classes
   - Use `snake_case` for variables, functions and class names
   - Use namespace `andy::lang` for language components
   - Prefer `std::shared_ptr` for object management
-  
+  - Move semantics with `std::move` where possible
+
 ### Header Files
 
 - Use `#pragma once` instead of include guards
