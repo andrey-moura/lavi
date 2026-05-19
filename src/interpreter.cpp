@@ -600,7 +600,7 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
             return self;
         }
 
-        current_context->given_block = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_context);
+        current_context->given_block = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_yield_block);
 
         if(method_to_call->block_ast.childrens().size()) {
             for(size_t i = 0; i < method_to_call->positional_params.size(); i++) {
