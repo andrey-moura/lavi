@@ -1,92 +1,195 @@
 #include 'std/tests'
 
 describe 'type' do
-    context 'when creating a new instance' do
-        it 'should initialize instance variables by default value' do
-            type Foo
-                var x = 42
-            end
+  context 'when creating instances' do
+    it 'initializes instance variables with default values' do
+      type Foo
+        var x = 42
+      end
 
-            var f = Foo.new
-            expect(f.x).to eq(42)
-        end
-
-        it 'should initialize instance variables by the constructor' do
-            type Foo
-                var x = null
-                fn init
-                    x = 123
-                end
-            end
-
-            var f = Foo.new
-            expect(f.x).to eq(123)
-        end
+      var f = Foo.new
+      expect(f.x).to eq(42)
     end
 
-    context 'when defining methods on a type' do
-        it 'should allow modifying internal state via instance methods' do
-            type Counter
-                var count = 0
+    it 'applies constructor assignments during initialization' do
+      type Foo
+        var x = null
 
-                fn inc
-                    count += 1
-                end
-            end
-
-            var c = Counter.new
-            c.inc
-            c.inc
-            expect(c.count).to eq(2)
+        fn init
+          x = 123
         end
+      end
+
+      var f = Foo.new
+      expect(f.x).to eq(123)
     end
 
-    context 'when using method parameters' do
-        it 'should allow passing and using arguments in methods' do
-            type Multiplier
-                var result = 1
+    it 'keeps default values when constructor does not override them' do
+      type Foo
+        var x = 7
 
-                fn mul(n)
-                    result *= n
-                end
-            end
-
-            var m = Multiplier.new
-            m.mul 5
-            m.mul 2
-            expect(m.result).to eq(10)
+        fn init
+          var noop = null
         end
+      end
+
+      var f = Foo.new
+      expect(f.x).to eq(7)
+    end
+  end
+
+  context 'when defining instance methods' do
+    it 'modifies internal state through method calls' do
+      type Counter
+        var count = 0
+
+        fn inc
+          count += 1
+        end
+      end
+
+      var c = Counter.new
+      c.inc
+      c.inc
+
+      expect(c.count).to eq(2)
     end
 
-    context 'when using static methods' do
-        it 'should allow calling methods without instantiating the type' do
-            type Math
-                static fn double(n)
-                    return n * 2
-                end
-            end
+    it 'returns values based on current instance state' do
+      type Counter
+        var count = 0
 
-            expect(Math.double(4)).to eq(8)
+        fn inc
+          count += 1
         end
+
+        fn current
+          return count
+        end
+      end
+
+      var c = Counter.new
+      c.inc
+      c.inc
+
+      expect(c.current).to eq(2)
+    end
+  end
+
+  context 'when using method parameters' do
+    it 'uses arguments to update state' do
+      type Multiplier
+        var result = 1
+
+        fn mul(n)
+          result *= n
+        end
+      end
+
+      var m = Multiplier.new
+      m.mul 5
+      m.mul 2
+
+      expect(m.result).to eq(10)
     end
 
-    context 'when accessing multiple instances' do
-        it 'should isolate state between instances' do
-            type Box
-                var value = null
-                fn set(v)
-                    value = v
-                end
-            end
+    it 'supports multiple sequential updates with different values' do
+      type Accumulator
+        var total = 0
 
-            var a = Box.new
-            var b = Box.new
-
-            a.set 10
-            b.set 20
-
-            expect(a.value).to eq(10)
-            expect(b.value).to eq(20)
+        fn add(n)
+          total += n
         end
+      end
+
+      var a = Accumulator.new
+      a.add 3
+      a.add 10
+      a.add -4
+
+      expect(a.total).to eq(9)
     end
+  end
+
+  context 'when using static methods' do
+    it 'calls static methods without creating an instance' do
+      type Math
+        static fn double(n)
+          return n * 2
+        end
+      end
+
+      expect(Math.double(4)).to eq(8)
+    end
+
+    it 'allows static methods to be called multiple times with different inputs' do
+      type Math
+        static fn double(n)
+          return n * 2
+        end
+      end
+
+      expect(Math.double(1)).to eq(2)
+      expect(Math.double(10)).to eq(20)
+      expect(Math.double(-3)).to eq(-6)
+    end
+  end
+
+  context 'when handling multiple instances' do
+    it 'isolates state between different objects' do
+      type Box
+        var value = null
+
+        fn set(v)
+          value = v
+        end
+      end
+
+      var a = Box.new
+      var b = Box.new
+
+      a.set 10
+      b.set 20
+
+      expect(a.value).to eq(10)
+      expect(b.value).to eq(20)
+    end
+
+    it 'does not leak updates from one instance to another' do
+      type Box
+        var value = 0
+
+        fn set(v)
+          value = v
+        end
+      end
+
+      var first = Box.new
+      var second = Box.new
+
+      first.set 99
+
+      expect(first.value).to eq(99)
+      expect(second.value).to eq(0)
+    end
+  end
+
+  context 'when redefining a type' do
+    it 'accumulates members across type reopenings like Ruby' do
+      type User
+        var name = null
+      end
+
+      type User
+        fn set_name(value)
+          name = value
+        end
+      end
+
+      var u = User.new
+      u.set_name 'andrey'
+
+      expect(u.name).to eq('andrey')
+    end
+  end
 end
