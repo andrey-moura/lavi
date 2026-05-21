@@ -60,6 +60,11 @@ namespace andy
             /// @param fn The function name.
             /// @return Returns a shared pointer to the object.
             std::shared_ptr<andy::lang::object> call(andy::lang::interpreter* interpreter, std::string_view function_name, std::shared_ptr<andy::lang::object> object, std::vector<std::shared_ptr<andy::lang::object>> positional_params = {});
+            /// @brief Yield a value to the caller block.
+            /// @param interpreter The interpreter.
+            /// @param value The value to yield.
+            /// @return Returns the value sent by the caller block.
+            std::shared_ptr<andy::lang::object> yield(andy::lang::interpreter* interpreter, std::vector<std::shared_ptr<andy::lang::object>> position_params = {}, std::map<std::string, std::shared_ptr<andy::lang::object>> named_params = {});
             /// @brief Creates the object with a value and automatically determines the class.
             /// @tparam T The type of the value.
             /// @param interpreter The interpreter.
@@ -131,11 +136,6 @@ namespace andy
                     throw std::runtime_error("Unsupported type for to_object: " + std::string(typeid(T).name()));
                 }
             }
-            /// @brief Checks if the object is present (not null, not false, not empty string, etc.).
-            /// @param interpreter The interpreter.
-            /// @param obj The object to check.
-            /// @return Returns true if the object is present, false otherwise.
-            bool is_present(andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::object> obj);
             /// @brief Checks if the object is truthy (not null and not false).
             /// @param interpreter The interpreter.
             /// @param obj The object to check.

@@ -929,6 +929,26 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_yield(const
     stack.push_back(ctx);
     update_current_context();
 
+    auto* fn_params_definition_node = block->child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params);
+
+    if(fn_params_definition_node) {
+        auto* fn_params_call_node = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params);
+
+        for(size_t i = 0; i < fn_params_definition_node->childrens().size(); i++) {
+            auto& param_definition = fn_params_definition_node->childrens()[i];
+            std::shared_ptr<andy::lang::object> value = nullptr;
+
+            if(fn_params_call_node && i < fn_params_call_node->childrens().size()) {
+                auto& param_call = fn_params_call_node->childrens()[i];
+                value = execute(param_call);
+            } else {
+                value = std::make_shared<andy::lang::object>(NullClass);
+            }
+
+            current_context->variables[param_definition.token().content] = value;
+        }
+    }
+
     std::shared_ptr<andy::lang::object> ret = execute(*block->block());
     pop_context();
     return ret;

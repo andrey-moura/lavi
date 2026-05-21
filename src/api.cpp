@@ -136,14 +136,40 @@ namespace andy
                 return ret;
             }
 
-            bool is_present(andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::object> obj)
+            std::shared_ptr<andy::lang::object> yield(andy::lang::interpreter* interpreter, std::vector<std::shared_ptr<andy::lang::object>> position_params, std::map<std::string, std::shared_ptr<andy::lang::object>> named_params)
             {
-                if(!obj) {
-                    return false;
+                auto* block = interpreter->current_context->given_block;
+
+                if(!block) {
+                    throw std::runtime_error("No block given to yield to");
                 }
 
-                auto ret = call(interpreter, "present?", obj);
-                return cast_object_to<bool>(interpreter, std::move(ret));
+                auto ctx = std::make_shared<andy::lang::interpreter_context>();
+                ctx->is_block_context = true;
+                ctx->lexical_parent = interpreter->current_context->given_block_lexical_context;
+                interpreter->stack.push_back(ctx);
+                interpreter->update_current_context();
+
+                auto fn_params_definition_node = block->child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params);
+
+                if(fn_params_definition_node) {
+                    for(size_t i = 0; i < position_params.size(); ++i)
+                    {
+                        if(i >= fn_params_definition_node->childrens().size()) {
+                            break;
+                        }
+
+                        auto* param_node = &fn_params_definition_node->childrens()[i];
+
+                        interpreter->current_context->variables[param_node->token().content] = position_params[i];
+                    }
+                }
+
+                std::shared_ptr<andy::lang::object> ret = interpreter->execute(*block->block());
+
+                interpreter->pop_context();
+
+                return ret;
             }
 
             bool is_truthy(andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::object> obj)
