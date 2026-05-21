@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <list>
 
 #include <andy/file.hpp>
 #include <andy/lang/api.hpp>
@@ -16,8 +17,8 @@ std::shared_ptr<andy::lang::structure> create_directory_class(andy::lang::interp
         return nullptr;
     });
 
-        DirectoryClass->instance_functions["glob"] = std::make_shared<andy::lang::function>("glob", std::initializer_list<std::string>{"pattern"}, [](andy::lang::interpreter* interpreter) {
-        std::filesystem::path& path = interpreter->current_context->self->as<std::filesystem::path>();
+    DirectoryClass->instance_functions["glob"] = std::make_shared<andy::lang::function>("glob", std::initializer_list<std::string>{"pattern"}, [](andy::lang::interpreter* interpreter) {
+        std::filesystem::path& root_path = interpreter->current_context->self->as<std::filesystem::path>();
 #ifdef _WIN32
         std::string pattern = interpreter->current_context->positional_params[0]->as<std::string>();
         std::replace(pattern.begin(), pattern.end(), '/', '\\');
@@ -28,20 +29,74 @@ std::shared_ptr<andy::lang::structure> create_directory_class(andy::lang::interp
         std::vector<std::shared_ptr<andy::lang::object>> results;
 
         std::string_view pattern_view(pattern);
-        size_t star_pos = pattern_view.find('*');
-        std::string_view dir_part = pattern_view.substr(0, star_pos);
-        std::string_view suffix_part = pattern_view.substr(star_pos + 1);
 
-        for(auto& entry : std::filesystem::directory_iterator(path / dir_part)) {
-            const std::filesystem::path& entry_path = entry.path();
-            if(std::filesystem::is_regular_file(entry_path)) {
-                std::filesystem::path relative_entry_path = std::filesystem::relative(entry_path, path);
-                std::string entry_path_str = relative_entry_path.string();
-                if(entry_path_str.starts_with(dir_part) && entry_path_str.ends_with(suffix_part)) {
-                    results.push_back(andy::lang::api::to_object(interpreter, std::move(std::filesystem::path(entry_path))));
+        std::vector<std::string_view> parts;
+        parts.reserve(pattern_view.size() / 8); // average file name length is 8, so this is a good estimation
+
+        while(pattern_view.size()) {
+            size_t pos = pattern_view.find('/');
+
+            if(pos == std::string_view::npos) {
+                parts.push_back(pattern_view.substr(0, pattern_view.size()));
+                break;
+            } else {
+                parts.push_back(pattern_view.substr(0, pos));
+            }
+
+            pattern_view.remove_prefix(pos + 1);
+        }
+
+        std::function<void(std::filesystem::path)> recurse;
+        int current_level = -1;
+        
+        recurse = [&](std::filesystem::path current_path) {
+            current_level++;
+            std::string_view current_matching_part = parts[current_level];
+            bool should_enter_any_directory = false;
+            bool shoud_start_matching_files = false;
+            if(current_level == parts.size() - 1)
+            {
+                shoud_start_matching_files = true;
+
+                if(current_matching_part.starts_with('*')) {
+                    current_matching_part.remove_prefix(1);
                 }
             }
-        }
+            if(current_matching_part == "**") {
+                should_enter_any_directory = true;
+            }
+
+            for(auto& entry : std::filesystem::directory_iterator(current_path)) {
+                const std::filesystem::path& entry_path = entry.path();
+                std::filesystem::path relative_path = std::filesystem::relative(entry_path, current_path);
+                if(entry.is_directory()) {
+                    bool should_enter_directory = false;
+                    if(!should_enter_any_directory) {
+                        if(relative_path == current_matching_part) {
+                            should_enter_directory = true;
+                        }
+                    }
+
+                    if(should_enter_any_directory) {
+                        should_enter_directory = true;
+                    }
+                    if(should_enter_directory) {
+                        recurse(entry_path);
+                    }
+
+                } else if(shoud_start_matching_files && entry.is_regular_file()) {
+                    if(relative_path.filename().string().ends_with(current_matching_part)) {
+                        results.push_back(andy::lang::object::instantiate(interpreter, interpreter->PathClass, std::move(entry_path)));
+                    }
+                }
+            }
+
+            should_enter_any_directory = false;
+            shoud_start_matching_files = false;
+            current_level--;
+        };
+
+        recurse(root_path);
 
         return andy::lang::object::instantiate(interpreter, interpreter->ArrayClass, std::move(results));
     });
