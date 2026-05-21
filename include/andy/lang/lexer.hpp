@@ -6,7 +6,7 @@
 #include <string_view>
 #include <memory>
 
-namespace andy
+namespace lavi
 {
     namespace lang
     {
@@ -110,15 +110,15 @@ namespace andy
                 token_kind kind;
                 size_t index;
             public:
-                andy::lang::lexer::token& operator=(const andy::lang::lexer::token& other) = default;
+                lavi::lang::lexer::token& operator=(const lavi::lang::lexer::token& other) = default;
             };
         protected:
             std::string m_source;
             std::shared_ptr<std::string> m_file_name;
 
             std::vector<std::string> m_includes;            
-            std::vector<andy::lang::lexer::token> m_tokens;
-            std::vector<andy::lang::lexer::token> m_unreachable_tokens;
+            std::vector<lavi::lang::lexer::token> m_tokens;
+            std::vector<lavi::lang::lexer::token> m_unreachable_tokens;
             
             // iterating
             std::string_view m_current;
@@ -188,19 +188,19 @@ namespace andy
             void consume_token();
             /// @brief Return the next token and increment the iterator.
             /// @return The next token.
-            andy::lang::lexer::token& next_token();
+            lavi::lang::lexer::token& next_token();
             /// @brief Return the next token without incrementing the iterator.
-            const andy::lang::lexer::token& see_next(int offset = 0) const;
+            const lavi::lang::lexer::token& see_next(int offset = 0) const;
             /// @brief Return the previous token without incrementing the iterator.
             /// @param offset The offset from the current iterator.
             /// @return The previous token.
-            const andy::lang::lexer::token& see_previous(int offset = 0) const;
+            const lavi::lang::lexer::token& see_previous(int offset = 0) const;
             /// @brief Decrement the iterator and return the next token.
             /// @return The previous token.
-            const andy::lang::lexer::token& previous_token();
+            const lavi::lang::lexer::token& previous_token();
             /// @brief The current token.
             /// @return The current token.
-            const andy::lang::lexer::token& current_token() const { return m_tokens[iterator-1]; }
+            const lavi::lang::lexer::token& current_token() const { return m_tokens[iterator-1]; }
             bool has_previous_token(int offset = 0) const { return iterator > offset; }
             /// @brief Rollback the token iterator. The next call to next_token will return the same token.
             void rollback_token();
@@ -218,13 +218,13 @@ namespace andy
             void erase_eof();
             /// @brief The tokens.
             /// @return The tokens.
-            const std::vector<andy::lang::lexer::token>& tokens() const { return m_tokens; }
+            const std::vector<lavi::lang::lexer::token>& tokens() const { return m_tokens; }
             /// @brief  The unreachable tokens. These tokens are ignored by the parser and the analyzer.
             /// @return The unreachable tokens.
-            const std::vector<andy::lang::lexer::token>& unreachable_tokens() const { return m_unreachable_tokens; }
+            const std::vector<lavi::lang::lexer::token>& unreachable_tokens() const { return m_unreachable_tokens; }
         protected:
         public:
-            //extern std::vector<std::pair<std::string_view, andy::lang::lexer::cursor_type>> cursor_type_from_string_map;
+            //extern std::vector<std::pair<std::string_view, lavi::lang::lexer::cursor_type>> cursor_type_from_string_map;
         };
     };
-}; // namespace andy
+}; // namespace lavi

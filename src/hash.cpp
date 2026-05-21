@@ -2,7 +2,7 @@
 
 #include <andy/lang/api.hpp>
 
-andy::lang::hash::hash(andy::lang::interpreter* interpreter)
+lavi::lang::hash::hash(lavi::lang::interpreter* interpreter)
     : interpreter(interpreter),
       values(0, hasher{interpreter}, equal_hash_key{interpreter})
 {
@@ -21,14 +21,14 @@ auto equal_hash_key::operator()(const hash_key& a, const hash_key& b) const -> b
         return false;
     }
 
-    auto ret = andy::lang::api::call(interpreter, "==", a.key->shared_from_this(), { b.key->shared_from_this() });
+    auto ret = lavi::lang::api::call(interpreter, "==", a.key->shared_from_this(), { b.key->shared_from_this() });
 
-    return andy::lang::api::is_truthy(interpreter, ret);
+    return lavi::lang::api::is_truthy(interpreter, ret);
 }
 
-void andy::lang::hash::set(const std::shared_ptr<object>& key, const std::shared_ptr<object>& value)
+void lavi::lang::hash::set(const std::shared_ptr<object>& key, const std::shared_ptr<object>& value)
 {
-    auto hash = andy::lang::api::call(interpreter, "hash", key);
+    auto hash = lavi::lang::api::call(interpreter, "hash", key);
 
     int hash_value = hash->as<int>();
 
@@ -44,9 +44,9 @@ void andy::lang::hash::set(const std::shared_ptr<object>& key, const std::shared
     }
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::hash::get(const std::shared_ptr<andy::lang::object>& key) const
+std::shared_ptr<lavi::lang::object> lavi::lang::hash::get(const std::shared_ptr<lavi::lang::object>& key) const
 {
-    auto hash = andy::lang::api::call(interpreter, "hash", key);
+    auto hash = lavi::lang::api::call(interpreter, "hash", key);
 
     int hash_value = hash->as<int>();
 
@@ -57,11 +57,11 @@ std::shared_ptr<andy::lang::object> andy::lang::hash::get(const std::shared_ptr<
     if(it != values.end()) {
         return it->second;
     } else {
-        return andy::lang::object::instantiate(interpreter, interpreter->NullClass);
+        return lavi::lang::object::instantiate(interpreter, interpreter->NullClass);
     }
 }
 
-bool andy::lang::hash::empty() const
+bool lavi::lang::hash::empty() const
 {
     return values.empty();
 }

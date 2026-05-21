@@ -6,31 +6,31 @@
 
 
 #define UNARY_OPERATOR_INLINE(op, T) \
-    [](andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::object>& object, const andy::lang::parser::ast_node& source_code) { \
+    [](lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object>& object, const lavi::lang::parser::ast_node& source_code) { \
         T& value = object->as<T>(); \
         value op; \
         return object; \
     }
 
 #define BINARY_ASSIGNMENT_OPERATOR_INLINE(op, T) \
-    [](andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::object>& object, const andy::lang::parser::ast_node& source_code) { \
-        const auto* params_node = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params); \
+    [](lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object>& object, const lavi::lang::parser::ast_node& source_code) { \
+        const auto* params_node = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params); \
         if (!params_node || params_node->childrens().size() != 1) { \
             throw std::runtime_error(std::string(object->cls->name) + "::operator " #op " requires exactly one parameter"); \
         } \
         const auto& param = params_node->childrens()[0]; \
         T& value = object->as<T>(); \
-        if (param.type() != andy::lang::parser::ast_node_type::ast_node_valuedecl || param.token().type != andy::lang::lexer::token_type::token_literal) { \
+        if (param.type() != lavi::lang::parser::ast_node_type::ast_node_valuedecl || param.token().type != lavi::lang::lexer::token_type::token_literal) { \
             throw std::runtime_error(std::string(object->cls->name) + "::operator " #op " requires a numeric literal"); \
         } \
         switch(param.token().kind) { \
-        case andy::lang::lexer::token_kind::token_integer: \
+        case lavi::lang::lexer::token_kind::token_integer: \
             value op param.token().integer_literal; \
             break; \
-        case andy::lang::lexer::token_kind::token_float: \
+        case lavi::lang::lexer::token_kind::token_float: \
             value op param.token().float_literal; \
             break; \
-        case andy::lang::lexer::token_kind::token_double: \
+        case lavi::lang::lexer::token_kind::token_double: \
             value op param.token().double_literal; \
             break; \
         default: \
@@ -39,68 +39,68 @@
         return object; \
     }
 #define BINARY_COMPARISON_OPERATOR_INLINE(op, T) \
-    [](andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::object>& object, const andy::lang::parser::ast_node& source_code) { \
-        const auto* params_node = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params); \
+    [](lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object>& object, const lavi::lang::parser::ast_node& source_code) { \
+        const auto* params_node = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params); \
         if (!params_node || params_node->childrens().size() != 1) { \
             throw std::runtime_error(std::string(object->cls->name) + "::operator " #op " requires exactly one parameter"); \
         } \
         const auto& param = params_node->childrens()[0]; \
         T& value = object->as<T>(); \
         bool comparison_result = false; \
-        if (param.type() != andy::lang::parser::ast_node_type::ast_node_valuedecl || param.token().type != andy::lang::lexer::token_type::token_literal) { \
+        if (param.type() != lavi::lang::parser::ast_node_type::ast_node_valuedecl || param.token().type != lavi::lang::lexer::token_type::token_literal) { \
             throw std::runtime_error(std::string(object->cls->name) + "::operator " #op " requires a numeric literal"); \
         } \
         switch(param.token().kind) { \
-        case andy::lang::lexer::token_kind::token_integer: \
+        case lavi::lang::lexer::token_kind::token_integer: \
             comparison_result = value op param.token().integer_literal; \
             break; \
-        case andy::lang::lexer::token_kind::token_float: \
+        case lavi::lang::lexer::token_kind::token_float: \
             comparison_result = value op param.token().float_literal; \
             break; \
-        case andy::lang::lexer::token_kind::token_double: \
+        case lavi::lang::lexer::token_kind::token_double: \
             comparison_result = value op param.token().double_literal; \
             break; \
         default: \
             throw std::runtime_error(std::string(object->cls->name) + "::operator " #op " requires a numeric literal"); \
         } \
-        return andy::lang::api::to_object(interpreter, comparison_result); \
+        return lavi::lang::api::to_object(interpreter, comparison_result); \
     }
 #define BINARY_ARITHMETIC_OPERATOR_INLINE(op, T) \
-    [](andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::object>& object, const andy::lang::parser::ast_node& source_code) { \
-        const auto* params_node = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params); \
+    [](lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object>& object, const lavi::lang::parser::ast_node& source_code) { \
+        const auto* params_node = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params); \
         if (!params_node || params_node->childrens().size() != 1) { \
             throw std::runtime_error(std::string(object->cls->name) + "::operator " #op " requires exactly one parameter"); \
         } \
         const auto& param = params_node->childrens()[0]; \
         T value = object->as<T>(); \
-        if (param.type() != andy::lang::parser::ast_node_type::ast_node_valuedecl || param.token().type != andy::lang::lexer::token_type::token_literal) { \
+        if (param.type() != lavi::lang::parser::ast_node_type::ast_node_valuedecl || param.token().type != lavi::lang::lexer::token_type::token_literal) { \
             throw std::runtime_error(std::string(object->cls->name) + "::operator " #op " requires a numeric literal"); \
         } \
         switch(param.token().kind) { \
-        case andy::lang::lexer::token_kind::token_integer: \
+        case lavi::lang::lexer::token_kind::token_integer: \
             value = value op param.token().integer_literal; \
             break; \
-        case andy::lang::lexer::token_kind::token_float: \
+        case lavi::lang::lexer::token_kind::token_float: \
             value = value op param.token().float_literal; \
             break; \
-        case andy::lang::lexer::token_kind::token_double: \
+        case lavi::lang::lexer::token_kind::token_double: \
             value = value op param.token().double_literal; \
             break; \
         default: \
             throw std::runtime_error(std::string(object->cls->name) + "::operator " #op " requires a numeric literal"); \
         } \
-        return andy::lang::object::instantiate(interpreter, object->cls, value); \
+        return lavi::lang::object::instantiate(interpreter, object->cls, value); \
     }
 
 #define UNARY_OPERATOR(op, T) \
-    andy::lang::function(#op, [](andy::lang::interpreter* interpreter) { \
+    lavi::lang::function(#op, [](lavi::lang::interpreter* interpreter) { \
         T& value = interpreter->current_context->self->as<T>(); \
         value op; \
         return interpreter->current_context->self->shared_from_this(); \
     })
 
 #define BINARY_ASSIGNMENT_OPERATOR(op, T) \
-    andy::lang::function(#op, { "other" }, [](andy::lang::interpreter* interpreter) { \
+    lavi::lang::function(#op, { "other" }, [](lavi::lang::interpreter* interpreter) { \
         const auto& params = interpreter->current_context->positional_params; \
         T& value = interpreter->current_context->self->as<T>(); \
         auto& param = params[0]; \
@@ -117,9 +117,9 @@
     })
 
 #define BINARY_COMPARISON_OPERATOR(op, T) \
-    andy::lang::function(#op, { "other" }, [](andy::lang::interpreter* interpreter) { \
+    lavi::lang::function(#op, { "other" }, [](lavi::lang::interpreter* interpreter) { \
         const auto& params = interpreter->current_context->positional_params; \
-        std::shared_ptr<andy::lang::object> other = params[0]; \
+        std::shared_ptr<lavi::lang::object> other = params[0]; \
         T& value = interpreter->current_context->self->as<T>(); \
         bool comparison_result = false; \
         if (params[0]->cls == interpreter->IntegerClass) { \
@@ -131,11 +131,11 @@
         } else { \
             throw std::runtime_error("undefined operator " #op " (" + std::string(interpreter->current_context->self->cls->name) + ", " + std::string(params[0]->cls->name) + ")"); \
         } \
-        return andy::lang::api::to_object(interpreter, comparison_result); \
+        return lavi::lang::api::to_object(interpreter, comparison_result); \
     })
 
 #define BINARY_ARITHMETIC_OPERATOR(op, T) \
-    andy::lang::function(#op, { "other" }, [](andy::lang::interpreter* interpreter) { \
+    lavi::lang::function(#op, { "other" }, [](lavi::lang::interpreter* interpreter) { \
         auto object = interpreter->current_context->self->shared_from_this(); \
         auto other = interpreter->current_context->positional_params[0]; \
         const auto& params = interpreter->current_context->positional_params; \
@@ -149,17 +149,17 @@
         } else { \
             throw std::runtime_error("undefined operator " #op " (" + std::string(interpreter->current_context->self->cls->name) + ", " + std::string(params[0]->cls->name) + ")"); \
         } \
-        return andy::lang::object::instantiate(interpreter, object->cls, value); \
+        return lavi::lang::object::instantiate(interpreter, object->cls, value); \
     })
 
-namespace andy
+namespace lavi
 {
     namespace lang  
     {
         template<typename T>
-        void add_operators(std::shared_ptr<andy::lang::structure> cls, interpreter* interpreter)
+        void add_operators(std::shared_ptr<lavi::lang::structure> cls, interpreter* interpreter)
         {
-            std::map<std::string_view, andy::lang::inline_function> inline_functions = {
+            std::map<std::string_view, lavi::lang::inline_function> inline_functions = {
                 { "++", UNARY_OPERATOR_INLINE(++, T) },
                 { "--", UNARY_OPERATOR_INLINE(--, T) },
                 { "+=", BINARY_ASSIGNMENT_OPERATOR_INLINE(+=, T) },
@@ -177,7 +177,7 @@ namespace andy
                 { "*",  BINARY_ARITHMETIC_OPERATOR_INLINE(*, T)  },
                 { "/",  BINARY_ARITHMETIC_OPERATOR_INLINE(/, T)  }
             };
-            std::map<std::string_view, andy::lang::function> instance_functions = {
+            std::map<std::string_view, lavi::lang::function> instance_functions = {
                 { "++", UNARY_OPERATOR(++, T) },
                 { "--", UNARY_OPERATOR(--, T) },
                 { "+=", BINARY_ASSIGNMENT_OPERATOR(+=, T) },
@@ -196,7 +196,7 @@ namespace andy
                 { "/",  BINARY_ARITHMETIC_OPERATOR(/, T)  },
             };
             if constexpr (std::is_same_v<T, int>) {
-                cls->instance_functions["%"] = std::make_shared<andy::lang::function>("%", std::initializer_list<std::string>{ "other" }, [](andy::lang::interpreter* interpreter) {
+                cls->instance_functions["%"] = std::make_shared<lavi::lang::function>("%", std::initializer_list<std::string>{ "other" }, [](lavi::lang::interpreter* interpreter) {
                     auto object = interpreter->current_context->self->shared_from_this();
                     auto other = interpreter->current_context->positional_params[0];
                     if(other->cls != interpreter->IntegerClass) {
@@ -204,29 +204,29 @@ namespace andy
                     }
                     int value = object->as<int>();
                     value %= other->as<int>();
-                    return andy::lang::object::create(interpreter, object->cls, value);
+                    return lavi::lang::object::create(interpreter, object->cls, value);
                 });
-                cls->instance_inline_functions["%"] = std::make_shared<andy::lang::inline_function>([](andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::object>& object, const andy::lang::parser::ast_node& source_code) {
-                    const auto* params_node = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params);
+                cls->instance_inline_functions["%"] = std::make_shared<lavi::lang::inline_function>([](lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object>& object, const lavi::lang::parser::ast_node& source_code) {
+                    const auto* params_node = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params);
                     if (!params_node || params_node->childrens().size() != 1) {
                         throw std::runtime_error(std::string(object->cls->name) + "::operator % requires exactly one parameter");
                     }
                     const auto& other = params_node->childrens()[0];
-                    if(other.type() != andy::lang::parser::ast_node_type::ast_node_valuedecl ||
-                       other.token().type != andy::lang::lexer::token_type::token_literal ||
-                       other.token().kind != andy::lang::lexer::token_kind::token_integer) {
+                    if(other.type() != lavi::lang::parser::ast_node_type::ast_node_valuedecl ||
+                       other.token().type != lavi::lang::lexer::token_type::token_literal ||
+                       other.token().kind != lavi::lang::lexer::token_kind::token_integer) {
                         throw std::runtime_error(std::string(object->cls->name) + "::operator % requires an integer literal");
                     }
                     int value = object->as<int>();
                     value %= other.token().integer_literal;
-                    return andy::lang::object::create(interpreter, object->cls, value);
+                    return lavi::lang::object::create(interpreter, object->cls, value);
                 });
             }
             for(auto& [name, func_ptr] : inline_functions) {
-                cls->instance_inline_functions[name] = std::make_shared<andy::lang::inline_function>(func_ptr);
+                cls->instance_inline_functions[name] = std::make_shared<lavi::lang::inline_function>(func_ptr);
             }
             for(auto& [name, func] : instance_functions) {
-                cls->instance_functions[name] = std::make_shared<andy::lang::function>(std::move(func));
+                cls->instance_functions[name] = std::make_shared<lavi::lang::function>(std::move(func));
             }
         }
     };

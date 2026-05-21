@@ -15,7 +15,7 @@
 int main(int argc, char** argv) {
     try {
         std::filesystem::path andy_executable_path = argv[0];
-        //vm_instance = std::make_shared<andy::lang::vm>();
+        //vm_instance = std::make_shared<lavi::lang::vm>();
 
         std::filesystem::path file_path;
 
@@ -27,17 +27,17 @@ int main(int argc, char** argv) {
                     std::cout << "Usage: " << argv[0] << " [file]" << std::endl;
                     std::cout << std::endl;
                     std::cout << "Options: " << std::endl;
-                    andy::console::print_warning("  --help");
+                    lavi::console::print_warning("  --help");
                     std::cout << "     Display this information" << std::endl;
-                    andy::console::print_warning("  --version");
+                    lavi::console::print_warning("  --version");
                     std::cout << "  Display the version of the andy language" << std::endl;
                     return 0;
                 } else if(arg == "--version") {
-                    std::cout << ANDYLANG_VERSION << std::endl;
+                    std::cout << LAVI_VERSION << std::endl;
                     return 0;
                 } else {
                     arg.remove_prefix(2);
-                    file_path = andy::lang::config::src_dir() / "utility" / arg;
+                    file_path = lavi::lang::config::src_dir() / "utility" / arg;
                     file_path.replace_extension(".andy");
 
                     if(!std::filesystem::exists(file_path)) {
@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
             }
         }
 
-        std::shared_ptr<andy::lang::object> ret = andy::lang::api::evaluate(file_path, argc, argv);
+        std::shared_ptr<lavi::lang::object> ret = lavi::lang::api::evaluate(file_path, argc, argv);
 
         if(!ret) {
             return 0;
@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
         }
         
     } catch (const std::exception& e) {
-        andy::console::log_error(e.what());
+        lavi::console::log_error(e.what());
         return 1;
     }
 

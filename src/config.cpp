@@ -1,6 +1,6 @@
 #include <andy/lang/config.hpp>
 
-namespace andy
+namespace lavi
 {
     namespace lang
     {
@@ -10,7 +10,7 @@ namespace andy
             {
                 std::filesystem::path src_dir;
 #ifdef __ANDY_DEBUG__
-                return std::filesystem::absolute(ANDYLANG_PROJECT_DIR);
+                return std::filesystem::absolute(LAVI_PROJECT_DIR);
 #endif
 #ifdef __linux__
                 src_dir = std::filesystem::path("/usr/local/src/andy-lang");

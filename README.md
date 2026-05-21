@@ -1,10 +1,10 @@
 <p align="center">
-    <img src="resources/andy.svg" alt="Alt Text" style="width:200px; height:200px;">
+    <img src="resources/lavi.svg" alt="Alt Text" style="width:200px; height:200px;">
 </p>
 
-# The Andy programming language
+# Lavi programming language
 
-Andy is an interpreted object-oriented multi-purpose programming language
+An interpreted object-oriented multi-purpose programming language
 
 ## Table of Contents
 * [Examples](#Examples)
@@ -19,7 +19,7 @@ Andy is an interpreted object-oriented multi-purpose programming language
 If you want to run examples, try:
 
 ```sh
-    andy examples/minimal.andy
+    lavi examples/minimal.lv
 ```
 
 This file has the content:
@@ -40,32 +40,32 @@ The result is:
 
 Environment | Build
 --- | --- |
-Ubuntu 22.04 | [![Ubuntu 22.04](https://github.com/andrey-moura/andy-lang/actions/workflows/build-ubuntu-22.04.yml/badge.svg?cache-control=no-cache)](https://github.com/andrey-moura/andy-lang/actions/workflows/build-ubuntu-22.04.yml)
-Ubuntu 24.04 | [![Ubuntu 24.04](https://github.com/andrey-moura/andy-lang/actions/workflows/build-ubuntu-24.04.yml/badge.svg?cache-control=no-cache)](https://github.com/andrey-moura/andy-lang/actions/workflows/build-ubuntu-24.04.yml)
-Windows Server 2022 | [![Windows Server 2022](https://github.com/andrey-moura/andy-lang/actions/workflows/build-windows-2022.yml/badge.svg?cache-control=no-cache)](https://github.com/andrey-moura/andy-lang/actions/workflows/build-windows-2022.yml)
-WebAssembly | [![WebAssembly](https://github.com/andrey-moura/andy-lang/actions/workflows/build-wasm.yml/badge.svg?cache-control=no-cache)](https://github.com/andrey-moura/andy-lang/actions/workflows/build-wasm.yml)
+Ubuntu 22.04 | [![Ubuntu 22.04](https://github.com/andrey-moura/lavi/actions/workflows/build-ubuntu-22.04.yml/badge.svg?cache-control=no-cache)](https://github.com/andrey-moura/lavi/actions/workflows/build-ubuntu-22.04.yml)
+Ubuntu 24.04 | [![Ubuntu 24.04](https://github.com/andrey-moura/lavi/actions/workflows/build-ubuntu-24.04.yml/badge.svg?cache-control=no-cache)](https://github.com/andrey-moura/lavi/actions/workflows/build-ubuntu-24.04.yml)
+Windows Server 2022 | [![Windows Server 2022](https://github.com/andrey-moura/lavi/actions/workflows/build-windows-2022.yml/badge.svg?cache-control=no-cache)](https://github.com/andrey-moura/lavi/actions/workflows/build-windows-2022.yml)
+WebAssembly | [![WebAssembly](https://github.com/andrey-moura/lavi/actions/workflows/build-wasm.yml/badge.svg?cache-control=no-cache)](https://github.com/andrey-moura/lavi/actions/workflows/build-wasm.yml)
 
 ## Install
 
-### Installation from andy-lang.org
+### Installation from lavi.org
 #### Under Linux
 ```sh
-    wget --content-disposition andy-lang.org/releases/andy-lang/latest
-    sudo dpkg -i andy-lang-x.x.x.deb
+    wget --content-disposition lavi.org/releases/lavi/latest
+    sudo dpkg -i lavi-x.x.x.deb
 ```
 #### Under Windows
 
-Download https://andy-lang.org/releases/andy-lang-installer/latest and run it.
+Download https://lavi.org/releases/lavi-installer/latest and run it.
 
 ### Install VSCode extension
-Download the VSIX file from the https://andy-lang.org/releases/andy-lang-vscode/latest and follow the instructions available in the [Install from a VSIX](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_install-from-a-vsix).
+Download the VSIX file from the https://lavi.org/releases/lavi-vscode/latest and follow the instructions available in the [Install from a VSIX](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_install-from-a-vsix).
 
 ## Building
 On Linux or Windows Developer Command Prompt
 
 ```sh
-    git clone https://github.com/andrey-moura/andy-lang --recursive
-    cd andy-lang
+    git clone https://github.com/andrey-moura/lavi --recursive
+    cd lavi
     cmake -DCMAKE_BUILD_TYPE=Release -B build .
     cmake --build build --config Release --parallel
 ```
@@ -77,4 +77,5 @@ After building, run as sudo on Linux or with an Administrator Command Prompt on 
 ```
 
 ### Building with UI enabled
+
 The UI is enabled by default.

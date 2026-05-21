@@ -2,11 +2,11 @@
 #include "andy/lang/interpreter.hpp"
 #include "andy/lang/api.hpp"
 
-std::shared_ptr<andy::lang::structure> create_class_class(andy::lang::interpreter* interpreter)
+std::shared_ptr<lavi::lang::structure> create_class_class(lavi::lang::interpreter* interpreter)
 {
-    auto cls = std::make_shared<andy::lang::structure>("Class");
+    auto cls = std::make_shared<lavi::lang::structure>("Class");
 
-    cls->instance_functions["init"] = std::make_shared<andy::lang::function>("init", std::initializer_list<std::string>{ "class_name" }, [](andy::lang::interpreter* interpreter) {
+    cls->instance_functions["init"] = std::make_shared<lavi::lang::function>("init", std::initializer_list<std::string>{ "class_name" }, [](lavi::lang::interpreter* interpreter) {
         auto object = interpreter->current_context->self;
         auto& params = interpreter->current_context->positional_params;
         if(params.size() == 1) {
@@ -19,10 +19,10 @@ std::shared_ptr<andy::lang::structure> create_class_class(andy::lang::interprete
             }
 
             object->variables["name"] = params[0];
-            object->set_native<std::shared_ptr<andy::lang::structure>>(cls);
+            object->set_native<std::shared_ptr<lavi::lang::structure>>(cls);
         } else {
             // Called from interpreter
-            object->variables["name"] = andy::lang::api::to_object(interpreter, object->as<std::shared_ptr<andy::lang::structure>>()->name);
+            object->variables["name"] = lavi::lang::api::to_object(interpreter, object->as<std::shared_ptr<lavi::lang::structure>>()->name);
         }
         return nullptr;
     });

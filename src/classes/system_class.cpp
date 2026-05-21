@@ -3,9 +3,9 @@
 #include <andy/lang/extension.hpp>
 #include <andy/lang/api.hpp>
 
-std::shared_ptr<andy::lang::structure> create_system_class(andy::lang::interpreter* interpreter)
+std::shared_ptr<lavi::lang::structure> create_system_class(lavi::lang::interpreter* interpreter)
 {
-    auto SystemClass = std::make_shared<andy::lang::structure>("System");
+    auto SystemClass = std::make_shared<lavi::lang::structure>("System");
     std::string_view current_os_name;
 
     #ifdef _WIN32
@@ -18,18 +18,18 @@ std::shared_ptr<andy::lang::structure> create_system_class(andy::lang::interpret
         throw std::runtime_error("unsupported OS");
     #endif
 
-    SystemClass->variables["OS"] = andy::lang::api::to_object(interpreter, std::move(std::string(current_os_name)));
+    SystemClass->variables["OS"] = lavi::lang::api::to_object(interpreter, std::move(std::string(current_os_name)));
 
-    SystemClass->variables["windows?"]     = andy::lang::api::to_object(interpreter, false);
-    SystemClass->variables["linux?"]       = andy::lang::api::to_object(interpreter, false);
-    SystemClass->variables["web_assembly?"] = andy::lang::api::to_object(interpreter, false);
+    SystemClass->variables["windows?"]     = lavi::lang::api::to_object(interpreter, false);
+    SystemClass->variables["linux?"]       = lavi::lang::api::to_object(interpreter, false);
+    SystemClass->variables["web_assembly?"] = lavi::lang::api::to_object(interpreter, false);
 
 #ifdef _WIN32
-    SystemClass->variables["windows?"] = andy::lang::api::to_object(interpreter, true);
+    SystemClass->variables["windows?"] = lavi::lang::api::to_object(interpreter, true);
 #elif __linux__
-    SystemClass->variables["linux?"] = andy::lang::api::to_object(interpreter, true);
+    SystemClass->variables["linux?"] = lavi::lang::api::to_object(interpreter, true);
 #elif __wasm__
-    SystemClass->variables["web_assembly?"] = andy::lang::api::to_object(interpreter, true);
+    SystemClass->variables["web_assembly?"] = lavi::lang::api::to_object(interpreter, true);
 #endif
 
     return SystemClass;

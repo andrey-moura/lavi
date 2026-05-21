@@ -3,27 +3,27 @@
 
 #include <andy/console.hpp>
 
-extern std::shared_ptr<andy::lang::structure> create_false_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_andy_config_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_array_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_class_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_hash_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_directory_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_double_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_false_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_file_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_float_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_integer_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_null_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_path_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_string_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_system_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_true_class(andy::lang::interpreter*);
-extern std::shared_ptr<andy::lang::structure> create_function_class(andy::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_false_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_andy_config_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_class_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_hash_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_directory_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_double_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_false_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_file_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_float_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_integer_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_null_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_path_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_string_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_system_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_true_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_function_class(lavi::lang::interpreter*);
 
-void create_std_functions(andy::lang::interpreter*);
+void create_std_functions(lavi::lang::interpreter*);
 
-void andy::lang::structure::create_structures(andy::lang::interpreter* interpreter)
+void lavi::lang::structure::create_structures(lavi::lang::interpreter* interpreter)
 {
     interpreter->load(interpreter->FalseClass       = create_false_class       (interpreter) );
     interpreter->load(interpreter->TrueClass        = create_true_class        (interpreter) );
@@ -47,21 +47,21 @@ void andy::lang::structure::create_structures(andy::lang::interpreter* interpret
     create_std_functions(interpreter);
 }
 
-andy::lang::structure::structure(std::string_view __name, std::vector<andy::lang::function> __methods)
+lavi::lang::structure::structure(std::string_view __name, std::vector<lavi::lang::function> __methods)
     : name(std::move(__name)), interpreter_context()
 {
     for(auto& method : __methods) {
         if(method.storage_type == function_storage_type::class_function) {
-            functions[method.name] = std::make_shared<andy::lang::function>(std::move(method));
+            functions[method.name] = std::make_shared<lavi::lang::function>(std::move(method));
         } else {
-            instance_functions[method.name] = std::make_shared<andy::lang::function>(std::move(method));
+            instance_functions[method.name] = std::make_shared<lavi::lang::function>(std::move(method));
         }
     }
 
-    andy::console::log_debug("{}#Class created", name);
+    lavi::console::log_debug("{}#Class created", name);
 }
 
-andy::lang::structure::~structure()
+lavi::lang::structure::~structure()
 {
-    andy::console::log_debug("{}#Class destroyed", name);
+    lavi::console::log_debug("{}#Class destroyed", name);
 }

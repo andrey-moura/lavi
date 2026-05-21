@@ -15,20 +15,20 @@
 
 #include <andy/file.hpp>
 
-std::map<std::string_view, std::shared_ptr<andy::lang::extension>> andy::lang::extension::builtins;
+std::map<std::string_view, std::shared_ptr<lavi::lang::extension>> lavi::lang::extension::builtins;
 
-andy::lang::extension::extension(const std::string &name)
+lavi::lang::extension::extension(const std::string &name)
     : m_name(name)
 {
     
 }
 
-void andy::lang::extension::add_builtin(std::shared_ptr<andy::lang::extension> extension)
+void lavi::lang::extension::add_builtin(std::shared_ptr<lavi::lang::extension> extension)
 {
     builtins.insert({ extension->name(), extension });
 }
 
-andy::lang::extension* find_builtin(std::map<std::string_view, std::shared_ptr<andy::lang::extension>>& builtins, std::string_view module)
+lavi::lang::extension* find_builtin(std::map<std::string_view, std::shared_ptr<lavi::lang::extension>>& builtins, std::string_view module)
 {
     auto it = builtins.find(module);
     if(it != builtins.end()) {
@@ -38,12 +38,12 @@ andy::lang::extension* find_builtin(std::map<std::string_view, std::shared_ptr<a
 }
 
 std::filesystem::path find_module_path(
-    std::map<std::string_view, std::shared_ptr<andy::lang::extension>>& builtins,
+    std::map<std::string_view, std::shared_ptr<lavi::lang::extension>>& builtins,
     std::string_view module,
     std::filesystem::path& current_path
 )
 {
-    std::filesystem::path executable_path = andy::file::executable_path();
+    std::filesystem::path executable_path = lavi::file::executable_path();
     std::filesystem::path module_path = executable_path;
 
     std::string library_name = std::string(module);
@@ -76,7 +76,7 @@ std::filesystem::path find_module_path(
     return module_path;
 }
 
-bool andy::lang::extension::exists(std::filesystem::path current_dir, std::string_view module)
+bool lavi::lang::extension::exists(std::filesystem::path current_dir, std::string_view module)
 {
     auto it = builtins.find(module);
     if(it != builtins.end()) {
@@ -92,9 +92,9 @@ bool andy::lang::extension::exists(std::filesystem::path current_dir, std::strin
     return true;
 }
 
-void andy::lang::extension::import(andy::lang::interpreter* interpreter, std::string_view module)
+void lavi::lang::extension::import(lavi::lang::interpreter* interpreter, std::string_view module)
 {
-    andy::lang::extension* builtin = find_builtin(builtins, module);
+    lavi::lang::extension* builtin = find_builtin(builtins, module);
 
     interpreter->stack.push_back(interpreter->global_context);
     interpreter->update_current_context();
@@ -115,7 +115,7 @@ void andy::lang::extension::import(andy::lang::interpreter* interpreter, std::st
     std::string module_path_str = module_path.string();
     const char* module_path_c_str = module_path_str.c_str();
 
-    andy::lang::extension* (*create_extension)();
+    lavi::lang::extension* (*create_extension)();
 
 #ifdef __linux__
     void* handle = dlopen(module_path_c_str, RTLD_LAZY | RTLD_GLOBAL);
@@ -124,7 +124,7 @@ void andy::lang::extension::import(andy::lang::interpreter* interpreter, std::st
         throw std::runtime_error(dlerror());
     }
 
-    create_extension = (andy::lang::extension*(*)())dlsym(handle, "create_extension");
+    create_extension = (lavi::lang::extension*(*)())dlsym(handle, "create_extension");
 
     if(!create_extension) {
         throw std::runtime_error(dlerror());
@@ -136,7 +136,7 @@ void andy::lang::extension::import(andy::lang::interpreter* interpreter, std::st
         throw std::runtime_error("Failed to load library");
     }
 
-    create_extension = (andy::lang::extension*(*)())GetProcAddress(handle, "create_extension");
+    create_extension = (lavi::lang::extension*(*)())GetProcAddress(handle, "create_extension");
 
     if(!create_extension) {
         throw std::runtime_error("Failed to load symbol");
@@ -145,7 +145,7 @@ void andy::lang::extension::import(andy::lang::interpreter* interpreter, std::st
     throw std::runtime_error("unsupported platform");
 #endif
 
-    andy::lang::extension* extension = create_extension();
+    lavi::lang::extension* extension = create_extension();
 
     interpreter->load_extension(extension);
 

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cstdlib>
 
-void andy::lang::error::internal(std::string_view message)
+void lavi::lang::error::internal(std::string_view message)
 {
     std::cerr
         << "ANDY LANGUAGE INTERNAL ERROR!!!" << std::endl
