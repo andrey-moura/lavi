@@ -23,13 +23,14 @@ andy::lang::object::~object()
 
 const std::string& andy::lang::object::default_string_representation()
 {
-    if(string_representation_cache.empty()) {
-        if(cls) {
-            string_representation_cache += cls->name;
-            string_representation_cache.push_back('#');
-        }
-        string_representation_cache += std::to_string((uintptr_t)this);
+    string_representation_cache.clear();
+
+    if(cls) {
+        string_representation_cache += cls->name;
+        string_representation_cache.push_back('#');
     }
+
+    string_representation_cache += std::to_string((uintptr_t)this);
 
     return string_representation_cache;
 }

@@ -118,8 +118,8 @@ void andy::lang::interpreter::load(std::shared_ptr<andy::lang::structure> cls)
     if(inspect_instance_function == cls->instance_functions.end()) {
         cls->instance_functions["inspect"] = std::make_shared<andy::lang::function>("inspect", [cls, this](andy::lang::interpreter* interpreter) {
             auto object = interpreter->current_context->self;
-            std::string result = object->default_string_representation();
-            return andy::lang::api::to_object(interpreter, std::move(result));
+            std::string inspection = object->default_string_representation();
+            return andy::lang::api::to_object(interpreter, std::move(inspection));
         });
     }
 
