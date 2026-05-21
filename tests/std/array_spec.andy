@@ -1,0 +1,15 @@
+#include 'std/tests'
+
+describe 'array' do
+  describe 'map!' do
+    it 'modifies the array in place' do
+      var arr = [1, 2, 3]
+
+      arr.map! do(x)
+        x * 2
+      end
+
+      expect(arr).to eq([2, 4, 6])
+    end
+  end
+end

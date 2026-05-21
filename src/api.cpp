@@ -95,18 +95,40 @@ namespace andy
 
                 interpreter->current_context->positional_params = std::move(positional_params);
 
-                auto run_it = object->cls->instance_functions.find(function_name);
+                std::shared_ptr<andy::lang::function> function = nullptr;
 
-                if(run_it == object->cls->instance_functions.end()) {
-                    throw std::runtime_error("function '" + std::string(function_name) + "' is not defined in type " + std::string(object->cls->name));
+                if(interpreter->current_context->self)
+                {
+                    auto run_it = interpreter->current_context->cls->instance_functions.find(function_name);
+
+                    if(run_it != interpreter->current_context->cls->instance_functions.end()) {
+                        function = run_it->second;
+                    }
+                } else if(interpreter->current_context->cls)
+                {
+                    auto run_it = interpreter->current_context->cls->functions.find(function_name);
+
+                    if(run_it != interpreter->current_context->cls->functions.end()) {
+                        function = run_it->second;
+                    }
+                }
+
+                if(!function) {
+                    if(interpreter->current_context->self) {
+                        throw std::runtime_error("function '" + std::string(function_name) + "' is not defined in object of type " + std::string(interpreter->current_context->cls->name));
+                    } else if(interpreter->current_context->cls) {
+                        throw std::runtime_error("function '" + std::string(function_name) + "' is not defined in class " + std::string(interpreter->current_context->cls->name));
+                    } else {
+                        throw std::runtime_error("function '" + std::string(function_name) + "' is not defined in current context");
+                    }
                 }
 
                 std::shared_ptr<andy::lang::object> ret = nullptr;
 
-                if(run_it->second->block_ast.childrens().size()) {
-                    ret = interpreter->execute(run_it->second->block_ast);
-                } else if(run_it->second->native_function) {
-                    ret = run_it->second->native_function(interpreter);
+                if(function->block_ast.childrens().size()) {
+                    ret = interpreter->execute(function->block_ast);
+                } else if(function->native_function) {
+                    ret = function->native_function(interpreter);
                 }
 
                 interpreter->pop_context();
@@ -114,14 +136,40 @@ namespace andy
                 return ret;
             }
 
-            bool is_present(andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::object> obj)
+            std::shared_ptr<andy::lang::object> yield(andy::lang::interpreter* interpreter, std::vector<std::shared_ptr<andy::lang::object>> position_params, std::map<std::string, std::shared_ptr<andy::lang::object>> named_params)
             {
-                if(!obj) {
-                    return false;
+                auto* block = interpreter->current_context->given_block;
+
+                if(!block) {
+                    throw std::runtime_error("No block given to yield to");
                 }
 
-                auto ret = call(interpreter, "present?", obj);
-                return cast_object_to<bool>(interpreter, std::move(ret));
+                auto ctx = std::make_shared<andy::lang::interpreter_context>();
+                ctx->is_block_context = true;
+                ctx->lexical_parent = interpreter->current_context->given_block_lexical_context;
+                interpreter->stack.push_back(ctx);
+                interpreter->update_current_context();
+
+                auto fn_params_definition_node = block->child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params);
+
+                if(fn_params_definition_node) {
+                    for(size_t i = 0; i < position_params.size(); ++i)
+                    {
+                        if(i >= fn_params_definition_node->childrens().size()) {
+                            break;
+                        }
+
+                        auto* param_node = &fn_params_definition_node->childrens()[i];
+
+                        interpreter->current_context->variables[param_node->token().content] = position_params[i];
+                    }
+                }
+
+                std::shared_ptr<andy::lang::object> ret = interpreter->execute(*block->block());
+
+                interpreter->pop_context();
+
+                return ret;
             }
 
             bool is_truthy(andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::object> obj)

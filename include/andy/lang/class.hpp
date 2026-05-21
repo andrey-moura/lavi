@@ -11,7 +11,6 @@
 namespace andy {
     namespace lang {
         class object;
-        class method;
         class interpreter;
         class structure : public std::enable_shared_from_this<structure>, public interpreter_context
         {

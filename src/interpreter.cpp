@@ -9,6 +9,16 @@
 #include "andy/lang/lang.hpp"
 #include "andy/lang/api.hpp"
 
+struct andy_lang_runtime_exception {
+    andy_lang_runtime_exception(std::shared_ptr<andy::lang::object> exception_object)
+        : exception_object(std::move(exception_object))
+    {
+        
+    }
+    std::shared_ptr<andy::lang::object> exception_object;
+};
+
+
 andy::lang::function execute_method_definition(const andy::lang::parser::ast_node& class_child)
 {
     std::string_view method_name = class_child.decname();
@@ -64,12 +74,10 @@ void andy::lang::interpreter::load(std::shared_ptr<andy::lang::structure> cls)
         subclasses.reserve(cls->deriveds.size());
 
         for(auto& cls : cls->deriveds) {
-            std::vector<std::shared_ptr<andy::lang::object>> params = { andy::lang::object::create(this, StringClass, cls->name) };
-            auto c = andy::lang::object::instantiate(this, ClassClass, nullptr, params);
-            subclasses.push_back(c);
+            subclasses.push_back(andy::lang::api::to_object(interpreter, cls));
         }
 
-        return andy::lang::object::create(this, ArrayClass, std::move(subclasses));
+        return andy::lang::api::to_object(interpreter, std::move(subclasses));
     });
 
     auto to_string_instance_function = cls->instance_functions.find("to_string");
@@ -110,8 +118,16 @@ void andy::lang::interpreter::load(std::shared_ptr<andy::lang::structure> cls)
     if(inspect_instance_function == cls->instance_functions.end()) {
         cls->instance_functions["inspect"] = std::make_shared<andy::lang::function>("inspect", [cls, this](andy::lang::interpreter* interpreter) {
             auto object = interpreter->current_context->self;
-            std::string result = object->default_string_representation();
-            return andy::lang::api::to_object(interpreter, std::move(result));
+            std::string inspection = object->default_string_representation();
+            return andy::lang::api::to_object(interpreter, std::move(inspection));
+        });
+    }
+
+    auto to_string_function = cls->functions.find("to_string");
+
+    if(to_string_function == cls->functions.end()) {
+        cls->functions["to_string"] = std::make_shared<andy::lang::function>("to_string", [cls, this](andy::lang::interpreter* interpreter) {
+            return andy::lang::api::to_object(interpreter, cls->name);
         });
     }
 
@@ -200,7 +216,11 @@ static std::shared_ptr<andy::lang::structure> do_execute_classdecl(andy::lang::i
 {
     std::string_view class_name = source_code.decname();
 
-    auto cls = std::make_shared<andy::lang::structure>(class_name);
+    auto cls = interpreter->find_class(class_name);
+
+    if (!cls) {
+        cls = std::make_shared<andy::lang::structure>(class_name);
+    }
 
     auto baseclass_node = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_classdecl_base);
 
@@ -228,6 +248,8 @@ static std::shared_ptr<andy::lang::structure> do_execute_classdecl(andy::lang::i
         cls->base = base_class;
         base_class->deriveds.push_back(cls);
     }
+
+    interpreter->push_context_with_object(andy::lang::api::to_object(interpreter, cls));
 
     for(const auto& class_child : source_code.context()->childrens()) {
         switch (class_child.type())
@@ -291,6 +313,9 @@ static std::shared_ptr<andy::lang::structure> do_execute_classdecl(andy::lang::i
             break;
         }
     }
+
+    interpreter->pop_context();
+
     return cls;
 }
 
@@ -600,7 +625,7 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
             return self;
         }
 
-        current_context->given_block = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_context);
+        current_context->given_block = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_yield_block);
 
         if(method_to_call->block_ast.childrens().size()) {
             for(size_t i = 0; i < method_to_call->positional_params.size(); i++) {
@@ -891,6 +916,11 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_yield(const
 {
     // Previous block
     auto block = current_context->given_block;
+
+    if(!block) {
+        throw andy_lang_runtime_exception(andy::lang::api::to_object(this, "No block given to yield"));
+    }
+
     // Create a block context whose lexical_parent is the context where the DO...END block
     // was written (captured at call time), not where yield is being executed.
     auto ctx = std::make_shared<interpreter_context>();
@@ -899,7 +929,27 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_yield(const
     stack.push_back(ctx);
     update_current_context();
 
-    std::shared_ptr<andy::lang::object> ret = execute(*block);
+    auto* fn_params_definition_node = block->child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params);
+
+    if(fn_params_definition_node) {
+        auto* fn_params_call_node = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params);
+
+        for(size_t i = 0; i < fn_params_definition_node->childrens().size(); i++) {
+            auto& param_definition = fn_params_definition_node->childrens()[i];
+            std::shared_ptr<andy::lang::object> value = nullptr;
+
+            if(fn_params_call_node && i < fn_params_call_node->childrens().size()) {
+                auto& param_call = fn_params_call_node->childrens()[i];
+                value = execute(param_call);
+            } else {
+                value = std::make_shared<andy::lang::object>(NullClass);
+            }
+
+            current_context->variables[param_definition.token().content] = value;
+        }
+    }
+
+    std::shared_ptr<andy::lang::object> ret = execute(*block->block());
     pop_context();
     return ret;
 }
@@ -958,15 +1008,6 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_else(const 
     return execute_all(*context);
 }
 
-struct andy_lang_runtime_exception {
-    andy_lang_runtime_exception(std::shared_ptr<andy::lang::object> exception_object)
-        : exception_object(std::move(exception_object))
-    {
-        
-    }
-    std::shared_ptr<andy::lang::object> exception_object;
-};
-
 std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_try(const andy::lang::parser::ast_node& source_code)
 {
     push_block_context();
@@ -977,8 +1018,13 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_try(const a
         if(child.type() != andy::lang::parser::ast_node_type::ast_node_catch) {
             continue;
         }
-        std::string_view exception_type = child.decl_type();
-        catchers[exception_type] = &child;
+        auto dectype_node = child.child_from_type(andy::lang::parser::ast_node_type::ast_node_decltype);
+        if(!dectype_node) {
+            catchers["var"] = &child;
+        } else {
+            std::string_view exception_type = child.decl_type();
+            catchers[exception_type] = &child;
+        }
     }
 
     try {
@@ -993,8 +1039,16 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_try(const a
         }
         auto catcher = catchers.find(e.exception_object->cls->name);
         if(catcher == catchers.end()) {
-            // If we don't have a catcher for the exception type, we have to throw it again to be caught by an outer try...catch or to terminate the program if it's uncaught.
-            throw;
+            // If we don't have a catcher for the exception type, we have to throw it again to be caught by an outer
+            // try...catch or to terminate the program if it's uncaught.
+
+            // But... If we have a catcher for the "variable" decltype, we can use it to catch any exception
+            auto variable_catcher = catchers.find("var");
+            if(variable_catcher != catchers.end()) {
+                catcher = variable_catcher;
+            } else {
+                throw;
+            }
         }
         auto catch_context = catcher->second->child_from_type(andy::lang::parser::ast_node_type::ast_node_context);
         push_block_context();

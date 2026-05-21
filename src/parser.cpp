@@ -157,8 +157,16 @@ andy::lang::parser::ast_node andy::lang::parser::extract_fn_call_params(andy::la
     ast_node params_node(ast_node_type::ast_node_fn_params);
 
     while(true) {
-        ast_node param_node = parse_identifier_or_literal(lexer);
-        params_node.add_child(std::move(param_node));
+        auto& possible_yield = lexer.see_next();
+
+        if(possible_yield.type == andy::lang::lexer::token_type::token_keyword && possible_yield.content == "yield")
+        {
+            ast_node param_node = parse_keyword(lexer);
+            params_node.add_child(std::move(param_node));
+        } else {
+            ast_node param_node = parse_identifier_or_literal(lexer);
+            params_node.add_child(std::move(param_node));
+        }
 
         auto& token = lexer.see_next();
 
@@ -186,7 +194,7 @@ andy::lang::parser::ast_node andy::lang::parser::extract_fn_call_params(andy::la
                 break;
             }
         } else {
-        break;
+            break;
         }
     }
 
@@ -257,7 +265,9 @@ static bool is_no_parentheses_function_call(const andy::lang::lexer::token& toke
 
     auto& next_token = lexer.see_next();
 
-    return is_identifier_or_literal(next_token) && is_on_same_line(token, next_token);
+    bool is_identifier_or_literal_or_yield = is_identifier_or_literal(next_token) || (next_token.type == andy::lang::lexer::token_type::token_keyword && next_token.content == "yield");
+
+    return is_identifier_or_literal_or_yield && is_on_same_line(token, next_token);
 }
 
 static bool is_any_function_call(const andy::lang::lexer::token& token, const andy::lang::lexer& lexer)
@@ -276,12 +286,27 @@ static void extract_fn_yield_block_if_exists(andy::lang::parser::ast_node& node,
     auto& next_token = lexer.see_next();
 
     if(next_token.type == andy::lang::lexer::token_type::token_identifier && next_token.content == "do") {
+        andy::lang::parser::ast_node yield_node(andy::lang::parser::ast_node_type::ast_node_yield_block);
+
         auto& token = lexer.next_token(); // Consume the 'do' token
+        auto& possible_block_params = lexer.see_next();
+
+        if(possible_block_params.type == andy::lang::lexer::token_type::token_delimiter && possible_block_params.content == "(") {
+            // The block has parameters, we need to extract them before extracting the block itself
+            // ex: items.map do (item) ... end
+            lexer.consume_token(); // Consume the '(' token
+            andy::lang::parser::ast_node params_node = parser.extract_fn_call_params(lexer);
+            yield_node.add_child(std::move(params_node));
+            lexer.consume_token(); // Consume the ')' token
+        }
+
         andy::lang::parser::ast_node yield_context = extract_context(lexer, parser);
         yield_context.set_token(std::move(token));
-
         yield_context.set_end_token(lexer.next_token());
-        node.add_child(std::move(yield_context));
+
+        yield_node.add_child(std::move(yield_context));
+
+        node.add_child(std::move(yield_node));
     }
 }
 
@@ -530,7 +555,8 @@ andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(and
             }
         } else if (auto& next_token = lexer.see_next();
                   (next_token.type == andy::lang::lexer::token_type::token_identifier && next_token.content != "do") ||
-                  next_token.type == andy::lang::lexer::token_type::token_literal) {
+                  next_token.type == andy::lang::lexer::token_type::token_literal ||
+                    (next_token.type == andy::lang::lexer::token_type::token_keyword && next_token.content == "yield")) {
             // fn call with literal or identifier
             ast_node params_node = extract_fn_call_params(lexer);
             fn_node.add_child(std::move(params_node));
@@ -971,6 +997,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_yield(andy::lang:
     if(next_token.type == andy::lang::lexer::token_type::token_delimiter && next_token.content == "(") {
         lexer.consume_token(); // Consume the '(' token
         node.add_child(extract_fn_call_params(lexer));
+        lexer.consume_token(); // Consume the ')' token
     }
 
     return node;
@@ -1018,31 +1045,48 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_try(andy::lang::l
         if(possible_parenthesis_token.type == andy::lang::lexer::token_type::token_delimiter && possible_parenthesis_token.content == "(") {
             /*
                 catch(ExceptionClass variable_name)
-                        ^ '(' token
+                     ^ '(' token
             */
             lexer.consume_token(); // Consume the '(' token
 
-            const auto& possible_class = lexer.see_next();
+            const auto& possible_or_variable_name_class = lexer.see_next();
             /*
                 catch(ExceptionClass variable_name)
-                        ^^^^^^^^^^^^^^ Exception class
+                      ^^^^^^^^^^^^^^ Exception class
             */
-            if(possible_class.type != andy::lang::lexer::token_type::token_identifier) {
-                throw std::runtime_error(possible_class.error_message_at_current_position("Expected exception class or variable name after 'catch'"));
+            /*
+                catch(variable_name)
+                      ^^^^^^^^^^^^^ Variable
+            */
+
+            if(possible_or_variable_name_class.type != andy::lang::lexer::token_type::token_identifier) {
+                throw std::runtime_error(possible_or_variable_name_class.error_message_at_current_position("Expected exception class or variable name after 'catch'"));
             }
 
-            catch_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
-
-            const auto& possible_variable_name_token = lexer.see_next();
+            const auto& possible_variable_name_token = lexer.see_next(1);
+            /*
+                catch(variable_name)
+                      ^^^^^^^^^^^^^ Variable name
+            */
             /*
                 catch(ExceptionClass variable_name)
-                                        ^^^^^^^^^^^^^ Variable name
+                                     ^^^^^^^^^^^^^ Variable name
             */
-            if(possible_variable_name_token.type != andy::lang::lexer::token_type::token_identifier) {
-                throw std::runtime_error(possible_variable_name_token.error_message_at_current_position("Expected variable name after exception class in 'catch'"));
+            if(possible_variable_name_token.type == andy::lang::lexer::token_type::token_identifier)
+            {
+                /*
+                  catch(ExceptionClass variable_name)
+                                       ^^^^^^^^^^^^^ Variable name
+                */
+                catch_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
+                catch_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname));
+            } else {
+                /*
+                    catch(variable_name)
+                          ^^^^^^^^^^^^^ Variable name
+                */
+                catch_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname));
             }
-
-            catch_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname));
 
             const auto& possible_closing_parenthesis = lexer.see_next();
             /*
@@ -1052,10 +1096,11 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_try(andy::lang::l
             if(possible_closing_parenthesis.type != andy::lang::lexer::token_type::token_delimiter || possible_closing_parenthesis.content != ")") {
                 throw std::runtime_error(possible_closing_parenthesis.error_message_at_current_position("Expected closing ')' after exception class and variable name in 'catch'"));
             }
+
             lexer.consume_token(); // Consume the ')' token
         }
 
-        ast_node catch_context = extract_context(lexer, *this);
+        ast_node catch_context = extract_context(lexer, *this, &valid_following_tokens);
         catch_node.add_child(std::move(catch_context));
 
         try_node.add_child(std::move(catch_node));

@@ -518,6 +518,27 @@ int main(int argc, char** argv) {
                     cls.name = class_name;
                     cls.type = "class";
                     current_context->classes.push_back(cls);
+
+                    auto* base = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_classdecl_base);
+
+                    if(base) {
+                        auto decltype_node = base->child_from_type(andy::lang::parser::ast_node_type::ast_node_decltype);
+
+                        if(decltype_node) {
+                            const auto& decltype_token = decltype_node->token();
+
+                            if(decltype_token.type == andy::lang::lexer::token_type::token_identifier) {
+                                tokens_to_write.push_back({ "keyword", decltype_token });
+                            }
+                        }
+
+                        auto base_declname_node = base->child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
+
+                        if(base_declname_node) {
+                            inspect_node(*base_declname_node);
+                        }
+                    }
+
                     push_context();
                     for(const auto& child : node.context()->childrens()) {
                         inspect_node(child);

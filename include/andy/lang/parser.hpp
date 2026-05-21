@@ -83,6 +83,7 @@ namespace andy
                 ast_node_else,
                 ast_node_condition,
                 ast_node_yield,
+                ast_node_yield_block,
                 ast_node_throw,
                 ast_node_try,
                 ast_node_catch,
