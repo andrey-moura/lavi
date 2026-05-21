@@ -7,23 +7,27 @@ std::shared_ptr<andy::lang::structure> create_array_class(andy::lang::interprete
 {
     auto ArrayClass = std::make_shared<andy::lang::structure>("Array");
 
-        ArrayClass->instance_functions["to_string"] = std::make_shared<andy::lang::function>("to_string", [](andy::lang::interpreter* interpreter) {
-            std::string result = "[";
+    ArrayClass->instance_functions["to_string"] = std::make_shared<andy::lang::function>("to_string", [](andy::lang::interpreter* interpreter) {
+        std::string result = "[";
 
-            std::vector<std::shared_ptr<andy::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<andy::lang::object>>>();
+        std::vector<std::shared_ptr<andy::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<andy::lang::object>>>();
 
-            for(auto& item : items) {
-                if(result.size() > 1) {
-                    result += ", ";
-                }
-
-                result += andy::lang::api::call(interpreter, "to_string", item)->as<std::string>();
+        for(auto& item : items) {
+            if(result.size() > 1) {
+                result += ", ";
             }
 
-            result += "]";
+            result += andy::lang::api::call(interpreter, "to_string", item)->as<std::string>();
+        }
 
-            return andy::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(result));
-        });
+        result += "]";
+
+        return andy::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(result));
+    });
+
+    ArrayClass->instance_functions["inspect"] = std::make_shared<andy::lang::function>("inspect", [](andy::lang::interpreter* interpreter) {
+        return andy::lang::api::call(interpreter, "to_string", interpreter->current_context->self->shared_from_this());
+    });
 
         ArrayClass->instance_functions["join"] = std::make_shared<andy::lang::function>("join", std::vector<std::string>{"separator"}, [](andy::lang::interpreter* interpreter) {
             const std::string& separator = interpreter->current_context->positional_params[0]->as<std::string>();
@@ -116,6 +120,19 @@ std::shared_ptr<andy::lang::structure> create_array_class(andy::lang::interprete
             return std::make_shared<andy::lang::object>(interpreter->TrueClass);
         });
 
-    
+    ArrayClass->instance_functions["map!"] = std::make_shared<andy::lang::function>("map!", [](andy::lang::interpreter* interpreter) {
+        std::vector<std::shared_ptr<andy::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<andy::lang::object>>>();
+
+        for(size_t i = 0; i < items.size(); ++i) {
+            auto& item = items[i];
+
+            auto result = andy::lang::api::yield(interpreter, { item } );
+
+            items[i] = result;
+        }
+
+        return interpreter->current_context->self->shared_from_this();
+    });
+
     return ArrayClass;
 }
