@@ -6,7 +6,7 @@
 
 #include <andy/file.hpp>
 
-// TODO: move to andy::file
+// TODO: move to lavi::file
 std::vector<std::string> list_files_with_wildcard(const std::filesystem::path& base_path, std::string_view pattern) {
     std::vector<std::string> files;
     std::filesystem::path path = base_path;
@@ -63,10 +63,10 @@ std::vector<std::string> list_files_with_wildcard(const std::filesystem::path& b
     return files;
 }
 
-std::map<std::string, void(andy::lang::preprocessor::*)(const std::filesystem::path&, andy::lang::lexer&), std::less<>> preprocessor_directives = {
-    { "#include", &andy::lang::preprocessor::process_include },
-    { "#compile", &andy::lang::preprocessor::process_compile },
-    { "#if",      &andy::lang::preprocessor::process_if      }
+std::map<std::string, void(lavi::lang::preprocessor::*)(const std::filesystem::path&, lavi::lang::lexer&), std::less<>> preprocessor_directives = {
+    { "#include", &lavi::lang::preprocessor::process_include },
+    { "#compile", &lavi::lang::preprocessor::process_compile },
+    { "#if",      &lavi::lang::preprocessor::process_if      }
 };
 
 std::map<std::string_view, bool> preprocessor_definitions = {
@@ -79,17 +79,17 @@ std::map<std::string_view, bool> preprocessor_definitions = {
 #endif
 };
 
-andy::lang::preprocessor::preprocessor()
+lavi::lang::preprocessor::preprocessor()
 {
 }
 
-andy::lang::preprocessor::~preprocessor()
+lavi::lang::preprocessor::~preprocessor()
 {
 }
 
-void andy::lang::preprocessor::process(const std::filesystem::path &__file_name, andy::lang::lexer &__lexer)
+void lavi::lang::preprocessor::process(const std::filesystem::path &__file_name, lavi::lang::lexer &__lexer)
 {
-    andy::lang::lexer::token token = __lexer.next_token();
+    lavi::lang::lexer::token token = __lexer.next_token();
 
     while(!token.is_eof()) {
         process_token(__file_name, __lexer, token);
@@ -99,13 +99,13 @@ void andy::lang::preprocessor::process(const std::filesystem::path &__file_name,
     __lexer.reset();
 }
 
-void andy::lang::preprocessor::process_token(const std::filesystem::path &__file_name, andy::lang::lexer &__lexer, andy::lang::lexer::token &token)
+void lavi::lang::preprocessor::process_token(const std::filesystem::path &__file_name, lavi::lang::lexer &__lexer, lavi::lang::lexer::token &token)
 {
     switch(token.type) {
-        case andy::lang::lexer::token_type::token_comment:
+        case lavi::lang::lexer::token_type::token_comment:
             // Do nothing
         break;
-        case andy::lang::lexer::token_type::token_preprocessor: {
+        case lavi::lang::lexer::token_type::token_preprocessor: {
             if(auto it = preprocessor_directives.find(token.content); it != preprocessor_directives.end()) {
                 (this->*it->second)(__file_name, __lexer);
             } else {
@@ -116,11 +116,11 @@ void andy::lang::preprocessor::process_token(const std::filesystem::path &__file
     }
 }
 
-void andy::lang::preprocessor::process_include(const std::filesystem::path &__file_name, andy::lang::lexer &__lexer)
+void lavi::lang::preprocessor::process_include(const std::filesystem::path &__file_name, lavi::lang::lexer &__lexer)
 {
     // Moves becase it will be removed
-    andy::lang::lexer::token directive       = std::move(__lexer.current_token());
-    andy::lang::lexer::token file_name_token = std::move(__lexer.see_next());
+    lavi::lang::lexer::token directive       = std::move(__lexer.current_token());
+    lavi::lang::lexer::token file_name_token = std::move(__lexer.see_next());
 
     if(file_name_token.type != lexer::token_type::token_literal || file_name_token.kind != lexer::token_kind::token_string) {
         throw std::runtime_error(file_name_token.error_message_at_current_position("Expected string literal after include directive"));
@@ -142,7 +142,7 @@ void andy::lang::preprocessor::process_include(const std::filesystem::path &__fi
     std::vector<std::filesystem::path> include_paths;
 
 #ifdef __ANDY_DEBUG__
-    std::filesystem::path system_include_path = ANDYLANG_PROJECT_DIR;
+    std::filesystem::path system_include_path = LAVI_PROJECT_DIR;
 #elif defined(__linux__)
     std::filesystem::path system_include_path = "/usr/local/include/andy";
 #elif defined(_WIN32)
@@ -158,8 +158,8 @@ void andy::lang::preprocessor::process_include(const std::filesystem::path &__fi
     include_paths.push_back(directive_path.parent_path());
     include_paths.push_back(system_include_path);
 
-    if(!file_path_string.ends_with(".andy")) {
-        file_path_string += ".andy";
+    if(!file_path_string.ends_with(".lv")) {
+        file_path_string += ".lv";
     }
 
     std::sort(include_paths.begin(), include_paths.end());
@@ -201,16 +201,16 @@ void andy::lang::preprocessor::process_include(const std::filesystem::path &__fi
         if(__lexer.includes(file)) {
             continue;
         }
-        std::string file_content = andy::file::read_all_text<char>(file);
+        std::string file_content = lavi::file::read_all_text<char>(file);
         __lexer.include(file, std::move(file_content));
     }
 }
 
-void andy::lang::preprocessor::process_compile(const std::filesystem::path &__file_name, andy::lang::lexer &__lexer)
+void lavi::lang::preprocessor::process_compile(const std::filesystem::path &__file_name, lavi::lang::lexer &__lexer)
 {
     // Moves becase it will be removed
-    andy::lang::lexer::token directive       = std::move(__lexer.current_token());
-    andy::lang::lexer::token file_name_token = std::move(__lexer.see_next());
+    lavi::lang::lexer::token directive       = std::move(__lexer.current_token());
+    lavi::lang::lexer::token file_name_token = std::move(__lexer.see_next());
 
     __lexer.erase_tokens(2); // Remove the directive and the file name token
 
@@ -255,10 +255,10 @@ void andy::lang::preprocessor::process_compile(const std::filesystem::path &__fi
     std::filesystem::current_path(current_path);
 }
 
-void andy::lang::preprocessor::process_if(const std::filesystem::path &__file_name, andy::lang::lexer &__lexer)
+void lavi::lang::preprocessor::process_if(const std::filesystem::path &__file_name, lavi::lang::lexer &__lexer)
 {
-    andy::lang::lexer::token directive = std::move(__lexer.current_token());
-    andy::lang::lexer::token condition = std::move(__lexer.see_next());
+    lavi::lang::lexer::token directive = std::move(__lexer.current_token());
+    lavi::lang::lexer::token condition = std::move(__lexer.see_next());
 
     __lexer.erase_tokens(2); // Remove the directive and the condition token
 
@@ -271,9 +271,9 @@ void andy::lang::preprocessor::process_if(const std::filesystem::path &__file_na
     bool should_include_token = it->second;
 
     while(true) {
-        andy::lang::lexer::token& token = __lexer.next_token();
+        lavi::lang::lexer::token& token = __lexer.next_token();
 
-        if(token.type == andy::lang::lexer::token_type::token_preprocessor) {
+        if(token.type == lavi::lang::lexer::token_type::token_preprocessor) {
             if(token.content == "#end") {
                 __lexer.erase_tokens(1); // Remove the #end directive
                 break;

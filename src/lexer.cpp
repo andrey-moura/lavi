@@ -66,24 +66,24 @@ const static std::vector<std::string_view> keywords_lookup = {
     "within",
     "yield"
 };
-const static std::map<std::string_view, andy::lang::lexer::operator_type> string_to_operator_lookup = {
-    { "+",  andy::lang::lexer::operator_type::operator_plus          },
-    { "-",  andy::lang::lexer::operator_type::operator_minus         },
-    { "*",  andy::lang::lexer::operator_type::operator_multiply      },
-    { "/",  andy::lang::lexer::operator_type::operator_divide        },
-    { "%",  andy::lang::lexer::operator_type::operator_modulo        },
-    { "^",  andy::lang::lexer::operator_type::operator_power         },
-    { "&&", andy::lang::lexer::operator_type::operator_and           },
-    { "||", andy::lang::lexer::operator_type::operator_or            },
-    { "!",  andy::lang::lexer::operator_type::operator_not           },
-    { "==", andy::lang::lexer::operator_type::operator_equal         },
-    { "!=", andy::lang::lexer::operator_type::operator_not_equal     },
-    { "<",  andy::lang::lexer::operator_type::operator_less          },
-    { "<=", andy::lang::lexer::operator_type::operator_less_equal    },
-    { ">",  andy::lang::lexer::operator_type::operator_greater       },
-    { ">=", andy::lang::lexer::operator_type::operator_greater_equal },
-    { "++", andy::lang::lexer::operator_type::operator_increment     },
-    { "--", andy::lang::lexer::operator_type::operator_decrement     },
+const static std::map<std::string_view, lavi::lang::lexer::operator_type> string_to_operator_lookup = {
+    { "+",  lavi::lang::lexer::operator_type::operator_plus          },
+    { "-",  lavi::lang::lexer::operator_type::operator_minus         },
+    { "*",  lavi::lang::lexer::operator_type::operator_multiply      },
+    { "/",  lavi::lang::lexer::operator_type::operator_divide        },
+    { "%",  lavi::lang::lexer::operator_type::operator_modulo        },
+    { "^",  lavi::lang::lexer::operator_type::operator_power         },
+    { "&&", lavi::lang::lexer::operator_type::operator_and           },
+    { "||", lavi::lang::lexer::operator_type::operator_or            },
+    { "!",  lavi::lang::lexer::operator_type::operator_not           },
+    { "==", lavi::lang::lexer::operator_type::operator_equal         },
+    { "!=", lavi::lang::lexer::operator_type::operator_not_equal     },
+    { "<",  lavi::lang::lexer::operator_type::operator_less          },
+    { "<=", lavi::lang::lexer::operator_type::operator_less_equal    },
+    { ">",  lavi::lang::lexer::operator_type::operator_greater       },
+    { ">=", lavi::lang::lexer::operator_type::operator_greater_equal },
+    { "++", lavi::lang::lexer::operator_type::operator_increment     },
+    { "--", lavi::lang::lexer::operator_type::operator_decrement     },
 };
 
 static size_t is_delimiter(std::string_view str)
@@ -124,7 +124,7 @@ static bool is_preprocessor(std::string_view str) {
     return false;
 }
 
-static void update_position(andy::lang::lexer::token_position& position, const char& c)
+static void update_position(lavi::lang::lexer::token_position& position, const char& c)
 {
     if(utf8_is_multibyte_character_continuation(c)) {
         return;
@@ -140,18 +140,18 @@ static void update_position(andy::lang::lexer::token_position& position, const c
     position.offset++;
 }
 
-static andy::lang::lexer::operator_type to_operator(std::string_view str) {
+static lavi::lang::lexer::operator_type to_operator(std::string_view str) {
 
     auto it = string_to_operator_lookup.find(str);
 
     if(it == string_to_operator_lookup.end()) {
-        return andy::lang::lexer::operator_type::operator_null;
+        return lavi::lang::lexer::operator_type::operator_null;
     }
 
     return it->second;
 }
 
-andy::lang::lexer::lexer(std::string __file_name, std::string __source)
+lavi::lang::lexer::lexer(std::string __file_name, std::string __source)
     : m_file_name(std::make_shared<std::string>(std::move(__file_name))),
     m_source(std::move(__source)),
     m_current(m_source)
@@ -159,11 +159,11 @@ andy::lang::lexer::lexer(std::string __file_name, std::string __source)
 
 }
 
-void andy::lang::lexer::include(std::string file_name, std::string source)
+void lavi::lang::lexer::include(std::string file_name, std::string source)
 {
     m_includes.push_back(file_name);
 
-    andy::lang::lexer new_lexer(std::move(file_name), std::move(source));
+    lavi::lang::lexer new_lexer(std::move(file_name), std::move(source));
     new_lexer.tokenize();
 
     auto tokens = std::move(new_lexer.m_tokens);
@@ -173,12 +173,12 @@ void andy::lang::lexer::include(std::string file_name, std::string source)
     m_tokens.insert(m_tokens.begin() + iterator, tokens.begin(), tokens.end());
 }
 
-bool andy::lang::lexer::includes(const std::string& file_name)
+bool lavi::lang::lexer::includes(const std::string& file_name)
 {
     return std::find(m_includes.begin(), m_includes.end(), file_name) != m_includes.end();
 }
 
-std::vector<std::string_view> andy::lang::lexer::includes() const
+std::vector<std::string_view> lavi::lang::lexer::includes() const
 {
     std::vector<std::string_view> result;
     result.reserve(m_includes.size());
@@ -190,23 +190,23 @@ std::vector<std::string_view> andy::lang::lexer::includes() const
     return result;
 }
 
-void andy::lang::lexer::include_from_parent(std::string_view file_name)
+void lavi::lang::lexer::include_from_parent(std::string_view file_name)
 {
     m_includes.push_back(std::string(file_name));
 }
 
-void andy::lang::lexer::update_start_position(const char &c)
+void lavi::lang::lexer::update_start_position(const char &c)
 {
     update_position(m_start, c);
     m_end = m_start; // Reset the end position to the start position
 }
 
-void andy::lang::lexer::update_end_position(const char &c)
+void lavi::lang::lexer::update_end_position(const char &c)
 {
     update_position(m_end, c);
 }
 
-const char &andy::lang::lexer::discard()
+const char &lavi::lang::lexer::discard()
 {
     const char& c = m_current.front();
 
@@ -218,14 +218,14 @@ const char &andy::lang::lexer::discard()
 }
 
 
-void andy::lang::lexer::discard_whitespaces()
+void lavi::lang::lexer::discard_whitespaces()
 {
     discard_while([](const char& c) {
         return c == ' ' || c == '\t' || c == '\r' || c == '\n';
     });
 }
 
-void andy::lang::lexer::read(size_t c)
+void lavi::lang::lexer::read(size_t c)
 {
     for(size_t i = 0; i < c; i++) {
         // If it needs to read a character, and the buffer is empty, it is an error.
@@ -251,7 +251,7 @@ void andy::lang::lexer::read(size_t c)
     }
 }
 
-void andy::lang::lexer::push_token(token_type type, token_kind kind, operator_type op)
+void lavi::lang::lexer::push_token(token_type type, token_kind kind, operator_type op)
 {
     token t;
     t.start = m_start;
@@ -296,13 +296,13 @@ void andy::lang::lexer::push_token(token_type type, token_kind kind, operator_ty
     m_tokens.emplace_back(std::move(t));
 }
 
-void andy::lang::lexer::push_delimiter(token_delimiter_type delimiter)
+void lavi::lang::lexer::push_delimiter(token_delimiter_type delimiter)
 {
     push_token(token_type::token_delimiter, token_kind::token_null, operator_type::operator_max);
     m_tokens.back().delimiter = delimiter;
 }
 
-char unescape(andy::lang::lexer& lexer)
+char unescape(lavi::lang::lexer& lexer)
 {
     char c = lexer.discard();
 
@@ -350,7 +350,7 @@ char unescape(andy::lang::lexer& lexer)
     }
 }
 
-void andy::lang::lexer::read_next_token()
+void lavi::lang::lexer::read_next_token()
 {
     m_buffer = "";
 
@@ -535,14 +535,14 @@ void andy::lang::lexer::read_next_token()
     throw std::runtime_error("lexer: unknown token");
 }
 
-void andy::lang::lexer::tokenize()
+void lavi::lang::lexer::tokenize()
 {
     do {
         read_next_token();
     } while(!m_tokens.back().is_eof());
 }
 
-void andy::lang::lexer::consume_token()
+void lavi::lang::lexer::consume_token()
 {
     if(!has_next_token()) {
         // If the parser is trying to get a token that does not exist, it is an error.
@@ -552,14 +552,14 @@ void andy::lang::lexer::consume_token()
     iterator++;
 }
 
-andy::lang::lexer::token &andy::lang::lexer::next_token()
+lavi::lang::lexer::token &lavi::lang::lexer::next_token()
 {
-    andy::lang::lexer::token& token = m_tokens[iterator];
+    lavi::lang::lexer::token& token = m_tokens[iterator];
     consume_token();
     return token;
 }
 
-const andy::lang::lexer::token &andy::lang::lexer::see_next(int offset) const
+const lavi::lang::lexer::token &lavi::lang::lexer::see_next(int offset) const
 {
     if(iterator + offset >= m_tokens.size()) {
         throw std::runtime_error("unexpected end of file");
@@ -568,7 +568,7 @@ const andy::lang::lexer::token &andy::lang::lexer::see_next(int offset) const
     return m_tokens[iterator + offset];
 }
 
-const andy::lang::lexer::token& andy::lang::lexer::previous_token()
+const lavi::lang::lexer::token& lavi::lang::lexer::previous_token()
 {
     if(!has_previous_token()) {
         throw std::runtime_error("unexpected begin of file");
@@ -579,7 +579,7 @@ const andy::lang::lexer::token& andy::lang::lexer::previous_token()
     return m_tokens[iterator - 1];
 }
 
-const andy::lang::lexer::token& andy::lang::lexer::see_previous(int offset) const
+const lavi::lang::lexer::token& lavi::lang::lexer::see_previous(int offset) const
 {
     if(iterator - offset < 1) {
         throw std::runtime_error("unexpected begin of file");
@@ -588,7 +588,7 @@ const andy::lang::lexer::token& andy::lang::lexer::see_previous(int offset) cons
     return m_tokens[iterator - offset - 1];
 }
 
-void andy::lang::lexer::rollback_token()
+void lavi::lang::lexer::rollback_token()
 {
     if(iterator < 1) {
         throw std::runtime_error("unexpected begin of file");
@@ -597,7 +597,7 @@ void andy::lang::lexer::rollback_token()
     iterator--;
 }
 
-void andy::lang::lexer::erase_tokens(size_t count)
+void lavi::lang::lexer::erase_tokens(size_t count)
 {
     if(iterator + count > m_tokens.size()) {
         throw std::runtime_error("unexpected end of file");
@@ -608,21 +608,21 @@ void andy::lang::lexer::erase_tokens(size_t count)
     iterator--;
 }
 
-void andy::lang::lexer::erase_eof()
+void lavi::lang::lexer::erase_eof()
 {
     if(m_tokens.back().is_eof()) {
         m_tokens.pop_back();
     }
 }
 
-std::string andy::lang::lexer::token::human_description() const
+std::string lavi::lang::lexer::token::human_description() const
 {
     std::string description;
     description.reserve(50);
 
     description += human_type();
 
-    if(type == andy::lang::lexer::token_type::token_eof) {
+    if(type == lavi::lang::lexer::token_type::token_eof) {
         return description;
     }
 
@@ -633,7 +633,7 @@ std::string andy::lang::lexer::token::human_description() const
     return description;
 }
 
-std::string andy::lang::lexer::token::error_message_at_current_position(std::string_view what) const
+std::string lavi::lang::lexer::token::error_message_at_current_position(std::string_view what) const
 {
     std::string output(what);
     output += " at ";
@@ -642,12 +642,12 @@ std::string andy::lang::lexer::token::error_message_at_current_position(std::str
     return output;
 }
 
-std::string andy::lang::lexer::token::unexpected_eof_message() const
+std::string lavi::lang::lexer::token::unexpected_eof_message() const
 {
     return error_message_at_current_position("unexpected end of file");
 }
 
-std::string andy::lang::lexer::token::human_start_position() const
+std::string lavi::lang::lexer::token::human_start_position() const
 {
     std::string result;
     result.clear();
@@ -661,14 +661,14 @@ std::string andy::lang::lexer::token::human_start_position() const
     return result;
 }
 
-void andy::lang::lexer::token::merge(const token &other)
+void lavi::lang::lexer::token::merge(const token &other)
 {
     content += other.content;
     end = other.end;
 }
 
 
-std::string_view andy::lang::lexer::token::human_type() const
+std::string_view lavi::lang::lexer::token::human_type() const
 {
     static std::vector<std::string_view> types = {
         "undefined",
@@ -685,7 +685,7 @@ std::string_view andy::lang::lexer::token::human_type() const
     return types[(int)type];
 }
 
-void andy::lang::lexer::extract_and_push_string(bool is_interpolated)
+void lavi::lang::lexer::extract_and_push_string(bool is_interpolated)
 {
     std::string output;
     while(m_current.size()) {
@@ -753,7 +753,7 @@ void andy::lang::lexer::extract_and_push_string(bool is_interpolated)
     throw std::runtime_error("lexer: unexpected end of file");
 }
 
-void andy::lang::lexer::mark_unreachable(size_t count)
+void lavi::lang::lexer::mark_unreachable(size_t count)
 {
     if(iterator + count > m_tokens.size()) {
         throw std::runtime_error("unexpected end of file");

@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <memory>
 
-namespace andy
+namespace lavi
 {
     namespace lang
     {
@@ -15,20 +15,20 @@ namespace andy
 struct hash_key
 {
     size_t hash;
-    andy::lang::object* key;
+    lavi::lang::object* key;
 };
 struct hasher
 {
-    andy::lang::interpreter* interpreter;
+    lavi::lang::interpreter* interpreter;
     size_t operator()(const hash_key& k) const;
 };
 struct equal_hash_key
 {
-    andy::lang::interpreter* interpreter;
+    lavi::lang::interpreter* interpreter;
     bool operator()(const hash_key& a, const hash_key& b) const;
 };
 
-namespace andy
+namespace lavi
 {
     namespace lang
     {
@@ -37,21 +37,21 @@ namespace andy
         public:
             /// @brief Creates a hash object.
             /// @param interpreter The interpreter.
-            hash(andy::lang::interpreter* interpreter);
+            hash(lavi::lang::interpreter* interpreter);
         private:
-            andy::lang::interpreter* interpreter;
+            lavi::lang::interpreter* interpreter;
         private:
             std::unordered_map<
                 hash_key,
-                std::shared_ptr<andy::lang::object>,
+                std::shared_ptr<lavi::lang::object>,
                 hasher,
                 equal_hash_key
             > values;
         public:
-            std::vector<std::shared_ptr<andy::lang::object>> keys;
+            std::vector<std::shared_ptr<lavi::lang::object>> keys;
 
-            void set(const std::shared_ptr<object>& key, const std::shared_ptr<andy::lang::object>& value);
-            std::shared_ptr<andy::lang::object> get(const std::shared_ptr<andy::lang::object>& key) const;
+            void set(const std::shared_ptr<object>& key, const std::shared_ptr<lavi::lang::object>& value);
+            std::shared_ptr<lavi::lang::object> get(const std::shared_ptr<lavi::lang::object>& key) const;
 
             bool empty() const;
         };

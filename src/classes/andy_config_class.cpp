@@ -5,14 +5,14 @@
 
 #include <filesystem>
 
-std::shared_ptr<andy::lang::structure> create_andy_config_class(andy::lang::interpreter* interpreter)
+std::shared_ptr<lavi::lang::structure> create_andy_config_class(lavi::lang::interpreter* interpreter)
 {
-    auto AndyConfigClass = std::make_shared<andy::lang::structure>("AndyConfig");
+    auto AndyConfigClass = std::make_shared<lavi::lang::structure>("AndyConfig");
 
-    AndyConfigClass->variables["src_dir"]  = andy::lang::object::create(interpreter, interpreter->PathClass, std::move(andy::lang::config::src_dir()));
-    AndyConfigClass->variables["version"]  = andy::lang::object::create(interpreter, interpreter->StringClass, std::string(andy::lang::config::version));
-    AndyConfigClass->variables["build"]    = andy::lang::object::create(interpreter, interpreter->StringClass, std::string(andy::lang::config::build));
-    AndyConfigClass->variables["cpp"]      = andy::lang::object::create(interpreter, interpreter->StringClass, std::string(andy::lang::config::cpp));
-    AndyConfigClass->variables["compiler"] = andy::lang::object::create(interpreter, interpreter->StringClass, std::string(andy::lang::config::compiler));
+    AndyConfigClass->variables["src_dir"]  = lavi::lang::object::create(interpreter, interpreter->PathClass, std::move(lavi::lang::config::src_dir()));
+    AndyConfigClass->variables["version"]  = lavi::lang::object::create(interpreter, interpreter->StringClass, std::string(lavi::lang::config::version));
+    AndyConfigClass->variables["build"]    = lavi::lang::object::create(interpreter, interpreter->StringClass, std::string(lavi::lang::config::build));
+    AndyConfigClass->variables["cpp"]      = lavi::lang::object::create(interpreter, interpreter->StringClass, std::string(lavi::lang::config::cpp));
+    AndyConfigClass->variables["compiler"] = lavi::lang::object::create(interpreter, interpreter->StringClass, std::string(lavi::lang::config::compiler));
     return AndyConfigClass;
 }

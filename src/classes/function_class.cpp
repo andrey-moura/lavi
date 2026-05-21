@@ -3,13 +3,13 @@
 
 #include "add_operators.hpp"
 
-std::shared_ptr<andy::lang::structure> create_function_class(andy::lang::interpreter* interpreter)
+std::shared_ptr<lavi::lang::structure> create_function_class(lavi::lang::interpreter* interpreter)
 {
-    std::shared_ptr<andy::lang::structure> functionClass = std::make_shared<andy::lang::structure>("Function");
+    std::shared_ptr<lavi::lang::structure> functionClass = std::make_shared<lavi::lang::structure>("Function");
 
     // No functions to add initially
 
-    andy::lang::add_operators<float>(functionClass, interpreter);
+    lavi::lang::add_operators<float>(functionClass, interpreter);
 
     return functionClass;
 }

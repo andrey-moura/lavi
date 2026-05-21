@@ -5,47 +5,47 @@
 #include <andy/lang/interpreter.hpp>
 #include <andy/lang/extension.hpp>
 
-std::shared_ptr<andy::lang::structure> create_path_class(andy::lang::interpreter* interpreter)
+std::shared_ptr<lavi::lang::structure> create_path_class(lavi::lang::interpreter* interpreter)
 {
-    auto PathClass = std::make_shared<andy::lang::structure>("Path");
-    PathClass->variables["temp"] = andy::lang::object::create(interpreter, PathClass, std::move(std::filesystem::temp_directory_path()));
-    PathClass->instance_functions["init"] = std::make_shared<andy::lang::function>("init", std::initializer_list<std::string>{"path"}, [](andy::lang::interpreter* interpreter) {
+    auto PathClass = std::make_shared<lavi::lang::structure>("Path");
+    PathClass->variables["temp"] = lavi::lang::object::create(interpreter, PathClass, std::move(std::filesystem::temp_directory_path()));
+    PathClass->instance_functions["init"] = std::make_shared<lavi::lang::function>("init", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {
         auto object = interpreter->current_context->self;
         object->set_native<std::filesystem::path>(std::move(std::filesystem::path(interpreter->current_context->positional_params[0]->as<std::string>())));
 
         return nullptr;
     });
 
-    PathClass->instance_functions["to_string"] = std::make_shared<andy::lang::function>("to_string", [](andy::lang::interpreter* interpreter) {
-        return andy::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(interpreter->current_context->self->as<std::filesystem::path>().string()));
+    PathClass->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
+        return lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(interpreter->current_context->self->as<std::filesystem::path>().string()));
     });
 
-    PathClass->instance_functions["exists?"] = std::make_shared<andy::lang::function>("exists?", [](andy::lang::interpreter* interpreter) {
+    PathClass->instance_functions["exists?"] = std::make_shared<lavi::lang::function>("exists?", [](lavi::lang::interpreter* interpreter) {
         std::filesystem::path& path = interpreter->current_context->self->as<std::filesystem::path>();
 
         if(std::filesystem::exists(path)) {
-            return std::make_shared<andy::lang::object>(interpreter->TrueClass);
+            return std::make_shared<lavi::lang::object>(interpreter->TrueClass);
         }
 
-        return std::make_shared<andy::lang::object>(interpreter->FalseClass);
+        return std::make_shared<lavi::lang::object>(interpreter->FalseClass);
     });
 
-    PathClass->instance_functions["/="] = std::make_shared<andy::lang::function>("/=", std::initializer_list<std::string>{"path"}, [](andy::lang::interpreter* interpreter) {
+    PathClass->instance_functions["/="] = std::make_shared<lavi::lang::function>("/=", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {
         std::filesystem::path& path = interpreter->current_context->self->as<std::filesystem::path>();
         path /= interpreter->current_context->positional_params[0]->as<std::string>();
 
         return interpreter->current_context->self->shared_from_this();
     });
 
-    PathClass->instance_functions["/"] = std::make_shared<andy::lang::function>("/", std::initializer_list<std::string>{"path"}, [](andy::lang::interpreter* interpreter) {
+    PathClass->instance_functions["/"] = std::make_shared<lavi::lang::function>("/", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {
         std::filesystem::path path = interpreter->current_context->self->as<std::filesystem::path>() / interpreter->current_context->positional_params[0]->as<std::string>();
         
-        return andy::lang::object::create(interpreter, interpreter->PathClass, std::move(path));
+        return lavi::lang::object::create(interpreter, interpreter->PathClass, std::move(path));
     });
     
-    PathClass->functions["set_current"] = std::make_shared<andy::lang::function>("set_current", std::initializer_list<std::string>{"path"}, [](andy::lang::interpreter* interpreter) {
+    PathClass->functions["set_current"] = std::make_shared<lavi::lang::function>("set_current", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {
         std::filesystem::path path;
-        std::shared_ptr<andy::lang::object> path_object = interpreter->current_context->positional_params[0];
+        std::shared_ptr<lavi::lang::object> path_object = interpreter->current_context->positional_params[0];
 
         if(path_object->cls == interpreter->StringClass) {
             path = path_object->as<std::string>();

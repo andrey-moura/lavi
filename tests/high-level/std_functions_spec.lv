@@ -4,9 +4,9 @@ describe 'std functions' do
   describe '__file__' do
     it 'should evaluate to the current file path' do
       if System.windows?
-        expect(__file__).to ends_with('\tests\high-level\std_functions_spec.andy')
+        expect(__file__).to ends_with('\tests\high-level\std_functions_spec.lv')
       else
-        expect(__file__).to ends_with('/tests/high-level/std_functions_spec.andy')
+        expect(__file__).to ends_with('/tests/high-level/std_functions_spec.lv')
       end
     end
   end
@@ -23,13 +23,13 @@ describe 'std functions' do
     fn fixture(name)
       var path = Path.new(__dir__)
       path /= 'fixtures'
-      path /= "${name}.andy"
+      path /= "${name}.lv"
     end
     context 'when a file is required' do
       it 'should evaluate the expression' do
         var path = Path.new(__dir__)
         path /= 'fixtures'
-        path /= '1.andy'
+        path /= '1.lv'
         expect(require fixture('1')).to eq 1
       end
       it 'should load definitions' do
@@ -42,4 +42,4 @@ describe 'std functions' do
 end
 
 // TODO list in order
-// 7. Make tests.andy accpet the file path as an argument and filter included files
+// 7. Make tests.lv accpet the file path as an argument and filter included files

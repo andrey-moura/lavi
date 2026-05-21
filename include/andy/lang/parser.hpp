@@ -9,7 +9,7 @@
 
 #include <andy/lang/lexer.hpp>
 
-namespace andy
+namespace lavi
 {
     namespace lang
     {
@@ -24,20 +24,20 @@ namespace andy
             public:
                 exception(
                     std::string message,
-                    const andy::lang::lexer::token& token
+                    const lavi::lang::lexer::token& token
                 );
-                exception(const andy::lang::lexer::token& token);
+                exception(const lavi::lang::lexer::token& token);
             protected:
-                const andy::lang::lexer::token& m_token;
+                const lavi::lang::lexer::token& m_token;
                 std::string m_message;
             public:
-                const andy::lang::lexer::token& token() const { return m_token; }
+                const lavi::lang::lexer::token& token() const { return m_token; }
                 const char* what() const noexcept override { return m_message.c_str(); }
             };
-            class unexpected_token_error : public andy::lang::parser::exception
+            class unexpected_token_error : public lavi::lang::parser::exception
             {
             public:
-                unexpected_token_error(const andy::lang::lexer::token& token, std::string_view expected = "");
+                unexpected_token_error(const lavi::lang::lexer::token& token, std::string_view expected = "");
             private:
                 std::string_view m_expected;
             private:
@@ -101,13 +101,13 @@ namespace andy
                     : m_type(__type) {
                     
                 }
-                ast_node(andy::lang::lexer::token __token, ast_node_type __type)
+                ast_node(lavi::lang::lexer::token __token, ast_node_type __type)
                     : m_token(__token), m_type(__type) {
                     
                 }
             protected:
-                andy::lang::lexer::token m_token;
-                andy::lang::lexer::token m_end_token;
+                lavi::lang::lexer::token m_token;
+                lavi::lang::lexer::token m_end_token;
                 ast_node_type m_type;
                 std::vector<ast_node> m_children;
             public:
@@ -123,29 +123,29 @@ namespace andy
                 {
                     m_type = __type;
                 }
-                void set_token(andy::lang::lexer::token __token)
+                void set_token(lavi::lang::lexer::token __token)
                 {
                     m_token = std::move(__token);
                 }
-                void set_end_token(andy::lang::lexer::token __token)
+                void set_end_token(lavi::lang::lexer::token __token)
                 {
                     m_end_token = std::move(__token);
                 }
             // Getters
             public:
-                andy::lang::lexer::token& token() {
+                lavi::lang::lexer::token& token() {
                     return m_token;
                 }
 
-                const andy::lang::lexer::token& token() const {
+                const lavi::lang::lexer::token& token() const {
                     return m_token;
                 }
 
-                andy::lang::lexer::token& end_token() {
+                lavi::lang::lexer::token& end_token() {
                     return m_end_token;
                 }
 
-                const andy::lang::lexer::token& end_token() const {
+                const lavi::lang::lexer::token& end_token() const {
                     return m_end_token;
                 }
 
@@ -161,7 +161,7 @@ namespace andy
                     return m_type;
                 }
 
-                const ast_node* child_from_type(const andy::lang::parser::ast_node_type& __type) const {
+                const ast_node* child_from_type(const lavi::lang::parser::ast_node_type& __type) const {
                     for(auto& child : m_children) {
                         if(child.type() == __type) {
                             return &child;
@@ -171,7 +171,7 @@ namespace andy
                     return nullptr;
                 }
 
-                ast_node* child_from_type(const andy::lang::parser::ast_node_type& __type) {
+                ast_node* child_from_type(const lavi::lang::parser::ast_node_type& __type) {
                     for(auto& child : m_children) {
                         if(child.type() == __type) {
                             return &child;
@@ -181,7 +181,7 @@ namespace andy
                     return nullptr;
                 }
 
-                const andy::lang::lexer::token* child_token_from_type(const andy::lang::parser::ast_node_type& __type) const {
+                const lavi::lang::lexer::token* child_token_from_type(const lavi::lang::parser::ast_node_type& __type) const {
                     return &child_from_type(__type)->token();
                 }
 
@@ -224,56 +224,56 @@ namespace andy
                 return current_path / path;
             }
         public:
-            andy::lang::parser::ast_node parse_node(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_all(andy::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_node(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_all(lavi::lang::lexer& lexer);
 
         // Commons extract functions used by parsers
         public:
             /// @brief Extract a function call parameters. You must consume the ')' token.
             /// @param lexer The lexer.
             /// @return A function call parameters node.
-            andy::lang::parser::ast_node extract_fn_call_params(andy::lang::lexer& lexer);
+            lavi::lang::parser::ast_node extract_fn_call_params(lavi::lang::lexer& lexer);
             /// @brief Extract a pair
             /// @param lexer The lexer.
             /// @return The pair node.
-            andy::lang::parser::ast_node extract_pair(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_identifier_or_literal(andy::lang::lexer& lexer, bool chain = true);
+            lavi::lang::parser::ast_node extract_pair(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_identifier_or_literal(lavi::lang::lexer& lexer, bool chain = true);
         // Parsers functions
         protected:
             /// @brief Parse a keyword.
             /// @param lexer The lexer.
             /// @return A keyword node.
-            andy::lang::parser::ast_node parse_keyword(andy::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword(lavi::lang::lexer& lexer);
             /// @brief Parse a delimiter.
             /// @param lexer The lexer.
             /// @return A delimiter node.
-            andy::lang::parser::ast_node parse_delimiter(andy::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_delimiter(lavi::lang::lexer& lexer);
             /// @brief Parse a context.
             /// @param lexer The lexer.
             /// @return A context node.
-            andy::lang::parser::ast_node parse_eof(andy::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_eof(lavi::lang::lexer& lexer);
             /// @brief Parse a preprocessing directive.
             /// @param lexer The lexer.
             /// @return An exception
-            andy::lang::parser::ast_node parse_preprocessor(andy::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_preprocessor(lavi::lang::lexer& lexer);
         protected:
-            andy::lang::parser::ast_node parse_keyword_class(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_var(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_function(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_return(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_if(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_namespace(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_loop(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_for(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_foreach(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_while(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_break(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_static(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_yield(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_within(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_throw(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_try(andy::lang::lexer& lexer);
-            andy::lang::parser::ast_node parse_keyword_enum(andy::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_class(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_var(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_function(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_return(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_if(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_namespace(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_loop(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_for(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_foreach(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_while(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_break(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_static(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_yield(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_within(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_throw(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_try(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_enum(lavi::lang::lexer& lexer);
         };
     }
-}; // namespace andy
+}; // namespace lavi

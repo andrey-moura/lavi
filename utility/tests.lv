@@ -1,6 +1,6 @@
 #include 'std/tests'
 
-var tests_dir = Dir.current.glob('tests/**/*_spec.andy')
+var tests_dir = Dir.current.glob('tests/**/*_spec.lv')
 
 loop for file in tests_dir
   if __args__.size > 2

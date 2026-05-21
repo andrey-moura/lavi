@@ -54,7 +54,7 @@ sudo cmake --install build --config Release  # Linux
 
 ### Running Tests
   - To run the tests for the full project, use the command `build/andy --tests`
-  - To run a specific test file, use `build/andy --tests tests/high-level/your_test.andy`
+  - To run a specific test file, use `build/andy --tests tests/high-level/your_test.lv`
 
 Tests are written in C++ (using a custom testing framework) and in Andy language itself.
 
@@ -67,7 +67,7 @@ Tests are written in C++ (using a custom testing framework) and in Andy language
   - Use 2 spaces for indentation (no tabs)
   - Opening braces on the following line for functions and classes
   - Use `snake_case` for variables, functions and class names
-  - Use namespace `andy::lang` for language components
+  - Use namespace `lavi::lang` for language components
   - Prefer `std::shared_ptr` for object management
   - Move semantics with `std::move` where possible
 
@@ -81,14 +81,14 @@ Tests are written in C++ (using a custom testing framework) and in Andy language
 ### Example Code Pattern
 
 ```cpp
-namespace andy
+namespace lavi
 {
     namespace lang
     {
         /// @brief Executes the code in a file.
         /// @param path The path to the source code.
         /// @return Returns a shared pointer to the object.
-        std::shared_ptr<andy::lang::object> evaluate(std::filesystem::path path);
+        std::shared_ptr<lavi::lang::object> evaluate(std::filesystem::path path);
     }
 }
 ```

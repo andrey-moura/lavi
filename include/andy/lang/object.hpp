@@ -10,7 +10,7 @@
 #include "andy/lang/class.hpp"
 #include "andy/lang/interpreter_context.hpp"
 
-namespace andy
+namespace lavi
 {
     namespace lang {
         class object;
@@ -20,7 +20,7 @@ namespace andy
         class object : public std::enable_shared_from_this<object>, public interpreter_context
         {
         public:
-            object(std::shared_ptr<andy::lang::structure> c);
+            object(std::shared_ptr<lavi::lang::structure> c);
             ~object();
         public:
             const std::string& default_string_representation();
@@ -28,7 +28,7 @@ namespace andy
             std::shared_ptr<object> base_instance = nullptr;
             std::shared_ptr<object> derived_instance = nullptr;
             // #ifdef __ANDY_DEBUG__
-            // andy::lang::object* debug_object = this;
+            // lavi::lang::object* debug_object = this;
 
             // __attribute__((noinline)) __attribute__((used)) std::string debug_string()
             // {
@@ -46,21 +46,21 @@ namespace andy
             // The native move function ptr.
             void (*native_move_ptr)(object* dest, object* src) = nullptr;
             // The native object copy function ptr.
-            std::shared_ptr<object> (*native_copy_ptr)(andy::lang::object* obj) = nullptr;
+            std::shared_ptr<object> (*native_copy_ptr)(lavi::lang::object* obj) = nullptr;
 #ifdef __ANDY_DEBUG__
             int* native_int = (int*)native;
 #endif
             std::string string_representation_cache;
         public:
-            void initialize(andy::lang::interpreter* interpreter);
-            void initialize(andy::lang::interpreter* interpreter, andy::lang::function_call new_call);
+            void initialize(lavi::lang::interpreter* interpreter);
+            void initialize(lavi::lang::interpreter* interpreter, lavi::lang::function_call new_call);
         public:
             /// @brief Initialize the object with a value.
             /// @param cls The class of the object.
             /// @return Returns a shared pointer to the object.
-            static auto instantiate(andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::structure> cls, andy::lang::function_call new_call = {})
+            static auto instantiate(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls, lavi::lang::function_call new_call = {})
             {
-                auto obj = std::make_shared<andy::lang::object>(cls);
+                auto obj = std::make_shared<lavi::lang::object>(cls);
                 obj->initialize(interpreter, std::move(new_call));
 
                 return obj;
@@ -71,9 +71,9 @@ namespace andy
             /// @param value The pointer to the value. This will be deleted when the object is destroyed.
             /// @return Returns a shared pointer to the object.
             template<typename T>
-            static std::shared_ptr<andy::lang::object> instantiate(andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::structure> cls, T* value)
+            static std::shared_ptr<lavi::lang::object> instantiate(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls, T* value)
             {
-                auto obj = std::make_shared<andy::lang::object>(cls);
+                auto obj = std::make_shared<lavi::lang::object>(cls);
                 obj->set_native_ptr<T>(obj.get(), value);
 
                 obj->initialize(interpreter);
@@ -86,24 +86,24 @@ namespace andy
             /// @param value The value.
             /// @return Returns a shared pointer to the object.
             template<typename T>
-            static std::enable_if<!std::is_pointer<T>::value, std::shared_ptr<andy::lang::object>>::type instantiate(andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::structure> cls, T value, std::vector<std::shared_ptr<andy::lang::object>> params = {})
+            static std::enable_if<!std::is_pointer<T>::value, std::shared_ptr<lavi::lang::object>>::type instantiate(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls, T value, std::vector<std::shared_ptr<lavi::lang::object>> params = {})
             {
-                auto obj = std::make_shared<andy::lang::object>(cls);
+                auto obj = std::make_shared<lavi::lang::object>(cls);
 
                 if(!std::is_same_v<T, std::nullptr_t>) {
                     obj->set_native<T>(std::move(value));
                 }
 
-                andy::lang::function_call new_call;
+                lavi::lang::function_call new_call;
                 new_call.positional_params = std::move(params);
 
                 obj->initialize(interpreter, std::move(new_call));
 
                 return obj;
             }
-            static std::shared_ptr<andy::lang::object> create(andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::structure> cls)
+            static std::shared_ptr<lavi::lang::object> create(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls)
             {
-                auto obj = std::make_shared<andy::lang::object>(cls);
+                auto obj = std::make_shared<lavi::lang::object>(cls);
                 obj->initialize(interpreter);
                 return obj;
             }
@@ -113,9 +113,9 @@ namespace andy
             /// @param value The value.
             /// @return Returns a shared pointer to the object.
             template<typename T>
-            static std::enable_if<!std::is_pointer<T>::value, std::shared_ptr<andy::lang::object>>::type create(andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::structure> cls, T value)
+            static std::enable_if<!std::is_pointer<T>::value, std::shared_ptr<lavi::lang::object>>::type create(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls, T value)
             {
-                auto obj = std::make_shared<andy::lang::object>(cls);
+                auto obj = std::make_shared<lavi::lang::object>(cls);
                 obj->set_native<T>(std::move(value));
                 obj->initialize(interpreter);
 
@@ -126,9 +126,9 @@ namespace andy
             /// @param value The pointer to the value.
             /// @return Returns a shared pointer to the object.
             template<typename T>
-            static std::shared_ptr<andy::lang::object> create(andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::structure> cls, T* value)
+            static std::shared_ptr<lavi::lang::object> create(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls, T* value)
             {
-                auto obj = std::make_shared<andy::lang::object>(cls);
+                auto obj = std::make_shared<lavi::lang::object>(cls);
                 obj->set_native_ptr(value);
                 return obj;
             }
@@ -168,7 +168,7 @@ namespace andy
                     return native_copy_ptr(this);
                 }
 
-                auto obj = std::make_shared<andy::lang::object>(cls);
+                auto obj = std::make_shared<lavi::lang::object>(cls);
                 for(const auto& [var_name, var_value] : variables) {
                     obj->variables[var_name] = var_value->native_copy();
                 }
@@ -197,8 +197,8 @@ namespace andy
                     };
                 }
 
-                obj->native_copy_ptr = [](andy::lang::object* obj) -> std::shared_ptr<andy::lang::object> {
-                    std::shared_ptr<andy::lang::object> other = std::make_shared<andy::lang::object>(obj->cls);
+                obj->native_copy_ptr = [](lavi::lang::object* obj) -> std::shared_ptr<lavi::lang::object> {
+                    std::shared_ptr<lavi::lang::object> other = std::make_shared<lavi::lang::object>(obj->cls);
                     other->self = other.get();
 
                     if constexpr(std::is_copy_constructible<T>::value)

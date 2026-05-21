@@ -12,12 +12,12 @@
                 },
                 onRuntimeInitialized: function() {
                     $.ajax({
-                        url: "andy-engine/application.andy",
+                        url: "andy-engine/application.lv",
                         dataType: "text",
                         success: function(code) {
-                            FS.writeFile("/application.andy", code);
+                            FS.writeFile("/application.lv", code);
                             try {
-                                callMain(["/application.andy"]);
+                                callMain(["/application.lv"]);
                             } catch (e) {
                                 console.error("Error executing code:", e);
                             }

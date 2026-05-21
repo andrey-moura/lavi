@@ -11,20 +11,20 @@
 #include <andy/lang/class.hpp>
 #include <andy/lang/function.hpp>
 
-using namespace andy;
+using namespace lavi;
 using namespace lang;
 
-andy::lang::parser::parser()
+lavi::lang::parser::parser()
 {
 }
 
-andy::lang::parser::ast_node extract_context(andy::lang::lexer &lexer, andy::lang::parser& parser, std::vector<std::string_view>* break_on_keywords = nullptr)
+lavi::lang::parser::ast_node extract_context(lavi::lang::lexer &lexer, lavi::lang::parser& parser, std::vector<std::string_view>* break_on_keywords = nullptr)
 {
-    andy::lang::parser::ast_node output(andy::lang::parser::ast_node_type::ast_node_context);
+    lavi::lang::parser::ast_node output(lavi::lang::parser::ast_node_type::ast_node_context);
     while(true) {
-        const andy::lang::lexer::token& next_token = lexer.see_next();
+        const lavi::lang::lexer::token& next_token = lexer.see_next();
 
-        if(next_token.type == andy::lang::lexer::token_delimiter) {
+        if(next_token.type == lavi::lang::lexer::token_delimiter) {
             if(next_token.content == "end") {
                 // The token is consumed by the caller
                 break;
@@ -34,12 +34,12 @@ andy::lang::parser::ast_node extract_context(andy::lang::lexer &lexer, andy::lan
                 lexer.consume_token();
                 continue;
             }
-        } else if(next_token.type == andy::lang::lexer::token_comment) {
+        } else if(next_token.type == lavi::lang::lexer::token_comment) {
             lexer.consume_token();
             continue;
-        } else if(next_token.type == andy::lang::lexer::token_type::token_eof) {
-            throw andy::lang::parser::unexpected_token_error(next_token, "end");
-        } else if (next_token.type == andy::lang::lexer::token_type::token_keyword && break_on_keywords) {
+        } else if(next_token.type == lavi::lang::lexer::token_type::token_eof) {
+            throw lavi::lang::parser::unexpected_token_error(next_token, "end");
+        } else if (next_token.type == lavi::lang::lexer::token_type::token_keyword && break_on_keywords) {
             bool should_break = false;
             for (const auto& keyword : *break_on_keywords) {
                 if (next_token.content == keyword) {
@@ -53,13 +53,13 @@ andy::lang::parser::ast_node extract_context(andy::lang::lexer &lexer, andy::lan
             }
         }
         
-        andy::lang::parser::ast_node context_child = parser.parse_node(lexer);
+        lavi::lang::parser::ast_node context_child = parser.parse_node(lexer);
         output.add_child(std::move(context_child));
     }
     return output;
 }
 
-andy::lang::parser::ast_node parser::parse_node(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node parser::parse_node(lavi::lang::lexer &lexer)
 {
     // We are at the middle of the source code.
     // What we can have in the middle of the source code:
@@ -72,29 +72,29 @@ andy::lang::parser::ast_node parser::parse_node(andy::lang::lexer &lexer)
 
     // We need to see the next token to know what to do.
 
-    const andy::lang::lexer::token& token = lexer.see_next();
+    const lavi::lang::lexer::token& token = lexer.see_next();
 
     switch (token.type)
     {
-    case andy::lang::lexer::token_type::token_comment:
+    case lavi::lang::lexer::token_type::token_comment:
         // Ignore the comment and return the next node
         lexer.consume_token();
         return parse_node(lexer);
         break;
-    case andy::lang::lexer::token_type::token_identifier:
-    case andy::lang::lexer::token_type::token_literal:
+    case lavi::lang::lexer::token_type::token_identifier:
+    case lavi::lang::lexer::token_type::token_literal:
         return parse_identifier_or_literal(lexer);
         break;
-    case andy::lang::lexer::token_type::token_delimiter:
+    case lavi::lang::lexer::token_type::token_delimiter:
         return parse_delimiter(lexer);
     break;
-    case andy::lang::lexer::token_type::token_keyword:
+    case lavi::lang::lexer::token_type::token_keyword:
         return parse_keyword(lexer);
         break;
-    case andy::lang::lexer::token_type::token_eof:
+    case lavi::lang::lexer::token_type::token_eof:
         return parse_eof(lexer);
         break;
-    case andy::lang::lexer::token_type::token_preprocessor:
+    case lavi::lang::lexer::token_type::token_preprocessor:
         return parse_preprocessor(lexer);
         break;
     default:
@@ -105,12 +105,12 @@ andy::lang::parser::ast_node parser::parse_node(andy::lang::lexer &lexer)
     throw std::runtime_error(token.error_message_at_current_position("Unexpected token"));
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_all(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_all(lavi::lang::lexer &lexer)
 {
     ast_node root_node(ast_node_type::ast_node_unit);
 
     do {
-        const andy::lang::lexer::token token = lexer.see_next();
+        const lavi::lang::lexer::token token = lexer.see_next();
         if(token.is_eof()) {
             break;
         }
@@ -121,7 +121,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_all(andy::lang::lexer &le
     return root_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::extract_pair(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::extract_pair(lavi::lang::lexer &lexer)
 {
     // If this function has been called, we are sure the next tokens are a pair. No need to check for errors.
 
@@ -130,9 +130,9 @@ andy::lang::parser::ast_node andy::lang::parser::extract_pair(andy::lang::lexer 
 
     auto& key_token = lexer.next_token();
 
-    if(key_token.type == andy::lang::lexer::token_type::token_identifier) {
-        key_token.type = andy::lang::lexer::token_type::token_literal;
-        key_token.kind = andy::lang::lexer::token_kind::token_string;
+    if(key_token.type == lavi::lang::lexer::token_type::token_identifier) {
+        key_token.type = lavi::lang::lexer::token_type::token_literal;
+        key_token.kind = lavi::lang::lexer::token_kind::token_string;
         key_token.string_literal = key_token.content;
     }
 
@@ -152,14 +152,14 @@ andy::lang::parser::ast_node andy::lang::parser::extract_pair(andy::lang::lexer 
     return pair_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::extract_fn_call_params(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::extract_fn_call_params(lavi::lang::lexer &lexer)
 {
     ast_node params_node(ast_node_type::ast_node_fn_params);
 
     while(true) {
         auto& possible_yield = lexer.see_next();
 
-        if(possible_yield.type == andy::lang::lexer::token_type::token_keyword && possible_yield.content == "yield")
+        if(possible_yield.type == lavi::lang::lexer::token_type::token_keyword && possible_yield.content == "yield")
         {
             ast_node param_node = parse_keyword(lexer);
             params_node.add_child(std::move(param_node));
@@ -201,9 +201,9 @@ andy::lang::parser::ast_node andy::lang::parser::extract_fn_call_params(andy::la
     return params_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_delimiter(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_delimiter(lavi::lang::lexer &lexer)
 {
-    const andy::lang::lexer::token& token = lexer.see_next();
+    const lavi::lang::lexer::token& token = lexer.see_next();
 
     if(token.content == ";") {
         // ; in the middle of the code is considered a whitespace
@@ -220,87 +220,87 @@ andy::lang::parser::ast_node andy::lang::parser::parse_delimiter(andy::lang::lex
     return ast_node(std::move(token), ast_node_type::ast_node_undefined);
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_eof(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_eof(lavi::lang::lexer &lexer)
 {
-    andy::lang::lexer::token token = lexer.next_token();
+    lavi::lang::lexer::token token = lexer.next_token();
     return ast_node(std::move(token), ast_node_type::ast_node_undefined);
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_preprocessor(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_preprocessor(lavi::lang::lexer &lexer)
 {
-    andy::lang::lexer::token token = lexer.next_token();
+    lavi::lang::lexer::token token = lexer.next_token();
 
     // If the directive has not been removed by the preprocessor, it is probably in an invalid location
     throw std::runtime_error(token.error_message_at_current_position("Unexpected '" + std::string(token.content) + "' directive"));
 }
 
-static bool is_identifier_or_literal(const andy::lang::lexer::token& token)
+static bool is_identifier_or_literal(const lavi::lang::lexer::token& token)
 {
-    return token.type == andy::lang::lexer::token_type::token_identifier ||
-           token.type == andy::lang::lexer::token_type::token_literal;
+    return token.type == lavi::lang::lexer::token_type::token_identifier ||
+           token.type == lavi::lang::lexer::token_type::token_literal;
 }
 
-static bool is_on_same_line(const andy::lang::lexer::token& token, const andy::lang::lexer::token& other)
+static bool is_on_same_line(const lavi::lang::lexer::token& token, const lavi::lang::lexer::token& other)
 {
     return token.start.line == other.start.line;
 }
 
-static bool is_function_call(const andy::lang::lexer::token& token, const andy::lang::lexer& lexer)
+static bool is_function_call(const lavi::lang::lexer::token& token, const lavi::lang::lexer& lexer)
 {
-    if(token.type != andy::lang::lexer::token_type::token_identifier) {
+    if(token.type != lavi::lang::lexer::token_type::token_identifier) {
         return false;
     }
     
     auto& next_token = lexer.see_next();
 
-    return next_token.type == andy::lang::lexer::token_type::token_delimiter
+    return next_token.type == lavi::lang::lexer::token_type::token_delimiter
             && next_token.content == "(";
 }
 
-static bool is_no_parentheses_function_call(const andy::lang::lexer::token& token, const andy::lang::lexer& lexer)
+static bool is_no_parentheses_function_call(const lavi::lang::lexer::token& token, const lavi::lang::lexer& lexer)
 {
-    if(token.type != andy::lang::lexer::token_type::token_identifier) {
+    if(token.type != lavi::lang::lexer::token_type::token_identifier) {
         return false;
     }
 
     auto& next_token = lexer.see_next();
 
-    bool is_identifier_or_literal_or_yield = is_identifier_or_literal(next_token) || (next_token.type == andy::lang::lexer::token_type::token_keyword && next_token.content == "yield");
+    bool is_identifier_or_literal_or_yield = is_identifier_or_literal(next_token) || (next_token.type == lavi::lang::lexer::token_type::token_keyword && next_token.content == "yield");
 
     return is_identifier_or_literal_or_yield && is_on_same_line(token, next_token);
 }
 
-static bool is_any_function_call(const andy::lang::lexer::token& token, const andy::lang::lexer& lexer)
+static bool is_any_function_call(const lavi::lang::lexer::token& token, const lavi::lang::lexer& lexer)
 {
     return is_function_call(token, lexer) || is_no_parentheses_function_call(token, lexer);
 }
 
-static void extract_fn_yield_block_if_exists(andy::lang::parser::ast_node& node, andy::lang::parser& parser, const andy::lang::lexer::token& token, andy::lang::lexer& lexer)
+static void extract_fn_yield_block_if_exists(lavi::lang::parser::ast_node& node, lavi::lang::parser& parser, const lavi::lang::lexer::token& token, lavi::lang::lexer& lexer)
 {
-    if(node.type() != andy::lang::parser::ast_node_type::ast_node_fn_call &&
-        node.type() != andy::lang::parser::ast_node_type::ast_node_declname) {
+    if(node.type() != lavi::lang::parser::ast_node_type::ast_node_fn_call &&
+        node.type() != lavi::lang::parser::ast_node_type::ast_node_declname) {
         // Cant extract yield block from this node
         return;
     }
 
     auto& next_token = lexer.see_next();
 
-    if(next_token.type == andy::lang::lexer::token_type::token_identifier && next_token.content == "do") {
-        andy::lang::parser::ast_node yield_node(andy::lang::parser::ast_node_type::ast_node_yield_block);
+    if(next_token.type == lavi::lang::lexer::token_type::token_identifier && next_token.content == "do") {
+        lavi::lang::parser::ast_node yield_node(lavi::lang::parser::ast_node_type::ast_node_yield_block);
 
         auto& token = lexer.next_token(); // Consume the 'do' token
         auto& possible_block_params = lexer.see_next();
 
-        if(possible_block_params.type == andy::lang::lexer::token_type::token_delimiter && possible_block_params.content == "(") {
+        if(possible_block_params.type == lavi::lang::lexer::token_type::token_delimiter && possible_block_params.content == "(") {
             // The block has parameters, we need to extract them before extracting the block itself
             // ex: items.map do (item) ... end
             lexer.consume_token(); // Consume the '(' token
-            andy::lang::parser::ast_node params_node = parser.extract_fn_call_params(lexer);
+            lavi::lang::parser::ast_node params_node = parser.extract_fn_call_params(lexer);
             yield_node.add_child(std::move(params_node));
             lexer.consume_token(); // Consume the ')' token
         }
 
-        andy::lang::parser::ast_node yield_context = extract_context(lexer, parser);
+        lavi::lang::parser::ast_node yield_context = extract_context(lexer, parser);
         yield_context.set_token(std::move(token));
         yield_context.set_end_token(lexer.next_token());
 
@@ -310,14 +310,14 @@ static void extract_fn_yield_block_if_exists(andy::lang::parser::ast_node& node,
     }
 }
 
-static andy::lang::parser::ast_node chain_if_exists(andy::lang::parser::ast_node& node, andy::lang::parser& parser, andy::lang::lexer& lexer)
+static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node& node, lavi::lang::parser& parser, lavi::lang::lexer& lexer)
 {
-    std::vector<andy::lang::parser::ast_node> chained_nodes;
+    std::vector<lavi::lang::parser::ast_node> chained_nodes;
 
     while(true) {
-        const andy::lang::lexer::token& next_token = lexer.see_next();
+        const lavi::lang::lexer::token& next_token = lexer.see_next();
 
-        if(next_token.type == andy::lang::lexer::token_type::token_operator) {
+        if(next_token.type == lavi::lang::lexer::token_type::token_operator) {
             if(next_token.content == "]") {
                 // Already handled in the array declaration
                 break;
@@ -325,12 +325,12 @@ static andy::lang::parser::ast_node chain_if_exists(andy::lang::parser::ast_node
             if(next_token.content == "." || next_token.content == "::") {
                 lexer.consume_token(); // Consume the '.' token
 
-                andy::lang::parser::ast_node next_node = parser.parse_identifier_or_literal(lexer, false);
+                lavi::lang::parser::ast_node next_node = parser.parse_identifier_or_literal(lexer, false);
                 chained_nodes.push_back(std::move(next_node));
             } else {
-                andy::lang::parser::ast_node operator_node(andy::lang::parser::ast_node_type::ast_node_fn_call);
+                lavi::lang::parser::ast_node operator_node(lavi::lang::parser::ast_node_type::ast_node_fn_call);
 
-                andy::lang::lexer::token& operator_token = lexer.next_token();
+                lavi::lang::lexer::token& operator_token = lexer.next_token();
 
                 std::string matching;
 
@@ -340,13 +340,13 @@ static andy::lang::parser::ast_node chain_if_exists(andy::lang::parser::ast_node
 
                 // ++ and -- are unary operators
                 if(operator_token.content != "++" && operator_token.content != "--") {
-                    andy::lang::parser::ast_node right_node = parser.parse_identifier_or_literal(lexer);
+                    lavi::lang::parser::ast_node right_node = parser.parse_identifier_or_literal(lexer);
 
-                    andy::lang::parser::ast_node params_node(andy::lang::parser::ast_node_type::ast_node_fn_params);
+                    lavi::lang::parser::ast_node params_node(lavi::lang::parser::ast_node_type::ast_node_fn_params);
                     params_node.add_child(std::move(right_node));
 
                     if(matching.size()) {
-                        andy::lang::lexer::token& matching_token = lexer.next_token();
+                        lavi::lang::lexer::token& matching_token = lexer.next_token();
 
                         if(matching_token.content != matching) {
                             throw std::runtime_error(matching_token.error_message_at_current_position("No matching '" + std::string(matching) + "' found for '" + std::string(operator_node.token().content) + "'"));
@@ -358,7 +358,7 @@ static andy::lang::parser::ast_node chain_if_exists(andy::lang::parser::ast_node
                     operator_node.add_child(std::move(params_node));
                 }
 
-                operator_node.add_child(andy::lang::parser::ast_node(std::move(operator_token), andy::lang::parser::ast_node_type::ast_node_declname));
+                operator_node.add_child(lavi::lang::parser::ast_node(std::move(operator_token), lavi::lang::parser::ast_node_type::ast_node_declname));
 
                 chained_nodes.push_back(std::move(operator_node));
             }
@@ -375,21 +375,21 @@ static andy::lang::parser::ast_node chain_if_exists(andy::lang::parser::ast_node
     chained_nodes.insert(chained_nodes.begin(), std::move(node));
 
     for(size_t i = 0; i < chained_nodes.size(); i++) {
-        andy::lang::parser::ast_node& node = chained_nodes[i];
+        lavi::lang::parser::ast_node& node = chained_nodes[i];
 
         if(i < chained_nodes.size() - 1) {
-            andy::lang::parser::ast_node& next_node = chained_nodes[i + 1];
+            lavi::lang::parser::ast_node& next_node = chained_nodes[i + 1];
 
-            if(node.type() == andy::lang::parser::ast_node_type::ast_node_declname && next_node.type() == andy::lang::parser::ast_node_type::ast_node_declname) {
+            if(node.type() == lavi::lang::parser::ast_node_type::ast_node_declname && next_node.type() == lavi::lang::parser::ast_node_type::ast_node_declname) {
                 if(next_node.token().content == "new") {
-                    andy::lang::parser::ast_node fn_call_node(andy::lang::parser::ast_node_type::ast_node_fn_call);
+                    lavi::lang::parser::ast_node fn_call_node(lavi::lang::parser::ast_node_type::ast_node_fn_call);
                     fn_call_node.add_child(std::move(next_node));
 
                     next_node = std::move(fn_call_node);
                 }
             }
 
-            andy::lang::parser::ast_node object_node(andy::lang::parser::ast_node_type::ast_node_fn_object);
+            lavi::lang::parser::ast_node object_node(lavi::lang::parser::ast_node_type::ast_node_fn_object);
             object_node.add_child(std::move(node));
 
             next_node.add_child(std::move(object_node));
@@ -403,23 +403,23 @@ static andy::lang::parser::ast_node chain_if_exists(andy::lang::parser::ast_node
     return last_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(andy::lang::lexer &lexer, bool chain)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lavi::lang::lexer &lexer, bool chain)
 {
-    const andy::lang::lexer::token& token = lexer.see_next();
+    const lavi::lang::lexer::token& token = lexer.see_next();
 
-    andy::lang::lexer::token identifier_or_literal;
+    lavi::lang::lexer::token identifier_or_literal;
 
     switch(token.type) {
-        case andy::lang::lexer::token_type::token_literal:
-        case andy::lang::lexer::token_type::token_identifier: {
+        case lavi::lang::lexer::token_type::token_literal:
+        case lavi::lang::lexer::token_type::token_identifier: {
             auto possible_colon = lexer.see_next(1);
-            if(possible_colon.type == andy::lang::lexer::token_type::token_delimiter && possible_colon.content == ":") {
+            if(possible_colon.type == lavi::lang::lexer::token_type::token_delimiter && possible_colon.content == ":") {
                 return extract_pair(lexer);
             }
             identifier_or_literal = std::move(lexer.next_token());
             break;
         }
-        case andy::lang::lexer::token_type::token_operator:
+        case lavi::lang::lexer::token_type::token_operator:
             // The lexer sees array as operator and we need to handle it here
             if(token.content == "[") {
                 ast_node array_node(ast_node_type::ast_node_arraydecl);
@@ -433,15 +433,15 @@ andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(and
 
                     array_node.add_child(std::move(value_node));
 
-                    const andy::lang::lexer::token& comma_or_closing = lexer.next_token();
+                    const lavi::lang::lexer::token& comma_or_closing = lexer.next_token();
 
-                    if(comma_or_closing.type == andy::lang::lexer::token_type::token_delimiter && comma_or_closing.content == ",") {
+                    if(comma_or_closing.type == lavi::lang::lexer::token_type::token_delimiter && comma_or_closing.content == ",") {
                         if(lexer.see_next().content == "]") {
                             lexer.consume_token();
                             break;
                         }
                     } else {
-                        if(comma_or_closing.type == andy::lang::lexer::token_type::token_operator && comma_or_closing.content == "]") {
+                        if(comma_or_closing.type == lavi::lang::lexer::token_type::token_operator && comma_or_closing.content == "]") {
                             break;
                         } else {
                             throw std::runtime_error(token.error_message_at_current_position("Expected ',' or ']'"));
@@ -472,7 +472,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(and
                 throw std::runtime_error(token.error_message_at_current_position("Unexpected operator"));
             }
         break;
-        case andy::lang::lexer::token_type::token_delimiter: {
+        case lavi::lang::lexer::token_type::token_delimiter: {
             // Can be a map {}
 
             if(token.content == "{") {
@@ -484,13 +484,13 @@ andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(and
                 while(true) {
                     ast_node pair_node = parse_identifier_or_literal(lexer);
 
-                    if(pair_node.type() != andy::lang::parser::ast_node_type::ast_node_pair) {
+                    if(pair_node.type() != lavi::lang::parser::ast_node_type::ast_node_pair) {
                         throw std::runtime_error(token.error_message_at_current_position("Expected key-value pair in map declaration"));
                     }
 
                     map_node.add_child(std::move(pair_node));
 
-                    const andy::lang::lexer::token& comma_token = lexer.next_token();
+                    const lavi::lang::lexer::token& comma_token = lexer.next_token();
 
                     if(comma_token.content == ",") {
                         if(lexer.see_next().content == "}") {
@@ -533,10 +533,10 @@ andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(and
         ast_node fn_node(ast_node_type::ast_node_fn_call);
         fn_node.add_child(std::move(ast_node(std::move(identifier_or_literal), ast_node_type::ast_node_declname)));
 
-        if(next_token.type == andy::lang::lexer::token_type::token_delimiter && next_token.content == "(") {
+        if(next_token.type == lavi::lang::lexer::token_type::token_delimiter && next_token.content == "(") {
             lexer.consume_token(); // Consume the '(' token
 
-            if(auto next_token = lexer.see_next(); next_token.type == andy::lang::lexer::token_type::token_delimiter && next_token.content == ")") {
+            if(auto next_token = lexer.see_next(); next_token.type == lavi::lang::lexer::token_type::token_delimiter && next_token.content == ")") {
                 // No parameters, just a closing parenthesis
                 // Consumes the ')' token
                 lexer.consume_token();
@@ -546,7 +546,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(and
 
                 const auto& possible_closing = lexer.see_next();
 
-                if(possible_closing.type == andy::lang::lexer::token_type::token_delimiter && possible_closing.content == ")") {
+                if(possible_closing.type == lavi::lang::lexer::token_type::token_delimiter && possible_closing.content == ")") {
                     // Consume the ')' token
                     lexer.consume_token();
                 } else {
@@ -554,9 +554,9 @@ andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(and
                 }
             }
         } else if (auto& next_token = lexer.see_next();
-                  (next_token.type == andy::lang::lexer::token_type::token_identifier && next_token.content != "do") ||
-                  next_token.type == andy::lang::lexer::token_type::token_literal ||
-                    (next_token.type == andy::lang::lexer::token_type::token_keyword && next_token.content == "yield")) {
+                  (next_token.type == lavi::lang::lexer::token_type::token_identifier && next_token.content != "do") ||
+                  next_token.type == lavi::lang::lexer::token_type::token_literal ||
+                    (next_token.type == lavi::lang::lexer::token_type::token_keyword && next_token.content == "yield")) {
             // fn call with literal or identifier
             ast_node params_node = extract_fn_call_params(lexer);
             fn_node.add_child(std::move(params_node));
@@ -566,27 +566,27 @@ andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(and
     else {
         ast_node_type node_type;
     
-        if(identifier_or_literal.type == andy::lang::lexer::token_type::token_literal) {
+        if(identifier_or_literal.type == lavi::lang::lexer::token_type::token_literal) {
             node_type = ast_node_type::ast_node_valuedecl;
         } else {
             node_type = ast_node_type::ast_node_declname;
         }
 
-        identifier_or_literal_node = andy::lang::parser::ast_node(std::move(identifier_or_literal), node_type);
+        identifier_or_literal_node = lavi::lang::parser::ast_node(std::move(identifier_or_literal), node_type);
     }
 
-    if(identifier_or_literal_node.token().type == andy::lang::lexer::token_type::token_literal &&
-        identifier_or_literal_node.token().kind == andy::lang::lexer::token_kind::token_interpolated_string)
+    if(identifier_or_literal_node.token().type == lavi::lang::lexer::token_type::token_literal &&
+        identifier_or_literal_node.token().kind == lavi::lang::lexer::token_kind::token_interpolated_string)
     {
-        identifier_or_literal_node.token().kind = andy::lang::lexer::token_kind::token_string;
+        identifier_or_literal_node.token().kind = lavi::lang::lexer::token_kind::token_string;
         ast_node interpolated_node(ast_node_type::ast_node_interpolated_string);
         interpolated_node.add_child(std::move(identifier_or_literal_node));
 
         while(true)
         {
             const auto& possible_end = lexer.see_next();
-            if(possible_end.type == andy::lang::lexer::token_type::token_delimiter &&
-                possible_end.delimiter == andy::lang::lexer::token_delimiter_type::delimiter_end)
+            if(possible_end.type == lavi::lang::lexer::token_type::token_delimiter &&
+                possible_end.delimiter == lavi::lang::lexer::token_delimiter_type::delimiter_end)
             {
                 lexer.consume_token();
                 break;
@@ -595,7 +595,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(and
             // The ',' token is generated by the lexer to separate the string parts from the expressions
 
             const auto& possible_comma = lexer.see_next();
-            if(possible_comma.type != andy::lang::lexer::token_type::token_delimiter || possible_comma.delimiter != andy::lang::lexer::token_delimiter_type::delimiter_comma) {
+            if(possible_comma.type != lavi::lang::lexer::token_type::token_delimiter || possible_comma.delimiter != lavi::lang::lexer::token_delimiter_type::delimiter_comma) {
                 throw std::runtime_error(possible_comma.error_message_at_current_position("Expected ',' in interpolated string"));
             }
 
@@ -616,26 +616,26 @@ andy::lang::parser::ast_node andy::lang::parser::parse_identifier_or_literal(and
     return chain_if_exists(identifier_or_literal_node, *this, lexer);
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword(lavi::lang::lexer &lexer)
 {
-    const andy::lang::lexer::token& token = lexer.see_next();
+    const lavi::lang::lexer::token& token = lexer.see_next();
 
-    static std::map<std::string_view, andy::lang::parser::ast_node(andy::lang::parser::*)(andy::lang::lexer&)> keyword_parsers = {
-        { "type",      &andy::lang::parser::parse_keyword_class     },
-        { "var",       &andy::lang::parser::parse_keyword_var       },
-        { "fn" ,       &andy::lang::parser::parse_keyword_function  },
-        { "return",    &andy::lang::parser::parse_keyword_return    },
-        { "if",        &andy::lang::parser::parse_keyword_if        },
-        { "unless",    &andy::lang::parser::parse_keyword_if    },
-        { "loop",      &andy::lang::parser::parse_keyword_loop      },
-        { "namespace", &andy::lang::parser::parse_keyword_namespace },
-        { "break",     &andy::lang::parser::parse_keyword_break     },
-        { "static",    &andy::lang::parser::parse_keyword_static    },
-        { "yield",     &andy::lang::parser::parse_keyword_yield     },
-        { "within",    &andy::lang::parser::parse_keyword_within    },
-        { "throw",     &andy::lang::parser::parse_keyword_throw     },
-        { "try",       &andy::lang::parser::parse_keyword_try       },
-        { "enum",      &andy::lang::parser::parse_keyword_enum      },
+    static std::map<std::string_view, lavi::lang::parser::ast_node(lavi::lang::parser::*)(lavi::lang::lexer&)> keyword_parsers = {
+        { "type",      &lavi::lang::parser::parse_keyword_class     },
+        { "var",       &lavi::lang::parser::parse_keyword_var       },
+        { "fn" ,       &lavi::lang::parser::parse_keyword_function  },
+        { "return",    &lavi::lang::parser::parse_keyword_return    },
+        { "if",        &lavi::lang::parser::parse_keyword_if        },
+        { "unless",    &lavi::lang::parser::parse_keyword_if    },
+        { "loop",      &lavi::lang::parser::parse_keyword_loop      },
+        { "namespace", &lavi::lang::parser::parse_keyword_namespace },
+        { "break",     &lavi::lang::parser::parse_keyword_break     },
+        { "static",    &lavi::lang::parser::parse_keyword_static    },
+        { "yield",     &lavi::lang::parser::parse_keyword_yield     },
+        { "within",    &lavi::lang::parser::parse_keyword_within    },
+        { "throw",     &lavi::lang::parser::parse_keyword_throw     },
+        { "try",       &lavi::lang::parser::parse_keyword_try       },
+        { "enum",      &lavi::lang::parser::parse_keyword_enum      },
     };
 
     auto keyword_parser = keyword_parsers.find(token.content);
@@ -647,12 +647,12 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword(andy::lang::lexer
     return (this->*keyword_parser->second)(lexer);
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_class(andy::lang::lexer &lexer) {
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_class(lavi::lang::lexer &lexer) {
     ast_node class_node(ast_node_type::ast_node_classdecl);
 
     class_node.add_child(std::move(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype)));
 
-    const andy::lang::lexer::token& identifier_token = lexer.see_next();
+    const lavi::lang::lexer::token& identifier_token = lexer.see_next();
 
     if(identifier_token.type != lexer::token_type::token_identifier) {
         throw std::runtime_error(identifier_token.error_message_at_current_position("Expected class name after 'class'"));
@@ -660,14 +660,14 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_class(andy::lang:
 
     class_node.add_child(std::move(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname)));
 
-    const andy::lang::lexer::token& extends_or_context_token = lexer.see_next();
+    const lavi::lang::lexer::token& extends_or_context_token = lexer.see_next();
 
-    if(extends_or_context_token.type == andy::lang::lexer::token_identifier && extends_or_context_token.content == "extends") {
+    if(extends_or_context_token.type == lavi::lang::lexer::token_identifier && extends_or_context_token.content == "extends") {
         ast_node base_class_node(ast_node_type::ast_node_classdecl_base);
         base_class_node.add_child(std::move(ast_node(extends_or_context_token, ast_node_type::ast_node_decltype)));
         lexer.consume_token(); // Consume the 'extends' or ':' token
 
-        const andy::lang::lexer::token& baseclass_token = lexer.see_next();
+        const lavi::lang::lexer::token& baseclass_token = lexer.see_next();
 
         if(baseclass_token.type != lexer::token_type::token_identifier) {
             throw std::runtime_error(baseclass_token.error_message_at_current_position("Expected identifier as base class name"));
@@ -687,11 +687,11 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_class(andy::lang:
     return class_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_var(andy::lang::lexer &lexer){
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_var(lavi::lang::lexer &lexer){
     ast_node var_node(ast_node_type::ast_node_vardecl);
     var_node.add_child(std::move(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype)));
 
-    andy::lang::lexer::token identifier_token = lexer.see_next();
+    lavi::lang::lexer::token identifier_token = lexer.see_next();
 
     if(identifier_token.type != lexer::token_type::token_identifier) {
         throw std::runtime_error(identifier_token.error_message_at_current_position("Expected variable name after 'var'"));
@@ -699,7 +699,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_var(andy::lang::l
 
     var_node.add_child(std::move(ast_node(std::move(identifier_token), ast_node_type::ast_node_declname)));
 
-    const andy::lang::lexer::token& equal_token = lexer.see_next(1);
+    const lavi::lang::lexer::token& equal_token = lexer.see_next(1);
 
     if(equal_token.type == lexer::token_type::token_operator && equal_token.content == "=") {
         // There is an '=' token, extract as a function call
@@ -712,11 +712,11 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_var(andy::lang::l
     return var_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_function(andy::lang::lexer &lexer) {
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_function(lavi::lang::lexer &lexer) {
     ast_node method_node(ast_node_type::ast_node_fn_decl);
     method_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
 
-    const andy::lang::lexer::token& identifier_token = lexer.see_next();
+    const lavi::lang::lexer::token& identifier_token = lexer.see_next();
 
     switch(identifier_token.type)
     {
@@ -730,7 +730,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_function(andy::la
 
     method_node.add_child(std::move(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname)));
 
-    const andy::lang::lexer::token& parenthesis_token = lexer.see_next();
+    const lavi::lang::lexer::token& parenthesis_token = lexer.see_next();
 
     if(parenthesis_token.content == "(") {
         lexer.consume_token(); // Consume the '(' token
@@ -738,7 +738,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_function(andy::la
         ast_node params_node(ast_node_type::ast_node_fn_params);
 
         while(true) {
-            const andy::lang::lexer::token& identifier_or_parenthesis = lexer.see_next();
+            const lavi::lang::lexer::token& identifier_or_parenthesis = lexer.see_next();
 
             if(identifier_or_parenthesis.type == lexer::token_type::token_identifier) {
                 auto next_token = lexer.see_next(1);
@@ -773,7 +773,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_function(andy::la
     return method_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_return(andy::lang::lexer &lexer) {
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_return(lavi::lang::lexer &lexer) {
     ast_node return_node(std::move(lexer.next_token()), ast_node_type::ast_node_fn_return);
 
     auto possible_return_value = lexer.see_next();
@@ -791,7 +791,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_return(andy::lang
     return return_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_if(andy::lang::lexer &lexer){
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_if(lavi::lang::lexer &lexer){
     ast_node if_node(ast_node_type::ast_node_conditional);
     if_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
 
@@ -804,16 +804,16 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_if(andy::lang::le
     ast_node if_context = extract_context(lexer, *this, &valid_following_tokens);
     if_node.add_child(std::move(if_context));
     
-    andy::lang::lexer::token token = lexer.next_token();
+    lavi::lang::lexer::token token = lexer.next_token();
 
     if_node.set_end_token(token); // Consume the closing 'end' or 'else'
 
     // Check if there is an else
-    if(token.type == andy::lang::lexer::token_type::token_keyword && token.content == "else") {
+    if(token.type == lavi::lang::lexer::token_type::token_keyword && token.content == "else") {
         // Check if it is an else if
-        const andy::lang::lexer::token& next_token = lexer.see_next();
+        const lavi::lang::lexer::token& next_token = lexer.see_next();
 
-        if(next_token.type == andy::lang::lexer::token_type::token_keyword && next_token.content == "if") {
+        if(next_token.type == lavi::lang::lexer::token_type::token_keyword && next_token.content == "if") {
             ast_node else_node = parse_keyword_if(lexer);
             if_node.add_child(std::move(else_node));
         } else {
@@ -828,11 +828,11 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_if(andy::lang::le
     return if_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_namespace(andy::lang::lexer &lexer) {
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_namespace(lavi::lang::lexer &lexer) {
     ast_node namespace_node(ast_node_type::ast_node_classdecl);
     namespace_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
 
-    const andy::lang::lexer::token& identifier_token = lexer.see_next();
+    const lavi::lang::lexer::token& identifier_token = lexer.see_next();
 
     if(identifier_token.type != lexer::token_type::token_identifier) {
         throw std::runtime_error(identifier_token.error_message_at_current_position("Expected namespace name after 'namespace'"));
@@ -847,20 +847,20 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_namespace(andy::l
     return namespace_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_loop(andy::lang::lexer& lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_loop(lavi::lang::lexer& lexer)
 {
     lexer.consume_token(); // Consume the 'loop' keyword
 
-    static std::map<std::string_view, andy::lang::parser::ast_node(andy::lang::parser::*)(andy::lang::lexer&)> loop_parsers = {
-        { "while",   &andy::lang::parser::parse_keyword_while   },
-        { "for",     &andy::lang::parser::parse_keyword_foreach },
-        { "times",   &andy::lang::parser::parse_keyword_for },
-        { "until",   &andy::lang::parser::parse_keyword_while   }
+    static std::map<std::string_view, lavi::lang::parser::ast_node(lavi::lang::parser::*)(lavi::lang::lexer&)> loop_parsers = {
+        { "while",   &lavi::lang::parser::parse_keyword_while   },
+        { "for",     &lavi::lang::parser::parse_keyword_foreach },
+        { "times",   &lavi::lang::parser::parse_keyword_for },
+        { "until",   &lavi::lang::parser::parse_keyword_while   }
     };
 
-    const andy::lang::lexer::token& next_token = lexer.see_next();
+    const lavi::lang::lexer::token& next_token = lexer.see_next();
 
-    if(next_token.type == andy::lang::lexer::token_type::token_identifier) {
+    if(next_token.type == lavi::lang::lexer::token_type::token_identifier) {
         auto loop_parser = loop_parsers.find(next_token.content);
 
         if(loop_parser != loop_parsers.end()) {
@@ -872,11 +872,11 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_loop(andy::lang::
     throw std::runtime_error(next_token.error_message_at_current_position("Expected 'while', 'for', 'foreach' or 'times' after 'loop'"));
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_for(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_for(lavi::lang::lexer &lexer)
 {
     ast_node for_node(ast_node_type::ast_node_for);
 
-    const andy::lang::lexer::token& times_token = lexer.next_token();
+    const lavi::lang::lexer::token& times_token = lexer.next_token();
     for_node.add_child(ast_node(std::move(times_token), ast_node_type::ast_node_decltype));
 
     ast_node value_node = parse_identifier_or_literal(lexer);
@@ -888,12 +888,12 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_for(andy::lang::l
     return for_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_foreach(andy::lang::lexer &lexer) {
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_foreach(lavi::lang::lexer &lexer) {
     ast_node foreach_node(ast_node_type::ast_node_foreach);
     foreach_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
 
     ast_node var_node(ast_node_type::ast_node_vardecl);
-    const andy::lang::lexer::token& identifier_token = lexer.next_token();
+    const lavi::lang::lexer::token& identifier_token = lexer.next_token();
 
     if(identifier_token.type != lexer::token_type::token_identifier) {
         throw std::runtime_error(identifier_token.error_message_at_current_position("Expected variable name after 'var'"));
@@ -903,9 +903,9 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_foreach(andy::lan
 
     foreach_node.add_child(std::move(var_node));
 
-    const andy::lang::lexer::token& in_token = lexer.next_token();
+    const lavi::lang::lexer::token& in_token = lexer.next_token();
 
-    if(in_token.type != andy::lang::lexer::token_type::token_identifier || in_token.content != "in") {
+    if(in_token.type != lavi::lang::lexer::token_type::token_identifier || in_token.content != "in") {
         throw std::runtime_error(in_token.error_message_at_current_position("Expected 'in' after variable name"));
     }
 
@@ -927,7 +927,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_foreach(andy::lan
     return foreach_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_while(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_while(lavi::lang::lexer &lexer)
 {
     ast_node while_node(ast_node_type::ast_node_while);
     while_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
@@ -944,7 +944,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_while(andy::lang:
     return while_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_break(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_break(lavi::lang::lexer &lexer)
 {
     ast_node break_node(ast_node_type::ast_node_break);
     break_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
@@ -952,13 +952,13 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_break(andy::lang:
     return break_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_static(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_static(lavi::lang::lexer &lexer)
 {
-    const andy::lang::lexer::token& static_token = lexer.next_token();
+    const lavi::lang::lexer::token& static_token = lexer.next_token();
 
-    const andy::lang::lexer::token& next_token = lexer.see_next();
+    const lavi::lang::lexer::token& next_token = lexer.see_next();
 
-    if(next_token.type == andy::lang::lexer::token_type::token_keyword) {
+    if(next_token.type == lavi::lang::lexer::token_type::token_keyword) {
         if(next_token.content == "fn") {
             ast_node node = parse_keyword_function(lexer);
             node.add_child(ast_node(std::move(static_token), ast_node_type::ast_node_declstatic));
@@ -975,10 +975,10 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_static(andy::lang
     throw std::runtime_error(next_token.error_message_at_current_position("Expected keyword 'fun' or 'var' after 'static'"));
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_within(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_within(lavi::lang::lexer &lexer)
 {
     lexer.consume_token(); // Consume the 'within' token
-    const andy::lang::lexer::token& token = lexer.next_token();
+    const lavi::lang::lexer::token& token = lexer.next_token();
     ast_node object_node(ast_node_type::ast_node_fn_object);
     object_node.add_child(ast_node(std::move(token), ast_node_type::ast_node_declname));
 
@@ -988,13 +988,13 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_within(andy::lang
     return within_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_yield(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_yield(lavi::lang::lexer &lexer)
 {
-    andy::lang::parser::ast_node node(std::move(lexer.next_token()), ast_node_type::ast_node_yield);
+    lavi::lang::parser::ast_node node(std::move(lexer.next_token()), ast_node_type::ast_node_yield);
 
     auto next_token = lexer.see_next();
 
-    if(next_token.type == andy::lang::lexer::token_type::token_delimiter && next_token.content == "(") {
+    if(next_token.type == lavi::lang::lexer::token_type::token_delimiter && next_token.content == "(") {
         lexer.consume_token(); // Consume the '(' token
         node.add_child(extract_fn_call_params(lexer));
         lexer.consume_token(); // Consume the ')' token
@@ -1003,18 +1003,18 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_yield(andy::lang:
     return node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_throw(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_throw(lavi::lang::lexer &lexer)
 {
     // throw [object_to_throw]
 
-    andy::lang::parser::ast_node node(std::move(lexer.next_token()), ast_node_type::ast_node_throw);
+    lavi::lang::parser::ast_node node(std::move(lexer.next_token()), ast_node_type::ast_node_throw);
     auto next_node = parse_identifier_or_literal(lexer);
     node.add_child(std::move(next_node));
 
     return node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_try(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_try(lavi::lang::lexer &lexer)
 {
     /*
     try
@@ -1025,24 +1025,24 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_try(andy::lang::l
     */
    // * ExceptionClass is optional, if not provided, it will catch all exceptions
 
-    andy::lang::parser::ast_node try_node(std::move(lexer.next_token()), ast_node_type::ast_node_try);
+    lavi::lang::parser::ast_node try_node(std::move(lexer.next_token()), ast_node_type::ast_node_try);
 
     static std::vector<std::string_view> valid_following_tokens = { "catch" };
     ast_node try_context = extract_context(lexer, *this, &valid_following_tokens);
     try_node.add_child(std::move(try_context));
 
     while(true) {
-        const andy::lang::lexer::token& possible_catch_token = lexer.see_next();
+        const lavi::lang::lexer::token& possible_catch_token = lexer.see_next();
 
-        if(possible_catch_token.type != andy::lang::lexer::token_type::token_keyword || possible_catch_token.content != "catch") {
+        if(possible_catch_token.type != lavi::lang::lexer::token_type::token_keyword || possible_catch_token.content != "catch") {
             break;
         }
 
         ast_node catch_node(std::move(lexer.next_token()), ast_node_type::ast_node_catch);
 
-        const andy::lang::lexer::token& possible_parenthesis_token = lexer.see_next();
+        const lavi::lang::lexer::token& possible_parenthesis_token = lexer.see_next();
 
-        if(possible_parenthesis_token.type == andy::lang::lexer::token_type::token_delimiter && possible_parenthesis_token.content == "(") {
+        if(possible_parenthesis_token.type == lavi::lang::lexer::token_type::token_delimiter && possible_parenthesis_token.content == "(") {
             /*
                 catch(ExceptionClass variable_name)
                      ^ '(' token
@@ -1059,7 +1059,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_try(andy::lang::l
                       ^^^^^^^^^^^^^ Variable
             */
 
-            if(possible_or_variable_name_class.type != andy::lang::lexer::token_type::token_identifier) {
+            if(possible_or_variable_name_class.type != lavi::lang::lexer::token_type::token_identifier) {
                 throw std::runtime_error(possible_or_variable_name_class.error_message_at_current_position("Expected exception class or variable name after 'catch'"));
             }
 
@@ -1072,7 +1072,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_try(andy::lang::l
                 catch(ExceptionClass variable_name)
                                      ^^^^^^^^^^^^^ Variable name
             */
-            if(possible_variable_name_token.type == andy::lang::lexer::token_type::token_identifier)
+            if(possible_variable_name_token.type == lavi::lang::lexer::token_type::token_identifier)
             {
                 /*
                   catch(ExceptionClass variable_name)
@@ -1093,7 +1093,7 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_try(andy::lang::l
                 catch(ExceptionClass variable_name)
                                                   ^ ')' token
             */
-            if(possible_closing_parenthesis.type != andy::lang::lexer::token_type::token_delimiter || possible_closing_parenthesis.content != ")") {
+            if(possible_closing_parenthesis.type != lavi::lang::lexer::token_type::token_delimiter || possible_closing_parenthesis.content != ")") {
                 throw std::runtime_error(possible_closing_parenthesis.error_message_at_current_position("Expected closing ')' after exception class and variable name in 'catch'"));
             }
 
@@ -1115,14 +1115,14 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_try(andy::lang::l
     return try_node;
 }
 
-andy::lang::parser::ast_node andy::lang::parser::parse_keyword_enum(andy::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_enum(lavi::lang::lexer &lexer)
 {
     ast_node enum_node(ast_node_type::ast_node_enum);
     enum_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
 
     auto possible_name_token = lexer.see_next();
 
-    if(possible_name_token.type != andy::lang::lexer::token_type::token_identifier) {
+    if(possible_name_token.type != lavi::lang::lexer::token_type::token_identifier) {
         throw std::runtime_error(possible_name_token.error_message_at_current_position("Expected enum name after 'enum'"));
     }
 
@@ -1133,12 +1133,12 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_enum(andy::lang::
     while(true) {
         auto& possible_enum_entry = lexer.see_next();
 
-        if(possible_enum_entry.type == andy::lang::lexer::token_type::token_delimiter && possible_enum_entry.content == "end") {
+        if(possible_enum_entry.type == lavi::lang::lexer::token_type::token_delimiter && possible_enum_entry.content == "end") {
             enum_node.set_end_token(lexer.next_token()); // Consume the 'end' token
             break;
         }
 
-        if(possible_enum_entry.type != andy::lang::lexer::token_type::token_identifier) {
+        if(possible_enum_entry.type != lavi::lang::lexer::token_type::token_identifier) {
             throw std::runtime_error(possible_enum_entry.error_message_at_current_position("Expected enum entry or 'end'"));
         }
 
@@ -1150,23 +1150,23 @@ andy::lang::parser::ast_node andy::lang::parser::parse_keyword_enum(andy::lang::
     return enum_node;
 }
 
-andy::lang::parser::exception::exception(std::string message, const andy::lang::lexer::token& token)
+lavi::lang::parser::exception::exception(std::string message, const lavi::lang::lexer::token& token)
     : m_token(token), m_message(std::move(message)), std::exception()
 {
 }
 
-andy::lang::parser::exception::exception(const andy::lang::lexer::token& token)
+lavi::lang::parser::exception::exception(const lavi::lang::lexer::token& token)
     : m_token(token), std::exception()
 {
 }
 
-andy::lang::parser::unexpected_token_error::unexpected_token_error(const andy::lang::lexer::token& token, std::string_view expected)
-    : andy::lang::parser::exception(token), m_expected(expected)
+lavi::lang::parser::unexpected_token_error::unexpected_token_error(const lavi::lang::lexer::token& token, std::string_view expected)
+    : lavi::lang::parser::exception(token), m_expected(expected)
 {
     m_message = generate_message();
 }
 
-std::string andy::lang::parser::unexpected_token_error::generate_message() const
+std::string lavi::lang::parser::unexpected_token_error::generate_message() const
 {
     std::string message;
     message.reserve(100);

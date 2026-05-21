@@ -6,18 +6,18 @@
 #include <andy/lang/lang.hpp>
 #include <andy/lang/interpreter.hpp>
 
-std::shared_ptr<andy::lang::structure> create_directory_class(andy::lang::interpreter* interpreter)
+std::shared_ptr<lavi::lang::structure> create_directory_class(lavi::lang::interpreter* interpreter)
 {
-    auto DirectoryClass = std::make_shared<andy::lang::structure>("Dir");
+    auto DirectoryClass = std::make_shared<lavi::lang::structure>("Dir");
 
-    DirectoryClass->instance_functions["init"] = std::make_shared<andy::lang::function>("init", std::initializer_list<std::string>{"path"}, [](andy::lang::interpreter* interpreter) {
+    DirectoryClass->instance_functions["init"] = std::make_shared<lavi::lang::function>("init", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {
         auto object = interpreter->current_context->self;
         object->set_native<std::filesystem::path>(std::move(std::filesystem::path(interpreter->current_context->positional_params[0]->as<std::string>())));
 
         return nullptr;
     });
 
-    DirectoryClass->instance_functions["glob"] = std::make_shared<andy::lang::function>("glob", std::initializer_list<std::string>{"pattern"}, [](andy::lang::interpreter* interpreter) {
+    DirectoryClass->instance_functions["glob"] = std::make_shared<lavi::lang::function>("glob", std::initializer_list<std::string>{"pattern"}, [](lavi::lang::interpreter* interpreter) {
         std::filesystem::path& root_path = interpreter->current_context->self->as<std::filesystem::path>();
 #ifdef _WIN32
         std::string pattern = interpreter->current_context->positional_params[0]->as<std::string>();
@@ -26,7 +26,7 @@ std::shared_ptr<andy::lang::structure> create_directory_class(andy::lang::interp
         const std::string& pattern = interpreter->current_context->positional_params[0]->as<std::string>();
 #endif
 
-        std::vector<std::shared_ptr<andy::lang::object>> results;
+        std::vector<std::shared_ptr<lavi::lang::object>> results;
 
         std::string_view pattern_view(pattern);
 
@@ -86,7 +86,7 @@ std::shared_ptr<andy::lang::structure> create_directory_class(andy::lang::interp
 
                 } else if(shoud_start_matching_files && entry.is_regular_file()) {
                     if(relative_path.filename().string().ends_with(current_matching_part)) {
-                        results.push_back(andy::lang::object::instantiate(interpreter, interpreter->PathClass, std::move(entry_path)));
+                        results.push_back(lavi::lang::object::instantiate(interpreter, interpreter->PathClass, std::move(entry_path)));
                     }
                 }
             }
@@ -98,12 +98,12 @@ std::shared_ptr<andy::lang::structure> create_directory_class(andy::lang::interp
 
         recurse(root_path);
 
-        return andy::lang::object::instantiate(interpreter, interpreter->ArrayClass, std::move(results));
+        return lavi::lang::object::instantiate(interpreter, interpreter->ArrayClass, std::move(results));
     });
 
-    DirectoryClass->functions["exists?"] = std::make_shared<andy::lang::function>("exists?", std::initializer_list<std::string>{"path"}, [](andy::lang::interpreter* interpreter) {
+    DirectoryClass->functions["exists?"] = std::make_shared<lavi::lang::function>("exists?", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {
         std::filesystem::path path;
-        std::shared_ptr<andy::lang::object> path_object = interpreter->current_context->positional_params[0];
+        std::shared_ptr<lavi::lang::object> path_object = interpreter->current_context->positional_params[0];
         if(path_object->cls == interpreter->StringClass) {
             path = path_object->as<std::string>();
         } else if(path_object->cls == interpreter->PathClass) {
@@ -112,15 +112,15 @@ std::shared_ptr<andy::lang::structure> create_directory_class(andy::lang::interp
             throw std::runtime_error("invalid path");
         }
         if(std::filesystem::exists(path) && std::filesystem::is_directory(path)) {
-            return std::make_shared<andy::lang::object>(interpreter->TrueClass);
+            return std::make_shared<lavi::lang::object>(interpreter->TrueClass);
         } else {
-            return std::make_shared<andy::lang::object>(interpreter->FalseClass);
+            return std::make_shared<lavi::lang::object>(interpreter->FalseClass);
         }
     });
 
-    DirectoryClass->functions["create"] = std::make_shared<andy::lang::function>("create", std::initializer_list<std::string>{"path"}, [](andy::lang::interpreter* interpreter) {
+    DirectoryClass->functions["create"] = std::make_shared<lavi::lang::function>("create", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {
         std::filesystem::path path;
-        std::shared_ptr<andy::lang::object> path_object = interpreter->current_context->positional_params[0];
+        std::shared_ptr<lavi::lang::object> path_object = interpreter->current_context->positional_params[0];
         if(path_object->cls == interpreter->StringClass) {
             path = path_object->as<std::string>();
         } else if(path_object->cls == interpreter->PathClass) {
@@ -132,20 +132,20 @@ std::shared_ptr<andy::lang::structure> create_directory_class(andy::lang::interp
         return nullptr;
     });
 
-    DirectoryClass->functions["home"] = std::make_shared<andy::lang::function>("home", [](andy::lang::interpreter* interpreter) {
+    DirectoryClass->functions["home"] = std::make_shared<lavi::lang::function>("home", [](lavi::lang::interpreter* interpreter) {
         std::filesystem::path path = std::filesystem::path(std::getenv("HOME"));
         if(path.empty()) {
             throw std::runtime_error("Unable to retrieve home directory");
         }
-        return andy::lang::object::instantiate(interpreter, interpreter->PathClass, std::move(path));
+        return lavi::lang::object::instantiate(interpreter, interpreter->PathClass, std::move(path));
     });
 
-    DirectoryClass->functions["current"] = std::make_shared<andy::lang::function>("current", [DirectoryClass](andy::lang::interpreter* interpreter) {
+    DirectoryClass->functions["current"] = std::make_shared<lavi::lang::function>("current", [DirectoryClass](lavi::lang::interpreter* interpreter) {
         std::filesystem::path path = std::filesystem::current_path();
         if(path.empty()) {
             throw std::runtime_error("Unable to retrieve current directory");
         }
-        return andy::lang::object::instantiate(interpreter, DirectoryClass, std::move(path));
+        return lavi::lang::object::instantiate(interpreter, DirectoryClass, std::move(path));
     });
 
     return DirectoryClass;
