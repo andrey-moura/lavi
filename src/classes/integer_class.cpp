@@ -1,5 +1,6 @@
 #include <andy/lang/lang.hpp>
 #include <andy/lang/interpreter.hpp>
+#include <andy/lang/api.hpp>
 
 #include "add_operators.hpp"
 
@@ -20,7 +21,13 @@ std::shared_ptr<andy::lang::structure> create_integer_class(andy::lang::interpre
     IntegerClass->instance_functions["to_string"] = std::make_shared<andy::lang::function>("to_string", [](andy::lang::interpreter* interpreter) {
         int value = interpreter->current_context->self->as<int>();
 
-        return andy::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(std::to_string(value)));
+        return andy::lang::api::to_object(interpreter, std::to_string(value));
+    });
+
+    IntegerClass->instance_functions["inspect"] = std::make_shared<andy::lang::function>("inspect", [](andy::lang::interpreter* interpreter) {
+        int value = interpreter->current_context->self->as<int>();
+
+        return andy::lang::api::to_object(interpreter, std::to_string(value));
     });
 
     IntegerClass->instance_functions["positive?"] = std::make_shared<andy::lang::function>("positive?", [](andy::lang::interpreter* interpreter) {
