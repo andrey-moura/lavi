@@ -158,7 +158,7 @@ install(TARGETS lavi-lang DESTINATION lib)
 # Install lavi-lang headers
 install(DIRECTORY include/lavi DESTINATION include)
 install(DIRECTORY std DESTINATION include/lavi)
-install(DIRECTORY utility DESTINATION src/lavi-lang)
+install(DIRECTORY utility DESTINATION src/lavi)
 
 install(EXPORT lavi-langTargets
     FILE lavi-langTargets.cmake
