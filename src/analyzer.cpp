@@ -5,19 +5,19 @@
 #include "andy/file.hpp"
 #include "andy/binary.hpp"
 
-#include "andy/lang/parser.hpp"
-#include "andy/lang/lexer.hpp"
-#include "andy/lang/interpreter.hpp"
-#include "andy/lang/extension.hpp"
-#include "andy/lang/preprocessor.hpp"
+#include "lavi/lang/parser.hpp"
+#include "lavi/lang/lexer.hpp"
+#include "lavi/lang/interpreter.hpp"
+#include "lavi/lang/extension.hpp"
+#include "lavi/lang/preprocessor.hpp"
 
 struct analyzer_error
 {
     std::string_view type;
     std::string message;
     std::string file_name;
-    andy::lang::lexer::token_position start;
-    andy::lang::lexer::token_position end;
+    lavi::lang::lexer::token_position start;
+    lavi::lang::lexer::token_position end;
 };
 
 std::string buffer;
@@ -42,8 +42,8 @@ void write_linter_warning(
     std::string_view type,
     std::string_view message,
     std::string_view file_name,
-    andy::lang::lexer::token_position start,
-    andy::lang::lexer::token_position end,
+    lavi::lang::lexer::token_position start,
+    lavi::lang::lexer::token_position end,
     std::string_view tags
 )
 {
@@ -99,12 +99,12 @@ void print_help(std::string_view program_name) {
                 << "    - Read content from stdin using --stdin.\n"
                 << "    - Read content from a temporary file using --temp <temp-path>.\n\n"
                 << "Examples:\n"
-                << "  " << program_name << " main.andy\n"
-                << "      Reads content from main.andy and uses it as the logical path.\n\n"
-                << "  " << program_name << " main.andy --stdin\n"
-                << "      Reads content from standard input, but treats it as if it came from main.andy.\n\n"
-                << "  " << program_name << " main.andy --temp temp_file.andy\n"
-                << "      Reads content from temp_file.andy, but treats it as if it came from main.andy.\n";
+                << "  " << program_name << " main.lv\n"
+                << "      Reads content from main.lv and uses it as the logical path.\n\n"
+                << "  " << program_name << " main.lv --stdin\n"
+                << "      Reads content from standard input, but treats it as if it came from main.lv.\n\n"
+                << "  " << program_name << " main.lv --temp temp_file.lv\n"
+                << "      Reads content from temp_file.lv, but treats it as if it came from main.lv.\n";
 }
 
 struct log_output {
@@ -222,7 +222,7 @@ int main(int argc, char** argv) {
             std::getline(std::cin, temp);
             file_path = std::filesystem::absolute(temp);
             std::getline(std::cin, temp);
-            source = andy::file::read_all_text<char>(temp);
+            source = lavi::file::read_all_text<char>(temp);
         } else {
             run = false;
             file_path = std::filesystem::absolute(argv[1]);
@@ -237,9 +237,9 @@ int main(int argc, char** argv) {
                 }
             } else if(read_from_temp) {
                 std::filesystem::path temp_file_path = std::filesystem::absolute(read_from_temp.argument);
-                source = andy::file::read_all_text<char>(temp_file_path);
+                source = lavi::file::read_all_text<char>(temp_file_path);
             } else {
-                source = andy::file::read_all_text<char>(file_path);
+                source = lavi::file::read_all_text<char>(file_path);
             }
         }
 
@@ -252,8 +252,8 @@ int main(int argc, char** argv) {
             std::string_view name;
             std::string_view type;
             std::string_view file;
-            andy::lang::lexer::token_position start;
-            andy::lang::lexer::token_position end;
+            lavi::lang::lexer::token_position start;
+            lavi::lang::lexer::token_position end;
 
             std::vector<analyzer_declaration> functions;
             std::vector<analyzer_declaration> variables;
@@ -284,10 +284,10 @@ int main(int argc, char** argv) {
             exit(1);
         }
 
-        andy::lang::interpreter interpreter;
+        lavi::lang::interpreter interpreter;
         // create_builtin_libs();
         std::string file_path_str = file_path.string();
-        andy::lang::lexer l(file_path_str, source);
+        lavi::lang::lexer l(file_path_str, source);
 
         try {
             l.tokenize();
@@ -296,7 +296,7 @@ int main(int argc, char** argv) {
         }
         struct analyzer_token {
             std::string_view type;
-            andy::lang::lexer::token token;
+            lavi::lang::lexer::token token;
             std::string_view modifier;
         };
         std::vector<analyzer_token> tokens_to_write;
@@ -309,7 +309,7 @@ int main(int argc, char** argv) {
                 continue;
             }
             switch(token.type) {    
-                case andy::lang::lexer::token_type::token_preprocessor:
+                case lavi::lang::lexer::token_type::token_preprocessor:
                     tokens_to_write.push_back({ "keyword", token });
                     if(token.content == "#if") {
                         next_token_is_macro = true;
@@ -318,17 +318,17 @@ int main(int argc, char** argv) {
             }
         }
         
-        andy::lang::preprocessor preprocessor;
+        lavi::lang::preprocessor preprocessor;
         preprocessor.process(file_path, l);
 
         buffer += "{\n";
 
-        andy::lang::parser p;
-        andy::lang::parser::ast_node root_node;
+        lavi::lang::parser p;
+        lavi::lang::parser::ast_node root_node;
         
         try {
             root_node = p.parse_all(l);
-        } catch (const andy::lang::parser::exception& e) {
+        } catch (const lavi::lang::parser::exception& e) {
             const auto& token = e.token();
 
             debug << e.what() << std::endl;
@@ -345,18 +345,18 @@ int main(int argc, char** argv) {
         }
 
         size_t i = 0;
-        std::function<void(const andy::lang::parser::ast_node& node)> inspect_node_for_errors;
-        inspect_node_for_errors = [&](const andy::lang::parser::ast_node& node) {
-            if(node.type() == andy::lang::parser::ast_node_type::ast_node_fn_call) {
-                const andy::lang::parser::ast_node* fn_declname_node = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
-                const andy::lang::lexer::token& fn_declname_token = fn_declname_node->token();
+        std::function<void(const lavi::lang::parser::ast_node& node)> inspect_node_for_errors;
+        inspect_node_for_errors = [&](const lavi::lang::parser::ast_node& node) {
+            if(node.type() == lavi::lang::parser::ast_node_type::ast_node_fn_call) {
+                const lavi::lang::parser::ast_node* fn_declname_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
+                const lavi::lang::lexer::token& fn_declname_token = fn_declname_node->token();
                 std::string_view fn_declname = fn_declname_token.content;
                 
                 if(fn_declname != "import") {
                     return;
                 }
 
-                auto* params_node = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params);
+                auto* params_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params);
 
                 if(!params_node || params_node->childrens().size() != 1) {
                     return;
@@ -364,15 +364,15 @@ int main(int argc, char** argv) {
 
                 auto* import_node = params_node->childrens().data();
 
-                if(import_node->type() != andy::lang::parser::ast_node_type::ast_node_valuedecl) {
+                if(import_node->type() != lavi::lang::parser::ast_node_type::ast_node_valuedecl) {
                     return;
                 }
 
-                const andy::lang::lexer::token& import_declname_token = import_node->token();
+                const lavi::lang::lexer::token& import_declname_token = import_node->token();
                 std::string_view import_declname = import_declname_token.content;
 
-                // if(andy::lang::extension::exists(file_directory, import_declname)) {
-                //     andy::lang::extension::import(&interpreter, import_declname);
+                // if(lavi::lang::extension::exists(file_directory, import_declname)) {
+                //     lavi::lang::extension::import(&interpreter, import_declname);
                 //     return;
                 // }
 
@@ -466,10 +466,10 @@ int main(int argc, char** argv) {
             }
             current_context->classes.push_back(cls_decl);
         }
-        std::function<void(const andy::lang::parser::ast_node& node)> inspect_node;
-        std::function<void(const andy::lang::parser::ast_node& node)> switch_type;
-        auto push_context_from_node_object_if_any = [&](const andy::lang::parser::ast_node& node) {
-            const andy::lang::parser::ast_node* object_node = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_object);
+        std::function<void(const lavi::lang::parser::ast_node& node)> inspect_node;
+        std::function<void(const lavi::lang::parser::ast_node& node)> switch_type;
+        auto push_context_from_node_object_if_any = [&](const lavi::lang::parser::ast_node& node) {
+            const lavi::lang::parser::ast_node* object_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_object);
 
             if(object_node) {
                 push_context();
@@ -494,23 +494,23 @@ int main(int argc, char** argv) {
                 pop_context();
             }
         };
-        auto pop_context_from_node_object_if_any = [&](const andy::lang::parser::ast_node& node) {
-            const andy::lang::parser::ast_node* object_node = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_object);
+        auto pop_context_from_node_object_if_any = [&](const lavi::lang::parser::ast_node& node) {
+            const lavi::lang::parser::ast_node* object_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_object);
 
             if(object_node) {
                 pop_context();
             }
         };
-        inspect_node = [&](const andy::lang::parser::ast_node& node) {
+        inspect_node = [&](const lavi::lang::parser::ast_node& node) {
             switch(node.type()) {
-                case andy::lang::parser::ast_node_type::ast_node_unit:
+                case lavi::lang::parser::ast_node_type::ast_node_unit:
                     for(const auto& child : node.childrens()) {
                         inspect_node(child);
                     }
                 break;
-                case andy::lang::parser::ast_node_type::ast_node_classdecl:
+                case lavi::lang::parser::ast_node_type::ast_node_classdecl:
                 {
-                    auto* declname_node = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
+                    auto* declname_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
                     std::string_view class_name = declname_node->token().content;
                     tokens_to_write.push_back({ "class", declname_node->token() });
 
@@ -518,6 +518,27 @@ int main(int argc, char** argv) {
                     cls.name = class_name;
                     cls.type = "class";
                     current_context->classes.push_back(cls);
+
+                    auto* base = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_classdecl_base);
+
+                    if(base) {
+                        auto decltype_node = base->child_from_type(lavi::lang::parser::ast_node_type::ast_node_decltype);
+
+                        if(decltype_node) {
+                            const auto& decltype_token = decltype_node->token();
+
+                            if(decltype_token.type == lavi::lang::lexer::token_type::token_identifier) {
+                                tokens_to_write.push_back({ "keyword", decltype_token });
+                            }
+                        }
+
+                        auto base_declname_node = base->child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
+
+                        if(base_declname_node) {
+                            inspect_node(*base_declname_node);
+                        }
+                    }
+
                     push_context();
                     for(const auto& child : node.context()->childrens()) {
                         inspect_node(child);
@@ -525,9 +546,9 @@ int main(int argc, char** argv) {
                     pop_context();
                 }
                 break;
-                case andy::lang::parser::ast_node_type::ast_node_fn_decl:
+                case lavi::lang::parser::ast_node_type::ast_node_fn_decl:
                 {
-                    auto* declname_node = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
+                    auto* declname_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
                     std::string_view function_name = declname_node->token().content;
 
                     tokens_to_write.push_back({ "function", declname_node->token() });
@@ -542,10 +563,10 @@ int main(int argc, char** argv) {
                     current_context->functions.push_back(std::move(decl));
                     push_context();
 
-                    auto fn_params = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params);
+                    auto fn_params = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params);
                     if(fn_params) {
                         for(const auto& param : fn_params->childrens()) {
-                            if(param.type() == andy::lang::parser::ast_node_type::ast_node_declname) {
+                            if(param.type() == lavi::lang::parser::ast_node_type::ast_node_declname) {
                                 analyzer_declaration decl;
                                 decl.name = param.token().content;
                                 decl.type = "variable";
@@ -564,25 +585,25 @@ int main(int argc, char** argv) {
                     pop_context();
                 }
                 break;
-                case andy::lang::parser::ast_node_type::ast_node_fn_call: {
-                    auto* declname_node = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
+                case lavi::lang::parser::ast_node_type::ast_node_fn_call: {
+                    auto* declname_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
                     std::string_view function_name = declname_node->token().content;
                     if(function_name == "=") {
                         tokens_to_write.push_back({ "function", declname_node->token() });
                     } else {
                         inspect_node(*declname_node);
                     }
-                    auto* fn_params_node = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params);
+                    auto* fn_params_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params);
                     if(fn_params_node) {
                         for(const auto& param : fn_params_node->childrens()) {
                             inspect_node(param);
                         }
                     }
-                    auto* fn_object_node = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_object);
+                    auto* fn_object_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_object);
                     if(fn_object_node) {
                         inspect_node(fn_object_node->childrens().front());
                     }
-                    auto* yield_block_node = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_context);
+                    auto* yield_block_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context);
                     if(yield_block_node) {
                         const auto& token = yield_block_node->token();
                         tokens_to_write.push_back({ "keyword", token });
@@ -594,9 +615,9 @@ int main(int argc, char** argv) {
                     }
                 }
                 break;
-                case andy::lang::parser::ast_node_type::ast_node_vardecl:
+                case lavi::lang::parser::ast_node_type::ast_node_vardecl:
                 {
-                    auto* declname_node = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
+                    auto* declname_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
                     std::string_view variable_name = declname_node->token().content;
                     tokens_to_write.push_back({ "variable", declname_node->token() });
 
@@ -614,7 +635,7 @@ int main(int argc, char** argv) {
                     }
                 }
                 break;
-                case andy::lang::parser::ast_node_type::ast_node_declname:
+                case lavi::lang::parser::ast_node_type::ast_node_declname:
                 {
                     std::string_view name = node.token().content;
 
@@ -666,9 +687,9 @@ int main(int argc, char** argv) {
                     }
                 }
                 break;
-                case andy::lang::parser::ast_node_type::ast_node_conditional:
+                case lavi::lang::parser::ast_node_type::ast_node_conditional:
                 {
-                    auto* condition = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_condition);
+                    auto* condition = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_condition);
                     auto* condition_child = condition->childrens().data();
                     inspect_node(*condition_child);
                     push_context(true);
@@ -678,10 +699,10 @@ int main(int argc, char** argv) {
                     pop_context();
                     for(const auto& child : node.childrens()) {
                         switch(child.type()) {
-                            case andy::lang::parser::ast_node_type::ast_node_conditional:
+                            case lavi::lang::parser::ast_node_type::ast_node_conditional:
                                 inspect_node(child);
                             break;
-                            case andy::lang::parser::ast_node_type::ast_node_else:
+                            case lavi::lang::parser::ast_node_type::ast_node_else:
                                 for(const auto& else_child : child.context()->childrens()) {
                                     inspect_node(else_child);
                                  }
@@ -690,14 +711,14 @@ int main(int argc, char** argv) {
                     }
                 }
                 break;
-                case andy::lang::parser::ast_node_type::ast_node_foreach:
+                case lavi::lang::parser::ast_node_type::ast_node_foreach:
                     {
                         push_context(true);
 
-                        tokens_to_write.push_back({ "keyword", node.child_from_type(andy::lang::parser::ast_node_type::ast_node_decltype)->token() });
-                        auto* vardecl = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_vardecl);
+                        tokens_to_write.push_back({ "keyword", node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_decltype)->token() });
+                        auto* vardecl = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_vardecl);
                         if(vardecl) {
-                            auto* declname_node = vardecl->child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
+                            auto* declname_node = vardecl->child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
                             if(declname_node) {
                                 std::string_view variable_name = declname_node->token().content;
 
@@ -712,7 +733,7 @@ int main(int argc, char** argv) {
                                 current_context->variables.push_back(std::move(decl));
                             }
                         }
-                        auto* value_node = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_valuedecl);
+                        auto* value_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
                         if(value_node) {
                             inspect_node(value_node->childrens().front());
                             tokens_to_write.push_back({ "keyword", value_node->childrens().back().token() });
@@ -734,29 +755,29 @@ int main(int argc, char** argv) {
         for(const auto& token : l.tokens()) {
             debug << "Inspecting token " << token.content << " of type " << static_cast<int>(token.type) << "\n";
             switch(token.type) {
-                case andy::lang::lexer::token_type::token_comment:
+                case lavi::lang::lexer::token_type::token_comment:
                     tokens_to_write.push_back({ "comment", token });
                 break;
-                case andy::lang::lexer::token_type::token_keyword:
+                case lavi::lang::lexer::token_type::token_keyword:
                     tokens_to_write.push_back({ "keyword", token });
                 break;
-                case andy::lang::lexer::token_type::token_literal:
+                case lavi::lang::lexer::token_type::token_literal:
                     switch(token.kind) {
-                        case andy::lang::lexer::token_kind::token_integer:
-                        case andy::lang::lexer::token_kind::token_float:
-                        case andy::lang::lexer::token_kind::token_double:
+                        case lavi::lang::lexer::token_kind::token_integer:
+                        case lavi::lang::lexer::token_kind::token_float:
+                        case lavi::lang::lexer::token_kind::token_double:
                             tokens_to_write.push_back({ "number", token });
                         break;
-                        case andy::lang::lexer::token_kind::token_string:
+                        case lavi::lang::lexer::token_kind::token_string:
                             tokens_to_write.push_back({ "string", token });
                         break;
-                        case andy::lang::lexer::token_kind::token_boolean:
-                        case andy::lang::lexer::token_kind::token_null:
+                        case lavi::lang::lexer::token_kind::token_boolean:
+                        case lavi::lang::lexer::token_kind::token_null:
                             tokens_to_write.push_back({ "macro", token });
                         break;
                     }
                 break;
-                case andy::lang::lexer::token_type::token_delimiter:
+                case lavi::lang::lexer::token_type::token_delimiter:
                     if(token.content == "end") {
                         tokens_to_write.push_back({ "keyword", token });
                     }
@@ -830,9 +851,9 @@ int main(int argc, char** argv) {
             // }
 
         //     switch(token.type) {
-        //         case andy::lang::lexer::token_type::token_literal:
+        //         case lavi::lang::lexer::token_type::token_literal:
         //             switch(token.kind()) {
-        //                 case andy::lang::lexer::token_kind::token_string:
+        //                 case lavi::lang::lexer::token_kind::token_string:
         //                     char c = source[offset];
 
         //                     switch(c)
@@ -849,8 +870,8 @@ int main(int argc, char** argv) {
         //     }
         // }
 
-        andy::lang::lexer::token_position start_position;
-        andy::lang::lexer::token_position end_position;
+        lavi::lang::lexer::token_position start_position;
+        lavi::lang::lexer::token_position end_position;
         int target_line = 0;
         std::string_view target_file;
         bool accumulate = false;
@@ -1047,7 +1068,7 @@ int main(int argc, char** argv) {
 
         //if(is_server) {
             // uint32_t size = (uint32_t)buffer.size();
-            // std::string size_str = andy::binary::to_hex_string(size);
+            // std::string size_str = lavi::binary::to_hex_string(size);
 
             // std::cout << size_str;
         if(write_to_output) {

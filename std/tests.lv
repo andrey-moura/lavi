@@ -111,6 +111,9 @@ fn it(what)
     catch(ExpectationNotMet e)
         error_msg = e.message
         errors.push("${describe_stack.join(' ')} ${what}\n${error_msg}")
+    catch(e)
+        error_msg = "Unexpected error: ${e.inspect}"
+        errors.push("${describe_stack.join(' ')} ${what}\n${error_msg}")
     end
     total_tests += 1
     if error_msg.present?

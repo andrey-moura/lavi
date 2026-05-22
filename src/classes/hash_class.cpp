@@ -1,38 +1,38 @@
-#include <andy/lang/lang.hpp>
-#include <andy/lang/api.hpp>
-#include <andy/lang/interpreter.hpp>
-#include <andy/lang/error.hpp>
+#include <lavi/lang/lang.hpp>
+#include <lavi/lang/api.hpp>
+#include <lavi/lang/interpreter.hpp>
+#include <lavi/lang/error.hpp>
 
-std::shared_ptr<andy::lang::structure> create_hash_class(andy::lang::interpreter* interpreter)
+std::shared_ptr<lavi::lang::structure> create_hash_class(lavi::lang::interpreter* interpreter)
 {
-    auto HashClass = std::make_shared<andy::lang::structure>("Hash");
+    auto HashClass = std::make_shared<lavi::lang::structure>("Hash");
 
-        HashClass->instance_functions["present?"] = std::make_shared<andy::lang::function>("present?", [](andy::lang::interpreter* interpreter) {
-            const auto& value = interpreter->current_context->self->as<andy::lang::hash>();
+        HashClass->instance_functions["present?"] = std::make_shared<lavi::lang::function>("present?", [](lavi::lang::interpreter* interpreter) {
+            const auto& value = interpreter->current_context->self->as<lavi::lang::hash>();
 
             if(value.empty()) {
-                return std::make_shared<andy::lang::object>(interpreter->FalseClass);
+                return std::make_shared<lavi::lang::object>(interpreter->FalseClass);
             }
 
-            return std::make_shared<andy::lang::object>(interpreter->TrueClass);
+            return std::make_shared<lavi::lang::object>(interpreter->TrueClass);
         });
 
-        HashClass->instance_functions["[]"] = std::make_shared<andy::lang::function>("[]", std::initializer_list<std::string>{"key"}, [](andy::lang::interpreter* interpreter) {
-            std::shared_ptr<andy::lang::object> key = interpreter->current_context->positional_params[0];
+        HashClass->instance_functions["[]"] = std::make_shared<lavi::lang::function>("[]", std::initializer_list<std::string>{"key"}, [](lavi::lang::interpreter* interpreter) {
+            std::shared_ptr<lavi::lang::object> key = interpreter->current_context->positional_params[0];
 
-            auto& hash = interpreter->current_context->self->as<andy::lang::hash>();
+            auto& hash = interpreter->current_context->self->as<lavi::lang::hash>();
 
             auto obj = hash.get(key);
 
             return obj;
         });
 
-        HashClass->instance_functions["to_string"] = std::make_shared<andy::lang::function>("to_string", [](andy::lang::interpreter* interpreter) {
+        HashClass->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
             std::string result = "{";
-            auto& hash = interpreter->current_context->self->as<andy::lang::hash>();
+            auto& hash = interpreter->current_context->self->as<lavi::lang::hash>();
             for(auto& key : hash.keys) {
                 auto value = hash.get(key);
-                result += andy::lang::api::call<std::string>(interpreter, andy::lang::function_call{
+                result += lavi::lang::api::call<std::string>(interpreter, lavi::lang::function_call{
                     "to_string",
                     key->cls,
                     key,
@@ -42,7 +42,7 @@ std::shared_ptr<andy::lang::structure> create_hash_class(andy::lang::interpreter
                     nullptr
                 });
                 result += ": ";
-                result += andy::lang::api::call<std::string>(interpreter, andy::lang::function_call{
+                result += lavi::lang::api::call<std::string>(interpreter, lavi::lang::function_call{
                     "to_string",
                     value->cls,
                     value,
@@ -54,7 +54,7 @@ std::shared_ptr<andy::lang::structure> create_hash_class(andy::lang::interpreter
                 result += ", ";
             }
             result += "}";
-            return andy::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(result));
+            return lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(result));
         });
 
     

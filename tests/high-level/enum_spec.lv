@@ -1,4 +1,4 @@
-#include 'std/tests.andy'
+#include 'std/tests.lv'
 
 describe 'enums' do
   context 'declaration' do

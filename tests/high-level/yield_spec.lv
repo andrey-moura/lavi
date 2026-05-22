@@ -1,0 +1,30 @@
+#include 'std/tests'
+
+describe 'yield' do
+  context 'with a block' do
+    it 'yields to the block' do
+      fn evaluate_yield
+        yield
+      end
+
+      var value = evaluate_yield do
+        'yielded value'
+      end
+
+      expect(value).to eq('yielded value')
+    end
+    context 'when parameters are given' do
+      it 'yields to the block with the parameters' do
+        fn evaluate_yield_with_params
+          yield(1, 2)
+        end
+
+        var result = evaluate_yield_with_params do (a, b)
+          a + b
+        end
+
+        expect(result).to eq(3)
+      end
+    end
+  end
+end
