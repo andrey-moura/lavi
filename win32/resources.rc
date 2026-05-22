@@ -2,13 +2,13 @@
 #include <commctrl.h>
 #include "resource.h"
 
-IDI_APP_ICON ICON "..\\resources\\andy.ico"
+IDI_APP_ICON ICON "..\\resources\\lavi.ico"
 
-IDR_BINARY_DATA RCDATA "..\\build\\Release\\andy.exe"
+IDR_BINARY_DATA RCDATA "..\\build\\Release\\lavi.exe"
 
 IDD_LOADING_DIALOG DIALOGEX 0, 0, 200, 50
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Installing Andy Language..."
+CAPTION "Installing Lavi Language..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PROGRESS, PROGRESS_CLASS, WS_CHILD | WS_VISIBLE, 10, 20, 180, 15
