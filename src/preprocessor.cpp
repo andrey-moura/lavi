@@ -144,9 +144,9 @@ void lavi::lang::preprocessor::process_include(const std::filesystem::path &__fi
 #ifdef __ANDY_DEBUG__
     std::filesystem::path system_include_path = LAVI_PROJECT_DIR;
 #elif defined(__linux__)
-    std::filesystem::path system_include_path = "/usr/local/include/andy";
+    std::filesystem::path system_include_path = "/usr/local/include/lavi";
 #elif defined(_WIN32)
-    std::filesystem::path system_include_path = "C:\\Program Files (x86)\\andy-lang\\include\\andy";
+    std::filesystem::path system_include_path = "C:\\Program Files (x86)\\lavi\\include\\lavi";
 #else
     throw std::runtime_error("unsupported platform");
 
