@@ -1,6 +1,6 @@
-#include 'token.andy'
-#include 'token_matchers/base.andy'
-#include 'token_matchers/*.andy'
+#include 'token.lv'
+#include 'token_matchers/base.lv'
+#include 'token_matchers/*.lv'
 
 namespace CXX
   type Lexer
@@ -10,6 +10,7 @@ namespace CXX
 
     fn init(f)
       source = f
+
       matchers = CXX::TokenMatchers::Base.subclasses.map! do (matcher_class)
         matcher_class.new
       end
