@@ -13,11 +13,11 @@ namespace lavi
                 return std::filesystem::absolute(LAVI_PROJECT_DIR);
 #endif
 #ifdef __linux__
-                src_dir = std::filesystem::path("/usr/local/src/andy-lang");
+                src_dir = std::filesystem::path("/usr/local/src/lavi");
 #elif defined(__wasm__)
                 src_dir = std::filesystem::path("/");
 #elif defined(_WIN32)
-                src_dir = std::filesystem::path("C:/Program Files (x86)/andy-lang/src/andy-lang");
+                src_dir = std::filesystem::path("C:/Program Files (x86)/lavi/src/lavi");
 #else
                 throw std::runtime_error("unsupported OS");
 #endif
