@@ -1,41 +1,41 @@
-#include <andy/lang/api.hpp>
-#include <andy/lang/preprocessor.hpp>
-#include <andy/lang/lexer.hpp>
-#include <andy/lang/parser.hpp>
-#include <andy/lang/error.hpp>
+#include <lavi/lang/api.hpp>
+#include <lavi/lang/preprocessor.hpp>
+#include <lavi/lang/lexer.hpp>
+#include <lavi/lang/parser.hpp>
+#include <lavi/lang/error.hpp>
 
 #include <andy/file.hpp>
 
 extern void create_builtin_libs();
 
-namespace andy
+namespace lavi
 {
     namespace lang
     {
         namespace api
         {
-            std::shared_ptr<andy::lang::object> evaluate(std::filesystem::path path, int argc, char** argv)
+            std::shared_ptr<lavi::lang::object> evaluate(std::filesystem::path path, int argc, char** argv)
             {
-                andy::lang::parser::ast_node root_node;
+                lavi::lang::parser::ast_node root_node;
 
-                std::string source = andy::file::read_all_text<char>(path);
+                std::string source = lavi::file::read_all_text<char>(path);
 
                 std::string path_str = path.string();
-                andy::lang::lexer l(std::move(path_str), std::move(source));
+                lavi::lang::lexer l(std::move(path_str), std::move(source));
                 l.tokenize();
 
                 {
             
-                    andy::lang::preprocessor preprocessor;
+                    lavi::lang::preprocessor preprocessor;
                     preprocessor.process(path_str, l);
             
-                    andy::lang::parser p;
+                    lavi::lang::parser p;
                     root_node = p.parse_all(l);
                 }
 
                 create_builtin_libs();
         
-                andy::lang::interpreter interpreter;
+                lavi::lang::interpreter interpreter;
                 interpreter.main_lexer = &l;
 
                 for(int i = 0; i < argc; i++) {
@@ -43,21 +43,21 @@ namespace andy
                 }
 
                 interpreter.input_file_path = path;
-                std::shared_ptr<andy::lang::object> ret = interpreter.execute_all(root_node);
+                std::shared_ptr<lavi::lang::object> ret = interpreter.execute_all(root_node);
         
                 return ret;
             }
 
-            void contained_class(andy::lang::interpreter *interpreter, std::shared_ptr<andy::lang::structure> cls, std::shared_ptr<andy::lang::structure> contained) {
+            void contained_class(lavi::lang::interpreter *interpreter, std::shared_ptr<lavi::lang::structure> cls, std::shared_ptr<lavi::lang::structure> contained) {
                 auto cls_obj = to_object(interpreter, contained);
                 cls->variables[contained->name] = cls_obj;
             }
 
-            std::shared_ptr<andy::lang::object> call(andy::lang::interpreter *interpreter, andy::lang::function_call __call) {
+            std::shared_ptr<lavi::lang::object> call(lavi::lang::interpreter *interpreter, lavi::lang::function_call __call) {
                 if(__call.name == "yield") {
-                    andy::lang::lexer lexer("", std::string(__call.name));
+                    lavi::lang::lexer lexer("", std::string(__call.name));
                     lexer.tokenize();
-                    andy::lang::parser parser;
+                    lavi::lang::parser parser;
                     auto ast = parser.parse_all(lexer);
                     ast = ast.childrens().front();
                     auto ret = interpreter->execute(ast);
@@ -76,16 +76,16 @@ namespace andy
                     __call.method = method->second.get();
                 }
 
-                // std::shared_ptr<andy::lang::object> ret = interpreter->call(__call);
-                andy::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                // std::shared_ptr<lavi::lang::object> ret = interpreter->call(__call);
+                lavi::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
 
                 interpreter->pop_context();
 
-                std::shared_ptr<andy::lang::object> ret = nullptr;
+                std::shared_ptr<lavi::lang::object> ret = nullptr;
                 return ret;
             }
 
-            std::shared_ptr<andy::lang::object> call(andy::lang::interpreter* interpreter, std::string_view function_name, std::shared_ptr<andy::lang::object> object, std::vector<std::shared_ptr<andy::lang::object>> positional_params)
+            std::shared_ptr<lavi::lang::object> call(lavi::lang::interpreter* interpreter, std::string_view function_name, std::shared_ptr<lavi::lang::object> object, std::vector<std::shared_ptr<lavi::lang::object>> positional_params)
             {
                 if(object) {
                     interpreter->push_context_with_object(object);
@@ -95,7 +95,7 @@ namespace andy
 
                 interpreter->current_context->positional_params = std::move(positional_params);
 
-                std::shared_ptr<andy::lang::function> function = nullptr;
+                std::shared_ptr<lavi::lang::function> function = nullptr;
 
                 if(interpreter->current_context->self)
                 {
@@ -123,7 +123,7 @@ namespace andy
                     }
                 }
 
-                std::shared_ptr<andy::lang::object> ret = nullptr;
+                std::shared_ptr<lavi::lang::object> ret = nullptr;
 
                 if(function->block_ast.childrens().size()) {
                     ret = interpreter->execute(function->block_ast);
@@ -136,7 +136,7 @@ namespace andy
                 return ret;
             }
 
-            std::shared_ptr<andy::lang::object> yield(andy::lang::interpreter* interpreter, std::vector<std::shared_ptr<andy::lang::object>> position_params, std::map<std::string, std::shared_ptr<andy::lang::object>> named_params)
+            std::shared_ptr<lavi::lang::object> yield(lavi::lang::interpreter* interpreter, std::vector<std::shared_ptr<lavi::lang::object>> position_params, std::map<std::string, std::shared_ptr<lavi::lang::object>> named_params)
             {
                 auto* block = interpreter->current_context->given_block;
 
@@ -144,13 +144,13 @@ namespace andy
                     throw std::runtime_error("No block given to yield to");
                 }
 
-                auto ctx = std::make_shared<andy::lang::interpreter_context>();
+                auto ctx = std::make_shared<lavi::lang::interpreter_context>();
                 ctx->is_block_context = true;
                 ctx->lexical_parent = interpreter->current_context->given_block_lexical_context;
                 interpreter->stack.push_back(ctx);
                 interpreter->update_current_context();
 
-                auto fn_params_definition_node = block->child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params);
+                auto fn_params_definition_node = block->child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params);
 
                 if(fn_params_definition_node) {
                     for(size_t i = 0; i < position_params.size(); ++i)
@@ -165,14 +165,14 @@ namespace andy
                     }
                 }
 
-                std::shared_ptr<andy::lang::object> ret = interpreter->execute(*block->block());
+                std::shared_ptr<lavi::lang::object> ret = interpreter->execute(*block->block());
 
                 interpreter->pop_context();
 
                 return ret;
             }
 
-            bool is_truthy(andy::lang::interpreter* interpreter, std::shared_ptr<andy::lang::object> obj)
+            bool is_truthy(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj)
             {
                 if(!obj) {
                     return false;

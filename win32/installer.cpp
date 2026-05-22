@@ -68,7 +68,7 @@ INT_PTR CALLBACK LoadingDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
     return FALSE;
 }
 
-bool SaveAndyExecutable(std::filesystem::path path) {
+bool SaveLaviExecutable(std::filesystem::path path) {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     HRSRC hRes = FindResource(hInstance, MAKEINTRESOURCE(IDR_BINARY_DATA), RT_RCDATA);
     if (!hRes) return false;
@@ -123,24 +123,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         //Sleep(500);  // Simula um processo demorado
     //}
 
-    std::filesystem::path install_dir = std::filesystem::path(std::string(1, std::filesystem::current_path().string()[0]) + ":\\") / "Program Files" / "Andy";
+    std::filesystem::path install_dir = std::filesystem::path(std::string(1, std::filesystem::current_path().string()[0]) + ":\\") / "Program Files" / "Lavi";
     std::filesystem::path bin = install_dir / "bin";
 
     if (!std::filesystem::exists(bin)) {
         std::filesystem::create_directories(bin);
     }
 
-    std::filesystem::path dest = bin / "andy.exe";
+    std::filesystem::path dest = bin / "lavi.exe";
 
     SendMessage(hProgress, PBM_SETPOS, 5, 0);
 
-    if(!SaveAndyExecutable(dest)) {
-        MessageBox(hDlg, "Failed to save Andy executable", "Error", MB_ICONERROR);
+    if(!SaveLaviExecutable(dest)) {
+        MessageBox(hDlg, "Failed to save Lavi executable", "Error", MB_ICONERROR);
         return 0;
     }
 
     if(!AddPathToSystem(bin.string().c_str())) {
-        MessageBox(hDlg, "Failed to add Andy to system path", "Error", MB_ICONERROR);
+        MessageBox(hDlg, "Failed to add Lavi to system path", "Error", MB_ICONERROR);
         return 0;
     }
 
@@ -148,7 +148,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     EndDialog(hDlg, 0);
 
-    int response = MessageBoxA(NULL, "Andy has been installed successfully. Would you like to restart your computer now?", "Success", MB_YESNO | MB_ICONQUESTION);
+    int response = MessageBoxA(NULL, "Lavi has been installed successfully. Would you like to restart your computer now?", "Success", MB_YESNO | MB_ICONQUESTION);
     
     if (response == IDYES) {
         system("shutdown /r /t 0");

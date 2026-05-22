@@ -16,49 +16,49 @@ jobs:
       contents: read
       checks: write
     steps:
-    - name: Checkout andy-lang
+    - name: Checkout lavi
       uses: actions/checkout@v3
       with:
-        path: 'andy-lang'
+        path: 'lavi'
         submodules: 'recursive'
 
     - name: Cache CMake build
       uses: actions/cache@v3
       with:
         path: |
-          andy-lang/build
-          andy-lang/build/CMakeFiles
+          lavi/build
+          lavi/build/CMakeFiles
         key: build-cache-${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
         restore-keys: |
           build-cache-${{ runner.os }}-
-    - name: Configure CMake for andy-lang
+    - name: Configure CMake for lavi
       run: cmake -DCMAKE_BUILD_TYPE=Release -B build .
-      working-directory: andy-lang
+      working-directory: lavi
 
-    - name: Build project for andy-lang
+    - name: Build project for lavi
       run: cmake --build build --config Release --parallel
-      working-directory: andy-lang
+      working-directory: lavi
 
-    - name: Install andy-lang
+    - name: Install lavi
       run: cmake --install build --config Release
-      working-directory: andy-lang
+      working-directory: lavi
 
-    - name: Configure andy again so the installer can find it
+    - name: Configure lavi again so the installer can find it
       run: cmake -DCMAKE_BUILD_TYPE=Release -B build .
-      working-directory: andy-lang
+      working-directory: lavi
 
     - name: Build the installer
-      run: cmake --build build --config Release --parallel --target andy-lang-installer
-      working-directory: andy-lang
+      run: cmake --build build --config Release --parallel --target lavi-installer
+      working-directory: lavi
 
     - name: Generate artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: andy-artifacts
+        name: lavi-artifacts
         path: |
-          andy-lang/build/Release/andy.exe
-          andy-lang/build/Release/andy-lang-installer.exe
-    - name: Run tests for andy-lang
+          lavi/build/Release/lavi.exe
+          lavi/build/Release/lavi-installer.exe
+    - name: Run tests for lavi
       run: |
-        & "C:\Program Files (x86)\andy-lang\bin\andy.exe" --tests
-      working-directory: andy-lang
+        & "C:\Program Files (x86)\lavi\bin\lavi.exe" --tests
+      working-directory: lavi

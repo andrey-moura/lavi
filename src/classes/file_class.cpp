@@ -2,16 +2,16 @@
 
 #include <andy/file.hpp>
 
-#include <andy/lang/lang.hpp>
-#include <andy/lang/interpreter.hpp>
+#include <lavi/lang/lang.hpp>
+#include <lavi/lang/interpreter.hpp>
 
-std::shared_ptr<andy::lang::structure> create_file_class(andy::lang::interpreter* interpreter)
+std::shared_ptr<lavi::lang::structure> create_file_class(lavi::lang::interpreter* interpreter)
 {
-    auto FileClass = std::make_shared<andy::lang::structure>("File");
+    auto FileClass = std::make_shared<lavi::lang::structure>("File");
 
-        FileClass->functions["exists?"] = std::make_shared<andy::lang::function>("exists?", std::initializer_list<std::string>{"path"}, [](andy::lang::interpreter* interpreter) {
+        FileClass->functions["exists?"] = std::make_shared<lavi::lang::function>("exists?", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {
             std::filesystem::path path;
-            std::shared_ptr<andy::lang::object> path_object = interpreter->current_context->positional_params[0];
+            std::shared_ptr<lavi::lang::object> path_object = interpreter->current_context->positional_params[0];
             if(path_object->cls == interpreter->StringClass) {
                 path = path_object->as<std::string>();
             } else if(path_object->cls == interpreter->PathClass) {
@@ -20,15 +20,15 @@ std::shared_ptr<andy::lang::structure> create_file_class(andy::lang::interpreter
                 throw std::runtime_error("invalid path");
             }
             if(std::filesystem::exists(path) && std::filesystem::is_regular_file(path)) {
-                return std::make_shared<andy::lang::object>(interpreter->TrueClass);
+                return std::make_shared<lavi::lang::object>(interpreter->TrueClass);
             } else {
-                return std::make_shared<andy::lang::object>(interpreter->FalseClass);
+                return std::make_shared<lavi::lang::object>(interpreter->FalseClass);
             }
         });
 
-        FileClass->functions["read"] = std::make_shared<andy::lang::function>("read", std::initializer_list<std::string>{"path"}, [](andy::lang::interpreter* interpreter) {
+        FileClass->functions["read"] = std::make_shared<lavi::lang::function>("read", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {
             std::filesystem::path path;
-            std::shared_ptr<andy::lang::object> path_object = interpreter->current_context->positional_params[0];
+            std::shared_ptr<lavi::lang::object> path_object = interpreter->current_context->positional_params[0];
             if(path_object->cls == interpreter->StringClass) {
                 path = path_object->as<std::string>();
             } else if(path_object->cls == interpreter->PathClass) {
@@ -36,10 +36,10 @@ std::shared_ptr<andy::lang::structure> create_file_class(andy::lang::interpreter
             } else {
                 throw std::runtime_error("invalid path");
             }
-            return andy::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(andy::file::read_all_text<char>(path)));
+            return lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(lavi::file::read_all_text<char>(path)));
         });
 
-        FileClass->functions["read_all_lines"] = std::make_shared<andy::lang::function>("read_all_lines", std::initializer_list<std::string>{"path"}, [](andy::lang::interpreter* interpreter) {
+        FileClass->functions["read_all_lines"] = std::make_shared<lavi::lang::function>("read_all_lines", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {
             const std::string& input_path = interpreter->current_context->positional_params[0]->as<std::string>();
             std::filesystem::path path = std::filesystem::absolute(input_path);
 
@@ -47,15 +47,15 @@ std::shared_ptr<andy::lang::structure> create_file_class(andy::lang::interpreter
                 throw std::runtime_error("file '" + path.string() + "' does not exist");
             }
 
-            std::vector<std::string> file = andy::file::read_all_lines<char>(path);
+            std::vector<std::string> file = lavi::file::read_all_lines<char>(path);
 
-            std::vector<std::shared_ptr<andy::lang::object>> lines;
+            std::vector<std::shared_ptr<lavi::lang::object>> lines;
 
             for(auto& line : file) {
-                lines.push_back(andy::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(line)));
+                lines.push_back(lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(line)));
             }
 
-            return andy::lang::object::instantiate(interpreter, interpreter->ArrayClass, std::move(lines));
+            return lavi::lang::object::instantiate(interpreter, interpreter->ArrayClass, std::move(lines));
         });
 
     

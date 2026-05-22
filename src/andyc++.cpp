@@ -7,9 +7,9 @@
 #include <andy/console.hpp>
 #include <andy/file.hpp>
 
-#include <andy/lang/interpreter.hpp>
-#include <andy/lang/lexer.hpp>
-#include <andy/lang/class.hpp>
+#include <lavi/lang/interpreter.hpp>
+#include <lavi/lang/lexer.hpp>
+#include <lavi/lang/class.hpp>
 
 #include <clang-c/Index.h>  // This is libclang.
 
@@ -19,7 +19,7 @@ std::string_view folder_arg;
 
 std::map<std::string, std::string> results;
 std::vector<std::string> all_classes;
-std::vector<andy::lang::structure> classes;
+std::vector<lavi::lang::structure> classes;
 
 std::string to_string(CXString str)
 {
@@ -41,13 +41,13 @@ void display_usage(std::string_view argv0)
     std::cout << std::endl;
     std::cout << "Options:" << std::endl;
     std::cout << std::endl;
-    andy::console::print_warning("--debug, -d");
+    lavi::console::print_warning("--debug, -d");
     std::cout << "         Enable debug mode" << std::endl;
-    andy::console::print_warning("--incremental, -i");
+    lavi::console::print_warning("--incremental, -i");
     std::cout << "   Only generate code if the original file changed" << std::endl;
-    andy::console::print_warning("--file, -f <folder>");
+    lavi::console::print_warning("--file, -f <folder>");
     std::cout << " Output the generated code to a file in folder" << std::endl;
-    andy::console::print_warning("--help");
+    lavi::console::print_warning("--help");
     std::cout << "              Display this information" << std::endl;
 }
 
@@ -58,9 +58,9 @@ int create_extension() {
 
     output_file.open(output_file_path);
 
-    output_file << "#include <andy/lang/lang.hpp>" << std::endl;
-    output_file << "#include <andy/lang/interpreter.hpp>" << std::endl;
-    output_file << "#include <andy/lang/extension.hpp>" << std::endl;
+    output_file << "#include <lavi/lang/lang.hpp>" << std::endl;
+    output_file << "#include <lavi/lang/interpreter.hpp>" << std::endl;
+    output_file << "#include <lavi/lang/extension.hpp>" << std::endl;
     output_file << std::endl;
     for(const std::string_view& cls : all_classes) {
         std::string snake_case_name;
@@ -74,14 +74,14 @@ int create_extension() {
                 snake_case_name.push_back(c);
             }
         }
-        output_file << "extern void create_" << snake_case_name << "_class(andy::lang::interpreter* interpreter);" << std::endl;
+        output_file << "extern void create_" << snake_case_name << "_class(lavi::lang::interpreter* interpreter);" << std::endl;
     }
     output_file << std::endl;
-    output_file << "class AndyLangExtension : public andy::lang::extension {" << std::endl;
+    output_file << "class AndyLangExtension : public lavi::lang::extension {" << std::endl;
     output_file << "public:" << std::endl;
-    output_file << "    AndyLangExtension() : andy::lang::extension(\"andy-lang-extension\") {}" << std::endl;
+    output_file << "    AndyLangExtension() : lavi::lang::extension(\"andy-lang-extension\") {}" << std::endl;
     output_file << "public:" << std::endl;
-    output_file << "    void load(andy::lang::interpreter* interpreter) override {" << std::endl;
+    output_file << "    void load(lavi::lang::interpreter* interpreter) override {" << std::endl;
 
     for(const std::string_view& cls : all_classes) {
         std::string snake_case_name;
@@ -128,14 +128,14 @@ int main(int argc, char* argv[]) {
                 folder_arg = argv[i + 1];
                 ++i;
             } else {
-                andy::console::log_error("Expected argument after --file flag");
+                lavi::console::log_error("Expected argument after --file flag");
                 return 1;
             }
         } else if(arg == "--help") {
             display_usage(argv[0]);
             return 0;
         } else if(i > 1) {
-            andy::console::log_error("Unknown argument: " + std::string(arg));
+            lavi::console::log_error("Unknown argument: " + std::string(arg));
             return 1;
         }
     }
@@ -173,19 +173,19 @@ int main(int argc, char* argv[]) {
         std::filesystem::path input_file_path = input_file_path_str;
 
         if(!std::filesystem::exists(input_file_path)) {
-            andy::console::log_error("Input file does not exist");
+            lavi::console::log_error("Input file does not exist");
             return 1;
         }
 
         if(!std::filesystem::is_regular_file(input_file_path)) {
-            andy::console::log_error("Input file is not a regular file");
+            lavi::console::log_error("Input file is not a regular file");
             return 1;
         }
 
         std::filesystem::path output_file_path;
 
         output_file_path = folder_arg;
-        output_file_path /= (input_file_path.stem().string() + ".andy.cpp");
+        output_file_path /= (input_file_path.stem().string() + ".lv.cpp");
 
         bool output_file_exists = std::filesystem::exists(output_file_path);
 
@@ -214,7 +214,7 @@ int main(int argc, char* argv[]) {
 
         if (unit == nullptr)
         {
-            andy::console::log_error("Unable to parse translation unit. Quitting.");
+            lavi::console::log_error("Unable to parse translation unit. Quitting.");
             return 1;
         }
 
@@ -236,7 +236,7 @@ int main(int argc, char* argv[]) {
                 std::string name = to_string(clang_getCursorSpelling(c));        
                 if(clang_isCursorDefinition(c)) {
                     name[0] = std::toupper(name[0]);
-                    andy::lang::structure cls(std::move(name));
+                    lavi::lang::structure cls(std::move(name));
                     all_classes.push_back(cls.name);
 
                     if(debug) {
@@ -247,7 +247,7 @@ int main(int argc, char* argv[]) {
                         //std::cout << class_c.kind << clang_getCursorKindSpelling(class_c.kind) << "\n";
 
                         if(class_c.kind == CXCursorKind::CXCursor_CXXMethod || class_c.kind == CXCursorKind::CXCursor_Constructor) {
-                            andy::lang::structure* cls = (andy::lang::structure*)calient_data;
+                            lavi::lang::structure* cls = (lavi::lang::structure*)calient_data;
 
                             std::string name;
                             std::string return_type;
@@ -300,7 +300,7 @@ int main(int argc, char* argv[]) {
                                 return_type = std::move(everything_on_left);
                             }
 
-                            andy::lang::function m;
+                            lavi::lang::function m;
                             m.name = std::move(name);
 
                             if(return_type.size()) {
@@ -326,10 +326,10 @@ int main(int argc, char* argv[]) {
                                 return CXChildVisit_Continue;
                             }, nullptr);
 
-                            if(m.storage_type == andy::lang::function_storage_type::instance_function) {
-                                cls->instance_functions[m.name] = std::make_shared<andy::lang::function>(std::move(m));
+                            if(m.storage_type == lavi::lang::function_storage_type::instance_function) {
+                                cls->instance_functions[m.name] = std::make_shared<lavi::lang::function>(std::move(m));
                             } else {
-                                cls->functions[m.name] = std::make_shared<andy::lang::function>(std::move(m));
+                                cls->functions[m.name] = std::make_shared<lavi::lang::function>(std::move(m));
                             }
                         }
 
@@ -364,7 +364,7 @@ int main(int argc, char* argv[]) {
         output_file << "// Generated at " << buf << " UTC" << std::endl;
         output_file << "// Changes to this file will be overwritten on next build" << std::endl;
         output_file << std::endl;
-        output_file << "#include <andy/lang/api.hpp>" << std::endl;
+        output_file << "#include <lavi/lang/api.hpp>" << std::endl;
         output_file << std::endl;
         output_file << "#include <" << input_file_path.filename().string() << ">" << std::endl;
         output_file << std::endl;
@@ -374,9 +374,9 @@ int main(int argc, char* argv[]) {
             std::string snake_case_name = cls.name;
             std::transform(snake_case_name.begin(), snake_case_name.end(), snake_case_name.begin(), [](unsigned char c) { return std::tolower(c); });
 
-            output_file << "void create_" << snake_case_name << "_class(andy::lang::interpreter* interpreter)" << std::endl;
+            output_file << "void create_" << snake_case_name << "_class(lavi::lang::interpreter* interpreter)" << std::endl;
             output_file << "{" << std::endl;
-            output_file << "\tauto " << snake_case_name << "_class = std::make_shared<andy::lang::structure>(" << "\"" << cls.name << "\"" << "); " << std::endl;
+            output_file << "\tauto " << snake_case_name << "_class = std::make_shared<lavi::lang::structure>(" << "\"" << cls.name << "\"" << "); " << std::endl;
 
             if(cls.instance_functions.size() > 0) {
                 output_file  << std::endl;
@@ -389,11 +389,11 @@ int main(int argc, char* argv[]) {
                     if(method_iterator) {
                         output_file << "," << std::endl;
                     }
-                    output_file << "\t\t{\"" << name << "\", andy::lang::function(\"" << name << "\", [](andy::lang::interpreter* interpreter) {" << std::endl;
+                    output_file << "\t\t{\"" << name << "\", lavi::lang::function(\"" << name << "\", [](lavi::lang::interpreter* interpreter) {" << std::endl;
                     output_file << "\t\t\tauto object = interpreter->current_context->self;" << std::endl;
 
                     if(method.name == "new") {
-                        output_file << "\t\t\tif constexpr(sizeof(" << snake_case_name << ") < andy::lang::max_native_size) {" << std::endl;
+                        output_file << "\t\t\tif constexpr(sizeof(" << snake_case_name << ") < lavi::lang::max_native_size) {" << std::endl;
                         output_file << "\t\t\t\t" << snake_case_name << " native;" << std::endl;
                         output_file << "\t\t\t\t" << "object->set_native(std::move(native));" << std::endl;
                         output_file << "\t\t\t}" << std::endl;
@@ -411,7 +411,7 @@ int main(int argc, char* argv[]) {
                         }
                         output_file << "object->as<" << snake_case_name << ">" << "()." << method.name << "();" << std::endl;
                         if(return_type.size()) {
-                            output_file << "\t\t\treturn andy::lang::api::to_object(interpreter, result);" << std::endl;
+                            output_file << "\t\t\treturn lavi::lang::api::to_object(interpreter, result);" << std::endl;
                         }
                         else {
                             output_file << "\t\t\treturn nullptr;" << std::endl;

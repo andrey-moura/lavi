@@ -3,42 +3,42 @@
 #include "andy/file.hpp"
 #include "andy/console.hpp"
 
-#include "andy/lang/error.hpp"
-#include "andy/lang/interpreter.hpp"
-#include "andy/lang/extension.hpp"
-#include "andy/lang/lang.hpp"
-#include "andy/lang/api.hpp"
+#include "lavi/lang/error.hpp"
+#include "lavi/lang/interpreter.hpp"
+#include "lavi/lang/extension.hpp"
+#include "lavi/lang/lang.hpp"
+#include "lavi/lang/api.hpp"
 
 struct andy_lang_runtime_exception {
-    andy_lang_runtime_exception(std::shared_ptr<andy::lang::object> exception_object)
+    andy_lang_runtime_exception(std::shared_ptr<lavi::lang::object> exception_object)
         : exception_object(std::move(exception_object))
     {
         
     }
-    std::shared_ptr<andy::lang::object> exception_object;
+    std::shared_ptr<lavi::lang::object> exception_object;
 };
 
 
-andy::lang::function execute_method_definition(const andy::lang::parser::ast_node& class_child)
+lavi::lang::function execute_method_definition(const lavi::lang::parser::ast_node& class_child)
 {
     std::string_view method_name = class_child.decname();
 
-    auto* params_node = class_child.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params);
+    auto* params_node = class_child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params);
 
-    std::vector<andy::lang::fn_parameter> positional_params;
-    std::vector<andy::lang::fn_parameter> named_params;
+    std::vector<lavi::lang::fn_parameter> positional_params;
+    std::vector<lavi::lang::fn_parameter> named_params;
 
     if(params_node) {
         positional_params.reserve(class_child.childrens().size());
         named_params.reserve(class_child.childrens().size());
 
         for(auto& param : params_node->childrens()) {
-            andy::lang::fn_parameter fn_param;
-            if(param.type() == andy::lang::parser::ast_node_type::ast_node_pair) {
-                auto* declname = param.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
+            lavi::lang::fn_parameter fn_param;
+            if(param.type() == lavi::lang::parser::ast_node_type::ast_node_pair) {
+                auto* declname = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
 
                 fn_param.name = declname->childrens().front().token().content;
-                fn_param.default_value_node = param.child_from_type(andy::lang::parser::ast_node_type::ast_node_valuedecl);
+                fn_param.default_value_node = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
                 fn_param.named = true;
                 fn_param.has_default_value = fn_param.default_value_node != nullptr;
                 named_params.push_back(std::move(fn_param));
@@ -49,11 +49,11 @@ andy::lang::function execute_method_definition(const andy::lang::parser::ast_nod
         }
     }
 
-    auto static_node = class_child.child_from_type(andy::lang::parser::ast_node_type::ast_node_declstatic);
+    auto static_node = class_child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declstatic);
 
-    auto method_type = static_node ? andy::lang::function_storage_type::class_function : andy::lang::function_storage_type::instance_function;
+    auto method_type = static_node ? lavi::lang::function_storage_type::class_function : lavi::lang::function_storage_type::instance_function;
 
-    andy::lang::function method;
+    lavi::lang::function method;
     method.name = method_name;
     method.storage_type = method_type;
     method.positional_params = std::move(positional_params);
@@ -62,72 +62,72 @@ andy::lang::function execute_method_definition(const andy::lang::parser::ast_nod
     return method;
 }
 
-andy::lang::interpreter::interpreter()
+lavi::lang::interpreter::interpreter()
 {
     init();
 }
 
-void andy::lang::interpreter::load(std::shared_ptr<andy::lang::structure> cls)
+void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::structure> cls)
 {
-    cls->functions["subclasses"] = std::make_shared<andy::lang::function>("subclasses", [cls, this](andy::lang::interpreter* interpreter) {
-        std::vector<std::shared_ptr<andy::lang::object>> subclasses;
+    cls->functions["subclasses"] = std::make_shared<lavi::lang::function>("subclasses", [cls, this](lavi::lang::interpreter* interpreter) {
+        std::vector<std::shared_ptr<lavi::lang::object>> subclasses;
         subclasses.reserve(cls->deriveds.size());
 
         for(auto& cls : cls->deriveds) {
-            subclasses.push_back(andy::lang::api::to_object(interpreter, cls));
+            subclasses.push_back(lavi::lang::api::to_object(interpreter, cls));
         }
 
-        return andy::lang::api::to_object(interpreter, std::move(subclasses));
+        return lavi::lang::api::to_object(interpreter, std::move(subclasses));
     });
 
     auto to_string_instance_function = cls->instance_functions.find("to_string");
 
     if(to_string_instance_function == cls->instance_functions.end()) {
-        cls->instance_functions["to_string"] = std::make_shared<andy::lang::function>("to_string", [cls, this](andy::lang::interpreter* interpreter) {
-            return andy::lang::api::to_object(interpreter, interpreter->current_context->self->default_string_representation());
+        cls->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [cls, this](lavi::lang::interpreter* interpreter) {
+            return lavi::lang::api::to_object(interpreter, interpreter->current_context->self->default_string_representation());
         });
     }
 
     auto hash_instance_function = cls->instance_functions.find("hash");
 
     if(hash_instance_function == cls->instance_functions.end()) {
-        cls->instance_functions["hash"] = std::make_shared<andy::lang::function>("hash", [cls, this](andy::lang::interpreter* interpreter) {
+        cls->instance_functions["hash"] = std::make_shared<lavi::lang::function>("hash", [cls, this](lavi::lang::interpreter* interpreter) {
             // Default hash: the pointer of the object
             auto object = interpreter->current_context->self;
             void* ptr = object;
             std::hash<void*> hasher;
             size_t hash_value = hasher(ptr);
-            return andy::lang::api::to_object(interpreter, (int)hash_value);
+            return lavi::lang::api::to_object(interpreter, (int)hash_value);
         });
     }
 
     auto eq_instance_function = cls->instance_functions.find("==");
 
     if(eq_instance_function == cls->instance_functions.end()) {
-        cls->instance_functions["=="] = std::make_shared<andy::lang::function>("==", [cls, this](andy::lang::interpreter* interpreter) {
+        cls->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", [cls, this](lavi::lang::interpreter* interpreter) {
             auto object = interpreter->current_context->self;
             auto other_object = interpreter->current_context->positional_params[0].get();
 
             // Default equality: compare the pointers of the objects
-            return andy::lang::api::to_object(interpreter, object == other_object);
+            return lavi::lang::api::to_object(interpreter, object == other_object);
         });
     }
 
     auto inspect_instance_function = cls->instance_functions.find("inspect");
 
     if(inspect_instance_function == cls->instance_functions.end()) {
-        cls->instance_functions["inspect"] = std::make_shared<andy::lang::function>("inspect", [cls, this](andy::lang::interpreter* interpreter) {
+        cls->instance_functions["inspect"] = std::make_shared<lavi::lang::function>("inspect", [cls, this](lavi::lang::interpreter* interpreter) {
             auto object = interpreter->current_context->self;
             std::string inspection = object->default_string_representation();
-            return andy::lang::api::to_object(interpreter, std::move(inspection));
+            return lavi::lang::api::to_object(interpreter, std::move(inspection));
         });
     }
 
     auto to_string_function = cls->functions.find("to_string");
 
     if(to_string_function == cls->functions.end()) {
-        cls->functions["to_string"] = std::make_shared<andy::lang::function>("to_string", [cls, this](andy::lang::interpreter* interpreter) {
-            return andy::lang::api::to_object(interpreter, cls->name);
+        cls->functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [cls, this](lavi::lang::interpreter* interpreter) {
+            return lavi::lang::api::to_object(interpreter, cls->name);
         });
     }
 
@@ -136,7 +136,7 @@ void andy::lang::interpreter::load(std::shared_ptr<andy::lang::structure> cls)
     current_context->classes[cls->name] = cls;
 }
 
-std::shared_ptr<andy::lang::structure> andy::lang::interpreter::find_class(const std::string_view& name)
+std::shared_ptr<lavi::lang::structure> lavi::lang::interpreter::find_class(const std::string_view& name)
 {
     if(current_context != global_context) {
         auto it = current_context->classes.find(name);
@@ -155,20 +155,20 @@ std::shared_ptr<andy::lang::structure> andy::lang::interpreter::find_class(const
     return nullptr;
 }
 
-static bool is_named_param(const andy::lang::parser::ast_node& param)
+static bool is_named_param(const lavi::lang::parser::ast_node& param)
 {
-    return param.type() == andy::lang::parser::ast_node_type::ast_node_valuedecl && param.childrens().size();
+    return param.type() == lavi::lang::parser::ast_node_type::ast_node_valuedecl && param.childrens().size();
 }
 
-static void push_context_from_node_object_if_any(andy::lang::interpreter* interpreter, const andy::lang::parser::ast_node& node)
+static void push_context_from_node_object_if_any(lavi::lang::interpreter* interpreter, const lavi::lang::parser::ast_node& node)
 {
-    const andy::lang::parser::ast_node* object_node = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_object);
+    const lavi::lang::parser::ast_node* object_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_object);
 
     if(object_node) {
         object_node = object_node->childrens().data();
         auto object = interpreter->execute(*object_node);
         if(object == nullptr) {
-            object = andy::lang::object::instantiate(interpreter, interpreter->NullClass);
+            object = lavi::lang::object::instantiate(interpreter, interpreter->NullClass);
         }
         if(object) {
             interpreter->push_context_with_object(object);
@@ -176,18 +176,18 @@ static void push_context_from_node_object_if_any(andy::lang::interpreter* interp
     }
 }
 
-static void pop_context_from_node_object_if_any(andy::lang::interpreter* interpreter, const andy::lang::parser::ast_node& node)
+static void pop_context_from_node_object_if_any(lavi::lang::interpreter* interpreter, const lavi::lang::parser::ast_node& node)
 {
-    const andy::lang::parser::ast_node* object_node = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_object);
+    const lavi::lang::parser::ast_node* object_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_object);
 
     if(object_node) {
         interpreter->pop_context();
     }
 }
 
-static void push_context_from_node(andy::lang::interpreter* interpreter, const andy::lang::parser::ast_node& node)
+static void push_context_from_node(lavi::lang::interpreter* interpreter, const lavi::lang::parser::ast_node& node)
 {
-    const andy::lang::parser::ast_node* object_node = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_object);
+    const lavi::lang::parser::ast_node* object_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_object);
 
     if(object_node) {
         object_node = object_node->childrens().data();
@@ -200,37 +200,37 @@ static void push_context_from_node(andy::lang::interpreter* interpreter, const a
     }
 }
 
-static void pop_context_from_node(andy::lang::interpreter* interpreter, const andy::lang::parser::ast_node& node)
+static void pop_context_from_node(lavi::lang::interpreter* interpreter, const lavi::lang::parser::ast_node& node)
 {
     interpreter->pop_context();
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_decl(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_decl(const lavi::lang::parser::ast_node& source_code)
 {
     auto method = execute_method_definition(source_code);
-    current_context->functions[method.name] = std::make_shared<andy::lang::function>(std::move(method));
+    current_context->functions[method.name] = std::make_shared<lavi::lang::function>(std::move(method));
     return nullptr;
 }
 
-static std::shared_ptr<andy::lang::structure> do_execute_classdecl(andy::lang::interpreter* interpreter, const andy::lang::parser::ast_node& source_code)
+static std::shared_ptr<lavi::lang::structure> do_execute_classdecl(lavi::lang::interpreter* interpreter, const lavi::lang::parser::ast_node& source_code)
 {
     std::string_view class_name = source_code.decname();
 
     auto cls = interpreter->find_class(class_name);
 
     if (!cls) {
-        cls = std::make_shared<andy::lang::structure>(class_name);
+        cls = std::make_shared<lavi::lang::structure>(class_name);
     }
 
-    auto baseclass_node = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_classdecl_base);
+    auto baseclass_node = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_classdecl_base);
 
     if (baseclass_node)
     {
-        auto object = andy::lang::api::to_object(interpreter, cls);
+        auto object = lavi::lang::api::to_object(interpreter, cls);
 
         interpreter->push_context_with_object(object);
 
-        auto declname_node = baseclass_node->child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
+        auto declname_node = baseclass_node->child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
         auto base_class_object = interpreter->execute(*declname_node);
 
         interpreter->pop_context();
@@ -243,38 +243,38 @@ static std::shared_ptr<andy::lang::structure> do_execute_classdecl(andy::lang::i
             throw std::runtime_error("base class " + std::string(baseclass_node->decname()) + " is not a class");
         }
 
-        std::shared_ptr<andy::lang::structure> base_class = base_class_object->as<std::shared_ptr<andy::lang::structure>>();
+        std::shared_ptr<lavi::lang::structure> base_class = base_class_object->as<std::shared_ptr<lavi::lang::structure>>();
 
         cls->base = base_class;
         base_class->deriveds.push_back(cls);
     }
 
-    interpreter->push_context_with_object(andy::lang::api::to_object(interpreter, cls));
+    interpreter->push_context_with_object(lavi::lang::api::to_object(interpreter, cls));
 
     for(const auto& class_child : source_code.context()->childrens()) {
         switch (class_child.type())
         {
-        case andy::lang::parser::ast_node_type::ast_node_fn_decl: {
+        case lavi::lang::parser::ast_node_type::ast_node_fn_decl: {
             auto method = execute_method_definition(class_child);
-            if(method.storage_type == andy::lang::function_storage_type::class_function || source_code.decl_type() == "namespace") {
-                cls->functions[method.name] = std::make_shared<andy::lang::function>(std::move(method));
+            if(method.storage_type == lavi::lang::function_storage_type::class_function || source_code.decl_type() == "namespace") {
+                cls->functions[method.name] = std::make_shared<lavi::lang::function>(std::move(method));
             } else {
-                cls->instance_functions[method.name] = std::make_shared<andy::lang::function>(std::move(method));
+                cls->instance_functions[method.name] = std::make_shared<lavi::lang::function>(std::move(method));
             }
         }
         break;
-        case andy::lang::parser::ast_node_type::ast_node_vardecl: {
+        case lavi::lang::parser::ast_node_type::ast_node_vardecl: {
             std::string_view var_name = class_child.decname();
-            cls->instance_variables[var_name] = class_child.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_call);
+            cls->instance_variables[var_name] = class_child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_call);
         }
         break;
-        case andy::lang::parser::ast_node_type::ast_node_classdecl: {
+        case lavi::lang::parser::ast_node_type::ast_node_classdecl: {
             auto child_cls = do_execute_classdecl(interpreter, class_child);
-            andy::lang::api::contained_class(interpreter, cls, child_cls);
+            lavi::lang::api::contained_class(interpreter, cls, child_cls);
             interpreter->load(child_cls);
         }
         break;
-        case andy::lang::parser::ast_node_type::ast_node_enum: {
+        case lavi::lang::parser::ast_node_type::ast_node_enum: {
             std::string_view enum_name = class_child.decname();
             std::string corrected_enum_name_temp;
             corrected_enum_name_temp.reserve(enum_name.size() + enum_name.size() / 2);
@@ -289,21 +289,21 @@ static std::shared_ptr<andy::lang::structure> do_execute_classdecl(andy::lang::i
 
             cls->instance_variables[cls->string_holder.back()] = nullptr;
 
-            for(const auto& enum_child : class_child.child_from_type(andy::lang::parser::ast_node_type::ast_node_arraydecl)->childrens()) {
+            for(const auto& enum_child : class_child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_arraydecl)->childrens()) {
                 std::string_view enum_child_name = enum_child.token().content;
                 std::string enum_child_name_question;
                 enum_child_name_question.reserve(enum_child_name.size() + 1);
                 enum_child_name_question.append(enum_child_name);
                 enum_child_name_question.push_back('?');
                 cls->string_holder.push_back(std::move(enum_child_name_question));
-                cls->instance_functions[cls->string_holder.back()] = std::make_shared<andy::lang::function>(cls->string_holder.back(), [enum_name, enum_child_name, corrected_enum_name](andy::lang::interpreter* interpreter) {
+                cls->instance_functions[cls->string_holder.back()] = std::make_shared<lavi::lang::function>(cls->string_holder.back(), [enum_name, enum_child_name, corrected_enum_name](lavi::lang::interpreter* interpreter) {
                     auto it = interpreter->current_context->self->variables.find(*corrected_enum_name);
                     if(it == interpreter->current_context->self->variables.end()) {
-                        andy::lang::error::internal("Variable {} not found in object of class {} while evaluating {}?", *corrected_enum_name, interpreter->current_context->self->cls->name, enum_child_name);
+                        lavi::lang::error::internal("Variable {} not found in object of class {} while evaluating {}?", *corrected_enum_name, interpreter->current_context->self->cls->name, enum_child_name);
                         exit(1);
                     }
 
-                    return andy::lang::api::to_object(interpreter, it->second->as<std::string>() == enum_child_name);
+                    return lavi::lang::api::to_object(interpreter, it->second->as<std::string>() == enum_child_name);
                 });
             }
         }
@@ -319,43 +319,43 @@ static std::shared_ptr<andy::lang::structure> do_execute_classdecl(andy::lang::i
     return cls;
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_classdecl(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_classdecl(const lavi::lang::parser::ast_node& source_code)
 {
     auto cls = do_execute_classdecl(this, source_code);
     load(cls);
     return nullptr;
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_valuedecl(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_valuedecl(const lavi::lang::parser::ast_node& source_code)
 {
     switch(source_code.token().kind)
     {
         case lexer::token_kind::token_boolean: {
-            std::shared_ptr<andy::lang::object> obj = andy::lang::api::to_object(this, source_code.token().boolean_literal);
+            std::shared_ptr<lavi::lang::object> obj = lavi::lang::api::to_object(this, source_code.token().boolean_literal);
             return obj;
         }
         break;
         case lexer::token_kind::token_integer: {
-            std::shared_ptr<andy::lang::object> obj = andy::lang::api::to_object(this, source_code.token().integer_literal);
+            std::shared_ptr<lavi::lang::object> obj = lavi::lang::api::to_object(this, source_code.token().integer_literal);
             return obj;
         }
         case lexer::token_kind::token_float: {
-            std::shared_ptr<andy::lang::object> obj = andy::lang::api::to_object(this, source_code.token().float_literal);
+            std::shared_ptr<lavi::lang::object> obj = lavi::lang::api::to_object(this, source_code.token().float_literal);
             return obj;
         }
         break;
         case lexer::token_kind::token_double: {
-            std::shared_ptr<andy::lang::object> obj = andy::lang::api::to_object(this, source_code.token().double_literal);
+            std::shared_ptr<lavi::lang::object> obj = lavi::lang::api::to_object(this, source_code.token().double_literal);
             return obj;
         }
         break;
         case lexer::token_kind::token_string: {
-            std::shared_ptr<andy::lang::object> obj = andy::lang::api::to_object(this, source_code.token().string_literal);
+            std::shared_ptr<lavi::lang::object> obj = lavi::lang::api::to_object(this, source_code.token().string_literal);
             return obj;
         }
         break;
         case lexer::token_kind::token_null: {
-            std::shared_ptr<andy::lang::object> obj = andy::lang::object::instantiate(this, NullClass);
+            std::shared_ptr<lavi::lang::object> obj = lavi::lang::object::instantiate(this, NullClass);
             return obj;
         }
         break;
@@ -365,14 +365,14 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_valuedecl(c
     }
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(const lavi::lang::parser::ast_node& source_code)
 {
     std::string_view function_name;
 
     switch(source_code.type())
     {
         // declname interpreted as a function call with no parameters
-        case andy::lang::parser::ast_node_type::ast_node_declname:
+        case lavi::lang::parser::ast_node_type::ast_node_declname:
             function_name = source_code.token().content;
         break;
         default:
@@ -389,21 +389,21 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
         call_site_lexical_ctx = stack.back();
     }
 
-    std::vector<std::shared_ptr<andy::lang::object>> positional_params;
-    std::map<std::string_view, std::shared_ptr<andy::lang::object>> named_params;
+    std::vector<std::shared_ptr<lavi::lang::object>> positional_params;
+    std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params;
 
-    const andy::lang::parser::ast_node* params_node = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params);
+    const lavi::lang::parser::ast_node* params_node = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params);
 
     if(params_node) {
         for(auto& param : params_node->childrens()) {
-            const andy::lang::parser::ast_node* value_node = &param;
-            const andy::lang::parser::ast_node* name = nullptr;
-            if(param.type() == andy::lang::parser::ast_node_type::ast_node_pair) {
-                value_node = param.child_from_type(andy::lang::parser::ast_node_type::ast_node_valuedecl);
-                name = param.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname)->childrens().data();
+            const lavi::lang::parser::ast_node* value_node = &param;
+            const lavi::lang::parser::ast_node* name = nullptr;
+            if(param.type() == lavi::lang::parser::ast_node_type::ast_node_pair) {
+                value_node = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
+                name = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname)->childrens().data();
             }
 
-            std::shared_ptr<andy::lang::object> value = nullptr;
+            std::shared_ptr<lavi::lang::object> value = nullptr;
 
             value = execute(*value_node);
 
@@ -429,10 +429,10 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
         throw std::runtime_error("new operator cannot be called on an object");
     }
 
-    std::shared_ptr<andy::lang::object> ret = nullptr;
+    std::shared_ptr<lavi::lang::object> ret = nullptr;
 
     if(is_new) {
-        ret = std::make_shared<andy::lang::object>(current_context->cls);
+        ret = std::make_shared<lavi::lang::object>(current_context->cls);
         stack.pop_back(); // Pop the context we pushed to search for the class, since we already have the class in current_context->cls.
         push_context_with_object(ret);
         ret->initialize(this);
@@ -441,7 +441,7 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
     std::string_view object_name = "";
     bool is_super = function_name == "super";
     bool is_assignment = function_name == "=";
-    andy::lang::function* method_to_call = nullptr;
+    lavi::lang::function* method_to_call = nullptr;
     bool calling_function_same_object = false;
 
     if(is_assignment && !current_context->self) {
@@ -453,7 +453,7 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
             throw std::runtime_error("assignment operator '=' requires exactly one parameter");
         }
         if(positional_params[0] == nullptr) {
-            *current_context->self = std::move(*andy::lang::object::instantiate(this, NullClass).get());
+            *current_context->self = std::move(*lavi::lang::object::instantiate(this, NullClass).get());
         } else {
             // If the parameter is only used once (on the right side of the assignment only),
             // we can move it instead of copying it.
@@ -546,13 +546,13 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
                 }
 
                 auto previous_positional_params = std::move(positional_params);
-                positional_params = std::vector<std::shared_ptr<andy::lang::object>>();
+                positional_params = std::vector<std::shared_ptr<lavi::lang::object>>();
 
-                auto function_name_obj = andy::lang::api::to_object(this, function_name);
+                auto function_name_obj = lavi::lang::api::to_object(this, function_name);
 
                 positional_params.push_back(function_name_obj);
-                positional_params.push_back(andy::lang::api::to_object(this, std::move(previous_positional_params)));
-                positional_params.push_back(andy::lang::api::to_object(this, std::move(named_params)));
+                positional_params.push_back(lavi::lang::api::to_object(this, std::move(previous_positional_params)));
+                positional_params.push_back(lavi::lang::api::to_object(this, std::move(named_params)));
             }
         }
 
@@ -612,7 +612,7 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
                 // call the base class constructor
                 push_context();
                 current_context->cls = current_context->self->cls->base;
-                auto base = execute_fn_call(*source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname));
+                auto base = execute_fn_call(*source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname));
                 pop_context();
                 current_context->self->base_instance = base;
                 pop_context_from_node_object_if_any(this, source_code);
@@ -625,7 +625,7 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
             return self;
         }
 
-        current_context->given_block = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_yield_block);
+        current_context->given_block = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_yield_block);
 
         if(method_to_call->block_ast.childrens().size()) {
             for(size_t i = 0; i < method_to_call->positional_params.size(); i++) {
@@ -636,7 +636,7 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
                 current_context->variables[name] = value;
             }
             
-            if(method_to_call->block_ast.type() == andy::lang::parser::ast_node_type::ast_node_context) {
+            if(method_to_call->block_ast.type() == lavi::lang::parser::ast_node_type::ast_node_context) {
                 ret = execute_all(method_to_call->block_ast);
             } else {
                 ret = execute(*method_to_call->block_ast.block());
@@ -667,41 +667,41 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_call(con
     return ret;
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_arraydecl(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_arraydecl(const lavi::lang::parser::ast_node& source_code)
 {
-    std::vector<std::shared_ptr<andy::lang::object>> array;
+    std::vector<std::shared_ptr<lavi::lang::object>> array;
     array.reserve(source_code.childrens().size());
 
     for(auto& child : source_code.childrens()) {
         array.push_back(node_to_object(child));
     }
 
-    return andy::lang::object::instantiate(this, ArrayClass, std::move(array));
+    return lavi::lang::object::instantiate(this, ArrayClass, std::move(array));
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_hashdecl(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_hashdecl(const lavi::lang::parser::ast_node& source_code)
 {
-    andy::lang::hash hash(this);
+    lavi::lang::hash hash(this);
 
     for(auto& child : source_code.childrens()) {
-        auto key_node = child.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
-        auto value_node = child.child_from_type(andy::lang::parser::ast_node_type::ast_node_valuedecl);
+        auto key_node = child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
+        auto value_node = child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
 
-        std::shared_ptr<andy::lang::object> key = node_to_object(key_node->childrens().front());
-        std::shared_ptr<andy::lang::object> value = node_to_object(*value_node);
+        std::shared_ptr<lavi::lang::object> key = node_to_object(key_node->childrens().front());
+        std::shared_ptr<lavi::lang::object> value = node_to_object(*value_node);
 
         hash.set(std::move(key), std::move(value));
     }
 
-    return andy::lang::object::instantiate(this, HashClass, std::move(hash));
+    return lavi::lang::object::instantiate(this, HashClass, std::move(hash));
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_interpolated_string(const andy::lang::parser::ast_node& source_code) 
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_interpolated_string(const lavi::lang::parser::ast_node& source_code) 
 {
     std::string str;
     for(size_t i = 0; i < source_code.childrens().size(); i++) {
         auto& node_child = source_code.childrens()[i];
-        if(node_child.token().type == andy::lang::lexer::token_type::token_literal)
+        if(node_child.token().type == lavi::lang::lexer::token_type::token_literal)
         {
             switch (node_child.token().kind)
             {
@@ -728,44 +728,44 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_interpolate
                 break;
             }
         } else {
-            std::shared_ptr<andy::lang::object> obj = execute(node_child);
+            std::shared_ptr<lavi::lang::object> obj = execute(node_child);
             if(obj->cls != StringClass) {
-                obj = andy::lang::api::call(this, "to_string", obj);
+                obj = lavi::lang::api::call(this, "to_string", obj);
             }
             str += obj->as<std::string>();
         }
     }
-    return andy::lang::object::create(this, StringClass, std::move(str));
+    return lavi::lang::object::create(this, StringClass, std::move(str));
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_vardecl(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_vardecl(const lavi::lang::parser::ast_node& source_code)
 {
     std::string_view var_name = source_code.decname();
-    std::shared_ptr<andy::lang::object> value = std::make_shared<andy::lang::object>(NullClass);
+    std::shared_ptr<lavi::lang::object> value = std::make_shared<lavi::lang::object>(NullClass);
     value->self = value.get();
     current_context->variables[var_name] = value;
 
-    if(auto fn_call = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_call)) {
+    if(auto fn_call = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_call)) {
         value = execute(*fn_call);
     }
 
     return value;
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_conditional(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_conditional(const lavi::lang::parser::ast_node& source_code)
 {
-    std::shared_ptr<andy::lang::object> ret = execute(*source_code.condition());
+    std::shared_ptr<lavi::lang::object> ret = execute(*source_code.condition());
     bool match_codition = source_code.decl_type() == "if";
-    bool truthy = andy::lang::api::is_truthy(this, ret);
+    bool truthy = lavi::lang::api::is_truthy(this, ret);
 
     if(truthy == match_codition) {
-        auto context = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_context);
+        auto context = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context);
 
         ret = execute(*context);
     } else {
-        auto e = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_else);
+        auto e = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_else);
         if(!e) {
-            e = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_conditional);
+            e = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_conditional);
         }
         if(e) {
             ret = execute(*e);
@@ -775,11 +775,11 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_conditional
     return ret;
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_while(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_while(const lavi::lang::parser::ast_node& source_code)
 {
     bool match_condition = source_code.decl_type() == "until";
 
-    while(andy::lang::api::is_truthy(this, execute(*source_code.condition())) != match_condition) {
+    while(lavi::lang::api::is_truthy(this, execute(*source_code.condition())) != match_condition) {
         if(current_context->self) {
             push_context_with_object(current_context->self->shared_from_this());
         } else {
@@ -796,22 +796,22 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_while(const
     return nullptr;
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_break(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_break(const lavi::lang::parser::ast_node& source_code)
 {
         current_context->has_returned = true;
         return nullptr;
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_context(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_context(const lavi::lang::parser::ast_node& source_code)
 {
     if(source_code.childrens().size() == 0) {
         return nullptr;
     }
 
     if(source_code.childrens().size() > 1) {
-        if(source_code.childrens().front().type() == andy::lang::parser::ast_node_type::ast_node_fn_object) {
+        if(source_code.childrens().front().type() == lavi::lang::parser::ast_node_type::ast_node_fn_object) {
             auto* fn_object = source_code.childrens().data();
-            std::shared_ptr<andy::lang::object> context_object = node_to_object(
+            std::shared_ptr<lavi::lang::object> context_object = node_to_object(
                 fn_object->childrens().front(),
                 current_context->self ? current_context->self->cls : nullptr,
                 current_context->self ? current_context->self->shared_from_this() : nullptr
@@ -825,12 +825,12 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_context(con
     return execute_all(source_code);
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_condition(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_condition(const lavi::lang::parser::ast_node& source_code)
 {
     return node_to_object(source_code.childrens().front());
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_return(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_return(const lavi::lang::parser::ast_node& source_code)
 {
         if(source_code.childrens().size()) {
             return node_to_object(
@@ -839,30 +839,30 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_fn_return(c
                 current_context->self ? current_context->self->shared_from_this() : nullptr
             );
         } else {
-            return std::make_shared<andy::lang::object>(NullClass);
+            return std::make_shared<lavi::lang::object>(NullClass);
         }
         return nullptr;
 }
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_foreach(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_foreach(const lavi::lang::parser::ast_node& source_code)
 {
-    auto* valuedecl = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_valuedecl);
+    auto* valuedecl = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
 
-    std::shared_ptr<andy::lang::object> array_or_hash = node_to_object(valuedecl->childrens().front());
+    std::shared_ptr<lavi::lang::object> array_or_hash = node_to_object(valuedecl->childrens().front());
 
-    auto* vardecl = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_vardecl);
+    auto* vardecl = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_vardecl);
 
     if(array_or_hash->cls == ArrayClass) {
-        std::vector<std::shared_ptr<andy::lang::object>>& array_values = array_or_hash->as<std::vector<std::shared_ptr<andy::lang::object>>>();
+        std::vector<std::shared_ptr<lavi::lang::object>>& array_values = array_or_hash->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
         for(auto& value : array_values) {
             push_block_context();
 
             current_context->variables[vardecl->decname()] = value;
-            execute_all(*source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_context));
+            execute_all(*source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context));
 
             pop_context();
         }
     } else if(array_or_hash->cls == HashClass) {
-        andy::lang::hash& hash_values = array_or_hash->as<andy::lang::hash>();
+        lavi::lang::hash& hash_values = array_or_hash->as<lavi::lang::hash>();
         for(auto& key : hash_values.keys) {
             if(!key) {
                 continue;
@@ -872,12 +872,12 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_foreach(con
 
             auto value = hash_values.get(key);
 
-            std::vector<std::shared_ptr<andy::lang::object>> params = { key, value };
-            std::shared_ptr<andy::lang::object> params_object = andy::lang::object::instantiate(this, ArrayClass, params);
+            std::vector<std::shared_ptr<lavi::lang::object>> params = { key, value };
+            std::shared_ptr<lavi::lang::object> params_object = lavi::lang::object::instantiate(this, ArrayClass, params);
 
             current_context->variables[vardecl->decname()] = params_object;
 
-            execute_all(*source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_context));
+            execute_all(*source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context));
 
             pop_context();
         }
@@ -886,14 +886,14 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_foreach(con
     }
     return nullptr;
 }
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_for(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_for(const lavi::lang::parser::ast_node& source_code)
 {
-    auto* valuedecl = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_valuedecl);
+    auto* valuedecl = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
     if(!valuedecl) {
-        valuedecl = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
+        valuedecl = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
     }
 
-    std::shared_ptr<andy::lang::object> max_object = execute(*valuedecl);
+    std::shared_ptr<lavi::lang::object> max_object = execute(*valuedecl);
 
     if(!max_object || max_object->cls != IntegerClass) {
         throw std::runtime_error("Cannot iterate over a non-integer value");
@@ -912,13 +912,13 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_for(const a
     return nullptr;
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_yield(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_yield(const lavi::lang::parser::ast_node& source_code)
 {
     // Previous block
     auto block = current_context->given_block;
 
     if(!block) {
-        throw andy_lang_runtime_exception(andy::lang::api::to_object(this, "No block given to yield"));
+        throw andy_lang_runtime_exception(lavi::lang::api::to_object(this, "No block given to yield"));
     }
 
     // Create a block context whose lexical_parent is the context where the DO...END block
@@ -929,38 +929,38 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_yield(const
     stack.push_back(ctx);
     update_current_context();
 
-    auto* fn_params_definition_node = block->child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params);
+    auto* fn_params_definition_node = block->child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params);
 
     if(fn_params_definition_node) {
-        auto* fn_params_call_node = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_params);
+        auto* fn_params_call_node = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params);
 
         for(size_t i = 0; i < fn_params_definition_node->childrens().size(); i++) {
             auto& param_definition = fn_params_definition_node->childrens()[i];
-            std::shared_ptr<andy::lang::object> value = nullptr;
+            std::shared_ptr<lavi::lang::object> value = nullptr;
 
             if(fn_params_call_node && i < fn_params_call_node->childrens().size()) {
                 auto& param_call = fn_params_call_node->childrens()[i];
                 value = execute(param_call);
             } else {
-                value = std::make_shared<andy::lang::object>(NullClass);
+                value = std::make_shared<lavi::lang::object>(NullClass);
             }
 
             current_context->variables[param_definition.token().content] = value;
         }
     }
 
-    std::shared_ptr<andy::lang::object> ret = execute(*block->block());
+    std::shared_ptr<lavi::lang::object> ret = execute(*block->block());
     pop_context();
     return ret;
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_declname(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_declname(const lavi::lang::parser::ast_node& source_code)
 {
     std::string_view name = source_code.token().content;
 
     push_context_from_node_object_if_any(this, source_code);
 
-    auto try_find_in_context = [&](const std::shared_ptr<interpreter_context>& ctx) -> std::shared_ptr<andy::lang::object> {
+    auto try_find_in_context = [&](const std::shared_ptr<interpreter_context>& ctx) -> std::shared_ptr<lavi::lang::object> {
         auto variable_it = ctx->variables.find(name);
         if(variable_it != ctx->variables.end()) {
             return variable_it->second;
@@ -968,13 +968,13 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_declname(co
         // If not found as a variable or function, it could be a class (in the case of a declname used as an expression), so we check for that before moving to the next context in the chain.
         auto class_it = ctx->classes.find(name);
         if(class_it != ctx->classes.end()) {
-            auto cls_object = andy::lang::object::create(this, ClassClass, class_it->second);
+            auto cls_object = lavi::lang::object::create(this, ClassClass, class_it->second);
             return cls_object;
         }
         return nullptr;
     };
 
-    std::shared_ptr<andy::lang::object> ret = nullptr;
+    std::shared_ptr<lavi::lang::object> ret = nullptr;
 
     // Walk the lexical_parent chain (starting from the current context) to find the variable.
     for(auto ctx = current_context; ctx != nullptr; ctx = ctx->lexical_parent) {
@@ -1002,23 +1002,23 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_declname(co
     throw std::runtime_error("'" + std::string(name) + "' is undefined");
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_else(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_else(const lavi::lang::parser::ast_node& source_code)
 {
-    auto context = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_context);
+    auto context = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context);
     return execute_all(*context);
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_try(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_try(const lavi::lang::parser::ast_node& source_code)
 {
     push_block_context();
 
-    std::map<std::string_view, const andy::lang::parser::ast_node*> catchers;
+    std::map<std::string_view, const lavi::lang::parser::ast_node*> catchers;
 
     for(const auto& child : source_code.childrens()) {
-        if(child.type() != andy::lang::parser::ast_node_type::ast_node_catch) {
+        if(child.type() != lavi::lang::parser::ast_node_type::ast_node_catch) {
             continue;
         }
-        auto dectype_node = child.child_from_type(andy::lang::parser::ast_node_type::ast_node_decltype);
+        auto dectype_node = child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_decltype);
         if(!dectype_node) {
             catchers["var"] = &child;
         } else {
@@ -1030,7 +1030,7 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_try(const a
     try {
         current_context->catching_exception = true;
 
-        auto context = source_code.child_from_type(andy::lang::parser::ast_node_type::ast_node_context);
+        auto context = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context);
         execute(*context);
     } catch(const andy_lang_runtime_exception& e) {
         // Go back to the push_context on the beginning of this function
@@ -1050,7 +1050,7 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_try(const a
                 throw;
             }
         }
-        auto catch_context = catcher->second->child_from_type(andy::lang::parser::ast_node_type::ast_node_context);
+        auto catch_context = catcher->second->child_from_type(lavi::lang::parser::ast_node_type::ast_node_context);
         push_block_context();
         current_context->variables[catcher->second->decname()] = e.exception_object;
         execute(*catch_context);
@@ -1062,7 +1062,7 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_try(const a
     return nullptr;
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_throw(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_throw(const lavi::lang::parser::ast_node& source_code)
 {
     auto exception_object = execute(source_code.childrens().front());
 
@@ -1071,36 +1071,36 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_throw(const
     return exception_object;
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute(const lavi::lang::parser::ast_node& source_code)
 {
-    static auto executors = std::map<andy::lang::parser::ast_node_type, std::shared_ptr<andy::lang::object>(andy::lang::interpreter::*)(const andy::lang::parser::ast_node&)>{
-        { andy::lang::parser::ast_node_type::ast_node_classdecl,           &andy::lang::interpreter::execute_classdecl           },
-        { andy::lang::parser::ast_node_type::ast_node_context,             &andy::lang::interpreter::execute_context             },
-        { andy::lang::parser::ast_node_type::ast_node_fn_return,           &andy::lang::interpreter::execute_fn_return           },
-        { andy::lang::parser::ast_node_type::ast_node_fn_decl,             &andy::lang::interpreter::execute_fn_decl             },
-        { andy::lang::parser::ast_node_type::ast_node_valuedecl,           &andy::lang::interpreter::execute_valuedecl           },
-        { andy::lang::parser::ast_node_type::ast_node_fn_call,             &andy::lang::interpreter::execute_fn_call             },
-        { andy::lang::parser::ast_node_type::ast_node_interpolated_string, &andy::lang::interpreter::execute_interpolated_string },
-        { andy::lang::parser::ast_node_type::ast_node_arraydecl,           &andy::lang::interpreter::execute_arraydecl           },
-        { andy::lang::parser::ast_node_type::ast_node_hashdecl,            &andy::lang::interpreter::execute_hashdecl            },
-        { andy::lang::parser::ast_node_type::ast_node_vardecl,             &andy::lang::interpreter::execute_vardecl             },
-        { andy::lang::parser::ast_node_type::ast_node_declname,            &andy::lang::interpreter::execute_declname            },
-        { andy::lang::parser::ast_node_type::ast_node_conditional,         &andy::lang::interpreter::execute_conditional         },
-        { andy::lang::parser::ast_node_type::ast_node_while,               &andy::lang::interpreter::execute_while               },
-        { andy::lang::parser::ast_node_type::ast_node_for,                 &andy::lang::interpreter::execute_for                 },
-        { andy::lang::parser::ast_node_type::ast_node_foreach,             &andy::lang::interpreter::execute_foreach             },
-        { andy::lang::parser::ast_node_type::ast_node_break,               &andy::lang::interpreter::execute_break               },
-        { andy::lang::parser::ast_node_type::ast_node_condition,           &andy::lang::interpreter::execute_condition           },
-        { andy::lang::parser::ast_node_type::ast_node_else,                &andy::lang::interpreter::execute_else                },
-        { andy::lang::parser::ast_node_type::ast_node_yield,               &andy::lang::interpreter::execute_yield               },
-        { andy::lang::parser::ast_node_type::ast_node_try,                 &andy::lang::interpreter::execute_try                 },
-        { andy::lang::parser::ast_node_type::ast_node_throw,               &andy::lang::interpreter::execute_throw               }
+    static auto executors = std::map<lavi::lang::parser::ast_node_type, std::shared_ptr<lavi::lang::object>(lavi::lang::interpreter::*)(const lavi::lang::parser::ast_node&)>{
+        { lavi::lang::parser::ast_node_type::ast_node_classdecl,           &lavi::lang::interpreter::execute_classdecl           },
+        { lavi::lang::parser::ast_node_type::ast_node_context,             &lavi::lang::interpreter::execute_context             },
+        { lavi::lang::parser::ast_node_type::ast_node_fn_return,           &lavi::lang::interpreter::execute_fn_return           },
+        { lavi::lang::parser::ast_node_type::ast_node_fn_decl,             &lavi::lang::interpreter::execute_fn_decl             },
+        { lavi::lang::parser::ast_node_type::ast_node_valuedecl,           &lavi::lang::interpreter::execute_valuedecl           },
+        { lavi::lang::parser::ast_node_type::ast_node_fn_call,             &lavi::lang::interpreter::execute_fn_call             },
+        { lavi::lang::parser::ast_node_type::ast_node_interpolated_string, &lavi::lang::interpreter::execute_interpolated_string },
+        { lavi::lang::parser::ast_node_type::ast_node_arraydecl,           &lavi::lang::interpreter::execute_arraydecl           },
+        { lavi::lang::parser::ast_node_type::ast_node_hashdecl,            &lavi::lang::interpreter::execute_hashdecl            },
+        { lavi::lang::parser::ast_node_type::ast_node_vardecl,             &lavi::lang::interpreter::execute_vardecl             },
+        { lavi::lang::parser::ast_node_type::ast_node_declname,            &lavi::lang::interpreter::execute_declname            },
+        { lavi::lang::parser::ast_node_type::ast_node_conditional,         &lavi::lang::interpreter::execute_conditional         },
+        { lavi::lang::parser::ast_node_type::ast_node_while,               &lavi::lang::interpreter::execute_while               },
+        { lavi::lang::parser::ast_node_type::ast_node_for,                 &lavi::lang::interpreter::execute_for                 },
+        { lavi::lang::parser::ast_node_type::ast_node_foreach,             &lavi::lang::interpreter::execute_foreach             },
+        { lavi::lang::parser::ast_node_type::ast_node_break,               &lavi::lang::interpreter::execute_break               },
+        { lavi::lang::parser::ast_node_type::ast_node_condition,           &lavi::lang::interpreter::execute_condition           },
+        { lavi::lang::parser::ast_node_type::ast_node_else,                &lavi::lang::interpreter::execute_else                },
+        { lavi::lang::parser::ast_node_type::ast_node_yield,               &lavi::lang::interpreter::execute_yield               },
+        { lavi::lang::parser::ast_node_type::ast_node_try,                 &lavi::lang::interpreter::execute_try                 },
+        { lavi::lang::parser::ast_node_type::ast_node_throw,               &lavi::lang::interpreter::execute_throw               }
     };
 
     auto it = executors.find(source_code.type());
 
     if(it == executors.end()) {
-        andy::lang::error::internal("No executor found for node type " + std::to_string(static_cast<int>(source_code.type())));
+        lavi::lang::error::internal("No executor found for node type " + std::to_string(static_cast<int>(source_code.type())));
     }
 
     auto ret = (this->*it->second)(source_code);
@@ -1108,23 +1108,23 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute(const andy:
     return ret;
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_all(
-    std::vector<andy::lang::parser::ast_node>::const_iterator begin,
-    std::vector<andy::lang::parser::ast_node>::const_iterator end
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_all(
+    std::vector<lavi::lang::parser::ast_node>::const_iterator begin,
+    std::vector<lavi::lang::parser::ast_node>::const_iterator end
 )
 {
-    std::shared_ptr<andy::lang::object> result = nullptr;
+    std::shared_ptr<lavi::lang::object> result = nullptr;
 
     for(auto it = begin; it != end; it++) {
-        const andy::lang::parser::ast_node& node = *it;
+        const lavi::lang::parser::ast_node& node = *it;
 
-        if(node.type() == andy::lang::parser::ast_node_type::ast_node_undefined && node.token().type == andy::lang::lexer::token_type::token_eof) {
+        if(node.type() == lavi::lang::parser::ast_node_type::ast_node_undefined && node.token().type == lavi::lang::lexer::token_type::token_eof) {
             break;
         }
 
         result = execute(node);
 
-        if(it->type() == andy::lang::parser::ast_node_type::ast_node_fn_return) {
+        if(it->type() == lavi::lang::parser::ast_node_type::ast_node_fn_return) {
             current_context->has_returned = true;
             current_context->return_value = result;
             return result;
@@ -1136,38 +1136,38 @@ std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_all(
     return result;
 }
 
-std::shared_ptr<andy::lang::object> andy::lang::interpreter::execute_all(const andy::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_all(const lavi::lang::parser::ast_node& source_code)
 {
     return execute_all(source_code.childrens().begin(), source_code.childrens().end());
 }
 
-void andy::lang::interpreter::init()
+void lavi::lang::interpreter::init()
 {
     // The global context
     push_context();
-    andy::lang::structure::create_structures(this);
+    lavi::lang::structure::create_structures(this);
 }
 
-const std::shared_ptr<andy::lang::object> andy::lang::interpreter::try_object_from_declname(
-    const andy::lang::parser::ast_node& node,
-    std::shared_ptr<andy::lang::structure> cls,
-    std::shared_ptr<andy::lang::object> object
+const std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::try_object_from_declname(
+    const lavi::lang::parser::ast_node& node,
+    std::shared_ptr<lavi::lang::structure> cls,
+    std::shared_ptr<lavi::lang::object> object
 )
 {
-    auto* fn_object = node.child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_object);
-    const andy::lang::parser::ast_node* fn_object_decname = nullptr;
+    auto* fn_object = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_object);
+    const lavi::lang::parser::ast_node* fn_object_decname = nullptr;
     std::string_view var_name = node.token().content;
 
     if(fn_object) {
-        fn_object_decname = fn_object->child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
+        fn_object_decname = fn_object->child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
         
         if(fn_object_decname) {    
             object = try_object_from_declname(*fn_object_decname, cls, object);
-        } else if(auto fn_value = fn_object->child_from_type(andy::lang::parser::ast_node_type::ast_node_valuedecl)) {
+        } else if(auto fn_value = fn_object->child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl)) {
             object = node_to_object(*fn_value, cls, object);
         }
         else {
-            auto fn_object_fn_call = fn_object->child_from_type(andy::lang::parser::ast_node_type::ast_node_fn_call);
+            auto fn_object_fn_call = fn_object->child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_call);
 
             if(fn_object_fn_call) {
                 std::shared_ptr fn_object = execute(*fn_object_fn_call);
@@ -1194,14 +1194,14 @@ const std::shared_ptr<andy::lang::object> andy::lang::interpreter::try_object_fr
         }
 
         if(object->cls == ClassClass) {
-            auto cls = object->as<std::shared_ptr<andy::lang::structure>>();
+            auto cls = object->as<std::shared_ptr<lavi::lang::structure>>();
             auto it = cls->variables.find(var_name);
 
             if(it != cls->variables.end()) {
                 return it->second;
             }
         }
-        andy::lang::function* method = nullptr;
+        lavi::lang::function* method = nullptr;
         auto method_it = object->cls->instance_functions.find(var_name);
         if(method_it != object->cls->instance_functions.end()) {
             method = method_it->second.get();
@@ -1214,7 +1214,7 @@ const std::shared_ptr<andy::lang::object> andy::lang::interpreter::try_object_fr
         }
 
         if(method) {
-            auto __call = andy::lang::function_call{
+            auto __call = lavi::lang::function_call{
                 var_name,
                 object->cls,
                 object,
@@ -1223,7 +1223,7 @@ const std::shared_ptr<andy::lang::object> andy::lang::interpreter::try_object_fr
                 {},
                 fn_object
             };
-            andy::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            lavi::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             // return call(__call);
         }
 
@@ -1246,7 +1246,7 @@ const std::shared_ptr<andy::lang::object> andy::lang::interpreter::try_object_fr
         if(it == cls->variables.end()) {
             // Andy supports calling functions which does not have parameters without parentheses
             if(auto it = cls->functions.find(var_name); it != cls->functions.end()) {
-                auto __call = andy::lang::function_call{
+                auto __call = lavi::lang::function_call{
                     var_name,
                     cls,
                     nullptr,
@@ -1255,7 +1255,7 @@ const std::shared_ptr<andy::lang::object> andy::lang::interpreter::try_object_fr
                     {},
                     fn_object
                 };
-                andy::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+                lavi::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
                 // return call(__call);
             }
             throw std::runtime_error("class " + std::string(class_name) + " does not have a variable or function called '" + std::string(var_name) + "'");
@@ -1274,16 +1274,16 @@ const std::shared_ptr<andy::lang::object> andy::lang::interpreter::try_object_fr
         auto fn_it = ctx->functions.find(node.token().content);
         if(fn_it != ctx->functions.end()) {
             auto method = fn_it->second;
-            andy::lang::function_call __call = {
+            lavi::lang::function_call __call = {
                 method->name,
                 nullptr,
                 nullptr,
                 method.get(),
                 {},
                 {},
-                node.child_from_type(andy::lang::parser::ast_node_type::ast_node_context)
+                node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context)
             };
-            andy::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
+            lavi::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
             // return call(__call);
         }
     }
@@ -1299,38 +1299,38 @@ const std::shared_ptr<andy::lang::object> andy::lang::interpreter::try_object_fr
     cls = find_class(node.token().content);
 
     if(cls) {
-        return andy::lang::api::to_object(this, cls);
+        return lavi::lang::api::to_object(this, cls);
     }
 
     return nullptr;
 }
 
-const std::shared_ptr<andy::lang::object> andy::lang::interpreter::node_to_object(const andy::lang::parser::ast_node& node, std::shared_ptr<andy::lang::structure> cls, std::shared_ptr<andy::lang::object> object)
+const std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::node_to_object(const lavi::lang::parser::ast_node& node, std::shared_ptr<lavi::lang::structure> cls, std::shared_ptr<lavi::lang::object> object)
 {
-    if(node.token().type == andy::lang::lexer::token_type::token_literal) {
+    if(node.token().type == lavi::lang::lexer::token_type::token_literal) {
         return execute(node);
-    } else if(node.type() == andy::lang::parser::ast_node_type::ast_node_fn_call) {
+    } else if(node.type() == lavi::lang::parser::ast_node_type::ast_node_fn_call) {
         return execute(node);
-    } else if(node.type() == andy::lang::parser::ast_node_type::ast_node_declname || node.type() == andy::lang::parser::ast_node_type::ast_node_valuedecl) {
+    } else if(node.type() == lavi::lang::parser::ast_node_type::ast_node_declname || node.type() == lavi::lang::parser::ast_node_type::ast_node_valuedecl) {
         return execute(node);
-    } else if(node.type() == andy::lang::parser::ast_node_type::ast_node_arraydecl) {
+    } else if(node.type() == lavi::lang::parser::ast_node_type::ast_node_arraydecl) {
         // Logic moved to execute_arraydecl to support array literals in more places
         return execute(node);
-    } else if(node.type() == andy::lang::parser::ast_node_type::ast_node_hashdecl) {
-        andy::lang::hash map(this);
+    } else if(node.type() == lavi::lang::parser::ast_node_type::ast_node_hashdecl) {
+        lavi::lang::hash map(this);
 
         for(auto& child : node.childrens()) {
-            const andy::lang::parser::ast_node* name_node = child.child_from_type(andy::lang::parser::ast_node_type::ast_node_declname);
-            const andy::lang::parser::ast_node* value_node = child.child_from_type(andy::lang::parser::ast_node_type::ast_node_valuedecl);
+            const lavi::lang::parser::ast_node* name_node = child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
+            const lavi::lang::parser::ast_node* value_node = child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
 
-            std::shared_ptr<andy::lang::object> key   = node_to_object(name_node->childrens().front());
-            std::shared_ptr<andy::lang::object> value = node_to_object(value_node->childrens().front());
+            std::shared_ptr<lavi::lang::object> key   = node_to_object(name_node->childrens().front());
+            std::shared_ptr<lavi::lang::object> value = node_to_object(value_node->childrens().front());
 
             map.set(key, value);
         }
 
-        return andy::lang::object::instantiate(this, HashClass, std::move(map));
-    } else if(node.type() == andy::lang::parser::ast_node_type::ast_node_interpolated_string) {
+        return lavi::lang::object::instantiate(this, HashClass, std::move(map));
+    } else if(node.type() == lavi::lang::parser::ast_node_type::ast_node_interpolated_string) {
         return execute(node);
     }
 
@@ -1339,23 +1339,23 @@ const std::shared_ptr<andy::lang::object> andy::lang::interpreter::node_to_objec
     return nullptr;
 }
 
-void andy::lang::interpreter::load_extension(andy::lang::extension* extension)
+void lavi::lang::interpreter::load_extension(lavi::lang::extension* extension)
 {
     extension->load(this);
     extensions.push_back(extension);
 }
 
-void andy::lang::interpreter::push_context()
+void lavi::lang::interpreter::push_context()
 {
-    andy::console::log_debug("Pushing context");
+    lavi::console::log_debug("Pushing context");
 
     stack.push_back(std::make_shared<interpreter_context>());
     update_current_context();
 }
 
-void andy::lang::interpreter::push_block_context()
+void lavi::lang::interpreter::push_block_context()
 {
-    andy::console::log_debug("Pushing block context");
+    lavi::console::log_debug("Pushing block context");
 
     auto ctx = std::make_shared<interpreter_context>();
     ctx->is_block_context = true;
@@ -1374,9 +1374,9 @@ void andy::lang::interpreter::push_block_context()
     update_current_context();
 }
 
-void andy::lang::interpreter::push_context(std::shared_ptr<andy::lang::object> object)
+void lavi::lang::interpreter::push_context(std::shared_ptr<lavi::lang::object> object)
 {
-    andy::console::log_debug("Pushing context with object");
+    lavi::console::log_debug("Pushing context with object");
 
     if(object) {
         push_context_with_object(object);
@@ -1387,12 +1387,12 @@ void andy::lang::interpreter::push_context(std::shared_ptr<andy::lang::object> o
     update_current_context();
 }
 
-void andy::lang::interpreter::push_context_with_object(std::shared_ptr<andy::lang::object> object)
+void lavi::lang::interpreter::push_context_with_object(std::shared_ptr<lavi::lang::object> object)
 {
     std::string_view class_name = object->cls ? object->cls->name : "null";
 
     if(object->cls == ClassClass) {
-        auto cls = object->as<std::shared_ptr<andy::lang::structure>>();
+        auto cls = object->as<std::shared_ptr<lavi::lang::structure>>();
         // Temporary workaround
         if(!cls->cls) {
             cls->cls = cls;
@@ -1402,24 +1402,24 @@ void andy::lang::interpreter::push_context_with_object(std::shared_ptr<andy::lan
         stack.push_back(std::static_pointer_cast<interpreter_context>(object));
     }
 
-    andy::console::log_debug("Pushing context with {}#{}", class_name, (void*)object.get());
+    lavi::console::log_debug("Pushing context with {}#{}", class_name, (void*)object.get());
 
     update_current_context();
 }
 
-void andy::lang::interpreter::pop_context()
+void lavi::lang::interpreter::pop_context()
 {
     if(stack.size() == 1) {
         throw std::runtime_error("interpreter: unexpected end of context stack");
     }
 
-    andy::console::log_debug("Popping context");
+    lavi::console::log_debug("Popping context");
 
     stack.pop_back();
     update_current_context();
 }
 
-void andy::lang::interpreter::update_current_context()
+void lavi::lang::interpreter::update_current_context()
 {
     if(stack.empty()) {
         current_context = nullptr;

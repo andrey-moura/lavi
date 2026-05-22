@@ -56,14 +56,14 @@ static bool is_alnum_or_underscore(char c) {
 int main(int argc, char** argv) {
     try {
         std::filesystem::path andy_executable_path = argv[0];
-        //vm_instance = std::make_shared<andy::lang::vm>();
+        //vm_instance = std::make_shared<lavi::lang::vm>();
 
         std::filesystem::path file_path;
         if(file_path.empty()) {
             if(argc > 1) {
                 file_path = std::filesystem::absolute(argv[1]);
             } else {
-                file_path = std::filesystem::absolute("application.andy");
+                file_path = std::filesystem::absolute("application.lv");
             }
 
             if(!std::filesystem::exists(file_path)) {
@@ -250,7 +250,7 @@ int main(int argc, char** argv) {
             }
         }
     } catch (const std::exception& e) {
-        andy::console::log_error(e.what());
+        lavi::console::log_error(e.what());
         return 1;
     }
 

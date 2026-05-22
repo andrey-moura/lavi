@@ -3,29 +3,29 @@ cmake_minimum_required(VERSION 3.10)
 
 set(CMAKE_CXX_STANDARD 20)
 
-file(READ "${CMAKE_SOURCE_DIR}/VERSION" ANDYLANG_PROJECT_VERSION)
-string(STRIP "${ANDYLANG_PROJECT_VERSION}" ANDYLANG_PROJECT_VERSION)
-set(ANDYLANG_VERSION "${ANDYLANG_PROJECT_VERSION}")
+file(READ "${CMAKE_SOURCE_DIR}/VERSION" LAVILANG_PROJECT_VERSION)
+string(STRIP "${LAVILANG_PROJECT_VERSION}" LAVILANG_PROJECT_VERSION)
+set(LAVILANG_VERSION "${LAVILANG_PROJECT_VERSION}")
 
-string(FIND "${ANDYLANG_VERSION}" "-beta" IS_BETA)
+string(FIND "${LAVILANG_VERSION}" "-beta" IS_BETA)
 if(NOT IS_BETA EQUAL -1)
     # Removes the -beta* part
-    string(SUBSTRING "${ANDYLANG_VERSION}" 0 ${IS_BETA} ANDYLANG_VERSION)
+    string(SUBSTRING "${LAVILANG_VERSION}" 0 ${IS_BETA} LAVILANG_VERSION)
 endif()
 
-string(FIND "${ANDYLANG_VERSION}" "-alpha" IS_ALPHA)
+string(FIND "${LAVILANG_VERSION}" "-alpha" IS_ALPHA)
 if(NOT IS_ALPHA EQUAL -1)
     # Removes the -alpha* part
-    string(SUBSTRING "${ANDYLANG_VERSION}" 0 ${IS_ALPHA} ANDYLANG_VERSION)
+    string(SUBSTRING "${LAVILANG_VERSION}" 0 ${IS_ALPHA} LAVILANG_VERSION)
 endif()
 
-project(andy-lang VERSION ${ANDYLANG_VERSION})
+project(lavi VERSION ${LAVILANG_VERSION})
 
-option(BUILD_ANDY_CPP "Build andyc++" OFF)
-option(BUILD_ANDY_ANALYZER "Build andy-analyzer" ON)
+option(BUILD_LAVI_CPP "Build lavic++" OFF)
+option(BUILD_LAVI_ANALYZER "Build lavi-analyzer" ON)
 
 # Get the parent directory
-get_filename_component(ANDYLANG_PARENT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} DIRECTORY)
+get_filename_component(LAVILANG_PARENT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} DIRECTORY)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
 
 include(${CMAKE_CURRENT_LIST_DIR}/modules/andy-tests/CMakeLists.txt)
@@ -37,7 +37,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/modules/binary/CMakeLists.txt)
 
 include("${CMAKE_CURRENT_LIST_DIR}/src/builtin_libs/net_extension/CMakeLists.txt")
 
-add_library(andy-lang
+add_library(lavi-lang
     ${CMAKE_CURRENT_LIST_DIR}/src/api.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/function.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/preprocessor.cpp
@@ -73,8 +73,8 @@ add_library(andy-lang
 
     ${CMAKE_CURRENT_LIST_DIR}/modules/andy-tests/src/andy-tests.cpp
     
-    ${ANDY_UI_EXTENSION_SOURCES}
-    ${ANDY_DRAWING_EXTENSION_SOURCES}
+    ${LAVI_UI_EXTENSION_SOURCES}
+    ${LAVI_DRAWING_EXTENSION_SOURCES}
     ${ANDY_NET_EXTENSION_SOURCES}
 
     $<TARGET_OBJECTS:andy-file>
@@ -83,10 +83,10 @@ add_library(andy-lang
     $<TARGET_OBJECTS:andy-binary>
 )
 
-target_link_libraries(andy-lang PRIVATE ${ANDY_NET_LIBRARIES} ${ANDY_DRAWING_BACKEND_LIBRARIES})
+target_link_libraries(lavi-lang PRIVATE ${ANDY_NET_LIBRARIES} ${LAVI_DRAWING_BACKEND_LIBRARIES})
 
-add_executable(andy
-    ${CMAKE_CURRENT_LIST_DIR}/src/andy.cpp
+add_executable(lavi
+    ${CMAKE_CURRENT_LIST_DIR}/src/lavi.cpp
 )
 
 if(FALSE)
@@ -94,101 +94,101 @@ if(FALSE)
 
     include_directories(${CLANG_INCLUDE_DIRS})
 
-    add_executable(andyc++
-        ${CMAKE_CURRENT_LIST_DIR}/src/andyc++.cpp
+    add_executable(lavic++
+        ${CMAKE_CURRENT_LIST_DIR}/src/lavic++.cpp
     )
 
-    target_link_libraries(andyc++ PRIVATE andy-lang libclang)
+    target_link_libraries(lavic++ PRIVATE lavi-lang libclang)
 endif()
 
-if(BUILD_ANDY_ANALYZER)
-    add_executable(andy-analyzer
+if(BUILD_LAVI_ANALYZER)
+    add_executable(lavi-analyzer
         ${CMAKE_CURRENT_LIST_DIR}/src/analyzer.cpp
     )
 
-    target_link_libraries(andy-analyzer PRIVATE andy-lang)
+    target_link_libraries(lavi-analyzer PRIVATE lavi-lang)
 endif()
 
 if(UNIX)
     find_package(Threads REQUIRED)
 
-    target_link_libraries(andy-lang PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
-    target_link_options(andy PRIVATE -Wl,--export-dynamic)
+    target_link_libraries(lavi-lang PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    target_link_options(lavi PRIVATE -Wl,--export-dynamic)
 
-    # set_target_properties(andy PROPERTIES LINK_SEARCH_START_STATIC ON)
-    # set_target_properties(andy PROPERTIES LINK_SEARCH_END_STATIC ON)
-    # target_link_options(andy PRIVATE -static-libgcc -static-libstdc++ -static)
+    # set_target_properties(lavi PROPERTIES LINK_SEARCH_START_STATIC ON)
+    # set_target_properties(lavi PROPERTIES LINK_SEARCH_END_STATIC ON)
+    # target_link_options(lavi PRIVATE -static-libgcc -static-libstdc++ -static)
 elseif(WIN32)
-    add_executable(andy-lang-installer WIN32 ${CMAKE_CURRENT_LIST_DIR}/win32/installer.cpp)
-    if(EXISTS "${CMAKE_BINARY_DIR}/Release/andy.exe")
+    add_executable(lavi-installer WIN32 ${CMAKE_CURRENT_LIST_DIR}/win32/installer.cpp)
+    if(EXISTS "${CMAKE_BINARY_DIR}/Release/lavi.exe")
         enable_language("RC")
         set(WIN32_RESOURCES ${CMAKE_CURRENT_LIST_DIR}/win32/resources.rc)
-        target_sources(andy PRIVATE ${WIN32_RESOURCES})
-        target_sources(andy-lang-installer PRIVATE ${WIN32_RESOURCES})
+        target_sources(lavi PRIVATE ${WIN32_RESOURCES})
+        target_sources(lavi-installer PRIVATE ${WIN32_RESOURCES})
     endif()
 
-    add_dependencies(andy-lang-installer andy)
-    SET_TARGET_PROPERTIES(andy-lang-installer PROPERTIES LINK_FLAGS "/MANIFESTUAC:/level='requireAdministrator' /uiAccess='false'")
-    target_compile_definitions(andy-lang PRIVATE _WIN32_WINNT=0x0A00)
+    add_dependencies(lavi-installer lavi)
+    SET_TARGET_PROPERTIES(lavi-installer PROPERTIES LINK_FLAGS "/MANIFESTUAC:/level='requireAdministrator' /uiAccess='false'")
+    target_compile_definitions(lavi-lang PRIVATE _WIN32_WINNT=0x0A00)
 endif()
 
-target_link_libraries(andy PRIVATE andy-lang)
+target_link_libraries(lavi PRIVATE lavi-lang)
 
-set(ANDYLANG_PROJECT_DIR "${CMAKE_CURRENT_LIST_DIR}")
-set(ANDYLANG_BUILD_DIR "${CMAKE_BINARY_DIR}")
+set(LAVILANG_PROJECT_DIR "${CMAKE_CURRENT_LIST_DIR}")
+set(LAVILANG_BUILD_DIR "${CMAKE_BINARY_DIR}")
 
 if(WIN32)
     # Replace / with \\
-    string(REPLACE "/" "\\\\" ANDYLANG_PROJECT_DIR "${ANDYLANG_PROJECT_DIR}")
-    string(REPLACE "/" "\\\\" ANDYLANG_BUILD_DIR "${ANDYLANG_BUILD_DIR}")
+    string(REPLACE "/" "\\\\" LAVILANG_PROJECT_DIR "${LAVILANG_PROJECT_DIR}")
+    string(REPLACE "/" "\\\\" LAVILANG_BUILD_DIR "${LAVILANG_BUILD_DIR}")
 endif()
 
-add_definitions(-DANDYLANG_PROJECT_DIR="${CMAKE_CURRENT_LIST_DIR}")
-add_definitions(-DANDYLANG_BUILD_DIR="${CMAKE_BINARY_DIR}")
-add_definitions(-DANDYLANG_VERSION="${ANDYLANG_PROJECT_VERSION}")
+add_definitions(-DLAVI_PROJECT_DIR="${CMAKE_CURRENT_LIST_DIR}")
+add_definitions(-DLAVI_BUILD_DIR="${CMAKE_BINARY_DIR}")
+add_definitions(-DLAVI_VERSION="${LAVILANG_PROJECT_VERSION}")
 
-# Install andy executable
-install(TARGETS andy DESTINATION bin)
-if(BUILD_ANDY_ANALYZER)
-    # Install andy-analyzer executable
-    install(TARGETS andy-analyzer DESTINATION bin)
+# Install lavi executable
+install(TARGETS lavi DESTINATION bin)
+if(BUILD_LAVI_ANALYZER)
+    # Install lavi-analyzer executable
+    install(TARGETS lavi-analyzer DESTINATION bin)
 endif()
-# Install andy-lang library
-install(TARGETS andy-lang DESTINATION lib)
-# Install andy-lang headers
-install(DIRECTORY include/andy DESTINATION include)
-install(DIRECTORY std DESTINATION include/andy)
-install(DIRECTORY utility DESTINATION src/andy-lang)
+# Install lavi-lang library
+install(TARGETS lavi-lang DESTINATION lib)
+# Install lavi-lang headers
+install(DIRECTORY include/lavi DESTINATION include)
+install(DIRECTORY std DESTINATION include/lavi)
+install(DIRECTORY utility DESTINATION src/lavi)
 
-install(EXPORT andy-langTargets
-    FILE andy-langTargets.cmake
-    NAMESPACE andy-lang::
-    DESTINATION lib/cmake/andy-lang
+install(EXPORT lavi-langTargets
+    FILE lavi-langTargets.cmake
+    NAMESPACE lavi-lang::
+    DESTINATION lib/cmake/lavi-lang
 )
 
 include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
-    ${CMAKE_BINARY_DIR}/andy-langConfigVersion.cmake
-    VERSION ${ANDYLANG_PROJECT_VERSION}
+    ${CMAKE_BINARY_DIR}/lavi-langConfigVersion.cmake
+    VERSION ${LAVILANG_PROJECT_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 
 configure_file(
-    ${CMAKE_SOURCE_DIR}/cmake/andy-langConfig.cmake.in
-    ${CMAKE_BINARY_DIR}/andy-langConfig.cmake
+    ${CMAKE_SOURCE_DIR}/cmake/lavi-langConfig.cmake.in
+    ${CMAKE_BINARY_DIR}/lavi-langConfig.cmake
     @ONLY
 )
 
 install(FILES
-    ${CMAKE_BINARY_DIR}/andy-langConfig.cmake
-    ${CMAKE_BINARY_DIR}/andy-langConfigVersion.cmake
-    DESTINATION lib/cmake/andy-lang
+    ${CMAKE_BINARY_DIR}/lavi-langConfig.cmake
+    ${CMAKE_BINARY_DIR}/lavi-langConfigVersion.cmake
+    DESTINATION lib/cmake/lavi-lang
 )
 
-install(TARGETS andy-lang
-    EXPORT andy-langTargets
+install(TARGETS lavi-lang
+    EXPORT lavi-langTargets
 )
 
-andy_tests_configure(andy)
-andy_tests_configure(andy-lang)
+andy_tests_configure(lavi)
+andy_tests_configure(lavi-lang)
