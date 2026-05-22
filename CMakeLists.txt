@@ -156,8 +156,8 @@ endif()
 # Install lavi-lang library
 install(TARGETS lavi-lang DESTINATION lib)
 # Install lavi-lang headers
-install(DIRECTORY include/andy DESTINATION include)
-install(DIRECTORY std DESTINATION include/andy)
+install(DIRECTORY include/lavi DESTINATION include)
+install(DIRECTORY std DESTINATION include/lavi)
 install(DIRECTORY utility DESTINATION src/lavi-lang)
 
 install(EXPORT lavi-langTargets
