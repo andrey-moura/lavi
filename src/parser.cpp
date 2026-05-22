@@ -1,4 +1,4 @@
-#include <andy/lang/parser.hpp>
+#include <lavi/lang/parser.hpp>
 
 #include <andy/file.hpp>
 #include <andy/console.hpp>
@@ -7,9 +7,9 @@
 #include <iostream>
 #include <regex>
 
-#include <andy/lang/object.hpp>
-#include <andy/lang/class.hpp>
-#include <andy/lang/function.hpp>
+#include <lavi/lang/object.hpp>
+#include <lavi/lang/class.hpp>
+#include <lavi/lang/function.hpp>
 
 using namespace lavi;
 using namespace lang;

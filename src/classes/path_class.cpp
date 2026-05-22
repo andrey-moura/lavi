@@ -1,9 +1,9 @@
 #include <filesystem>
 #include <iostream>
 
-#include <andy/lang/lang.hpp>
-#include <andy/lang/interpreter.hpp>
-#include <andy/lang/extension.hpp>
+#include <lavi/lang/lang.hpp>
+#include <lavi/lang/interpreter.hpp>
+#include <lavi/lang/extension.hpp>
 
 std::shared_ptr<lavi::lang::structure> create_path_class(lavi::lang::interpreter* interpreter)
 {

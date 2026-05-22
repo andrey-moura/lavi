@@ -2,8 +2,8 @@
 
 #include <andy/file.hpp>
 
-#include <andy/lang/lang.hpp>
-#include <andy/lang/interpreter.hpp>
+#include <lavi/lang/lang.hpp>
+#include <lavi/lang/interpreter.hpp>
 
 std::shared_ptr<lavi::lang::structure> create_file_class(lavi::lang::interpreter* interpreter)
 {

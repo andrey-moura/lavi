@@ -1,6 +1,6 @@
-#include "andy/lang/object.hpp"
-#include "andy/lang/interpreter.hpp"
-#include "andy/lang/api.hpp"
+#include "lavi/lang/object.hpp"
+#include "lavi/lang/interpreter.hpp"
+#include "lavi/lang/api.hpp"
 
 std::shared_ptr<lavi::lang::structure> create_class_class(lavi::lang::interpreter* interpreter)
 {

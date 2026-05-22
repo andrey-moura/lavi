@@ -1,7 +1,7 @@
 #pragma once
 
 #include <deque>
-#include "andy/lang/function.hpp"
+#include "lavi/lang/function.hpp"
 
 namespace lavi
 {

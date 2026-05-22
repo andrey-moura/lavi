@@ -1,5 +1,5 @@
-#include <andy/lang/lang.hpp>
-#include <andy/lang/interpreter.hpp>
+#include <lavi/lang/lang.hpp>
+#include <lavi/lang/interpreter.hpp>
 
 #include "add_operators.hpp"
 

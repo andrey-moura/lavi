@@ -1,8 +1,8 @@
-#include <andy/lang/object.hpp>
+#include <lavi/lang/object.hpp>
 
-#include <andy/lang/class.hpp>
-#include <andy/lang/function.hpp>
-#include <andy/lang/interpreter.hpp>
+#include <lavi/lang/class.hpp>
+#include <lavi/lang/function.hpp>
+#include <lavi/lang/interpreter.hpp>
 
 #include <andy/console.hpp>
 

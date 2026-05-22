@@ -3,8 +3,8 @@
 #include <vector>
 #include <memory>
 
-#include <andy/lang/api.hpp>
-#include <andy/lang/extension.hpp>
+#include <lavi/lang/api.hpp>
+#include <lavi/lang/extension.hpp>
 
 extern std::shared_ptr<lavi::lang::structure> create_net_class(lavi::lang::interpreter* interpreter);
 extern std::shared_ptr<lavi::lang::structure> create_http_class(lavi::lang::interpreter* interpreter);

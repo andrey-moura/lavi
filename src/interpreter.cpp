@@ -3,11 +3,11 @@
 #include "andy/file.hpp"
 #include "andy/console.hpp"
 
-#include "andy/lang/error.hpp"
-#include "andy/lang/interpreter.hpp"
-#include "andy/lang/extension.hpp"
-#include "andy/lang/lang.hpp"
-#include "andy/lang/api.hpp"
+#include "lavi/lang/error.hpp"
+#include "lavi/lang/interpreter.hpp"
+#include "lavi/lang/extension.hpp"
+#include "lavi/lang/lang.hpp"
+#include "lavi/lang/api.hpp"
 
 struct andy_lang_runtime_exception {
     andy_lang_runtime_exception(std::shared_ptr<lavi::lang::object> exception_object)

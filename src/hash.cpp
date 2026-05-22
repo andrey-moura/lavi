@@ -1,6 +1,6 @@
-#include "andy/lang/hash.hpp"
+#include "lavi/lang/hash.hpp"
 
-#include <andy/lang/api.hpp>
+#include <lavi/lang/api.hpp>
 
 lavi::lang::hash::hash(lavi::lang::interpreter* interpreter)
     : interpreter(interpreter),

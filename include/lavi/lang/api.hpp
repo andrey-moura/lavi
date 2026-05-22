@@ -2,10 +2,10 @@
 
 #include <filesystem>
 
-#include <andy/lang/lang.hpp>
-#include <andy/lang/interpreter.hpp>
-#include <andy/lang/config.hpp>
-#include <andy/lang/function.hpp>
+#include <lavi/lang/lang.hpp>
+#include <lavi/lang/interpreter.hpp>
+#include <lavi/lang/config.hpp>
+#include <lavi/lang/function.hpp>
 
 namespace lavi
 {

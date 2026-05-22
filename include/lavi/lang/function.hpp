@@ -5,7 +5,7 @@
 #include <functional>
 #include <memory>
 
-#include <andy/lang/parser.hpp>
+#include <lavi/lang/parser.hpp>
 
 namespace lavi {
     namespace lang {

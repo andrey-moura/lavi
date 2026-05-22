@@ -1,4 +1,4 @@
-#include "andy/lang/error.hpp"
+#include "lavi/lang/error.hpp"
 #include <iostream>
 #include <cstdlib>
 

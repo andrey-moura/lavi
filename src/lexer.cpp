@@ -1,4 +1,4 @@
-#include "andy/lang/lexer.hpp"
+#include "lavi/lang/lexer.hpp"
 
 #include <algorithm>
 #include <stdexcept>

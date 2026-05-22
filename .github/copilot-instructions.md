@@ -22,7 +22,7 @@ andy-lang/
 │   ├── classes/      # Built-in class implementations
 │   └── builtin_libs/ # Built-in extensions (drawing, UI)
 ├── include/          # Public header files
-│   └── andy/lang/    # Core language headers
+│   └── lavi/lang/    # Core language headers
 ├── modules/          # Modular components
 │   ├── andy/         # Main interpreter module
 │   ├── andy-core/    # Core utilities
@@ -74,7 +74,7 @@ Tests are written in C++ (using a custom testing framework) and in Andy language
 ### Header Files
 
 - Use `#pragma once` instead of include guards
-- Headers in `include/andy/lang/` are public API
+- Headers in `include/lavi/lang/` are public API
 - Use forward declarations when possible
 - Include documentation comments using `/// @brief` style
 

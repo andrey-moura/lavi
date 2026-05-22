@@ -1,8 +1,8 @@
-#include <andy/lang/api.hpp>
-#include <andy/lang/preprocessor.hpp>
-#include <andy/lang/lexer.hpp>
-#include <andy/lang/parser.hpp>
-#include <andy/lang/error.hpp>
+#include <lavi/lang/api.hpp>
+#include <lavi/lang/preprocessor.hpp>
+#include <lavi/lang/lexer.hpp>
+#include <lavi/lang/parser.hpp>
+#include <lavi/lang/error.hpp>
 
 #include <andy/file.hpp>
 

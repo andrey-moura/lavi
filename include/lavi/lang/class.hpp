@@ -5,8 +5,8 @@
 #include <map>
 #include <memory>
 
-#include <andy/lang/function.hpp>
-#include <andy/lang/interpreter_context.hpp>
+#include <lavi/lang/function.hpp>
+#include <lavi/lang/interpreter_context.hpp>
 
 namespace lavi {
     namespace lang {

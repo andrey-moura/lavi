@@ -1,6 +1,6 @@
 #include <memory>
 
-#include "andy/lang/extension.hpp"
+#include "lavi/lang/extension.hpp"
 
 extern std::shared_ptr<lavi::lang::extension> create_net_extension();
 

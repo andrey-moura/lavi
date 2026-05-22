@@ -3,8 +3,8 @@
 #include <vector>
 #include <memory>
 
-#include "andy/lang/api.hpp"
-#include "andy/lang/extension.hpp"
+#include "lavi/lang/api.hpp"
+#include "lavi/lang/extension.hpp"
 
 class net_extension : public lavi::lang::extension
 {

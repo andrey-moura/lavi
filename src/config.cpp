@@ -1,4 +1,4 @@
-#include <andy/lang/config.hpp>
+#include <lavi/lang/config.hpp>
 
 namespace lavi
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <andy/lang/lexer.hpp>
+#include <lavi/lang/lexer.hpp>
 
 #include <string>
 #include <vector>

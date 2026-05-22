@@ -4,7 +4,7 @@
 #include <vector>
 
 #include <andy.hpp>
-#include <andy/lang/parser.hpp>
+#include <lavi/lang/parser.hpp>
 
 #ifdef _WIN32
     #define ANDY_EXTENSION(name) \

@@ -1,5 +1,5 @@
 #include <andy/tests.hpp>
-#include <andy/lang/lexer.hpp>
+#include <lavi/lang/lexer.hpp>
 
 describe of("lexer", []() {
   describe("tokenization", []() {

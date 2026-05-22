@@ -5,11 +5,11 @@
 #include "andy/file.hpp"
 #include "andy/binary.hpp"
 
-#include "andy/lang/parser.hpp"
-#include "andy/lang/lexer.hpp"
-#include "andy/lang/interpreter.hpp"
-#include "andy/lang/extension.hpp"
-#include "andy/lang/preprocessor.hpp"
+#include "lavi/lang/parser.hpp"
+#include "lavi/lang/lexer.hpp"
+#include "lavi/lang/interpreter.hpp"
+#include "lavi/lang/extension.hpp"
+#include "lavi/lang/preprocessor.hpp"
 
 struct analyzer_error
 {

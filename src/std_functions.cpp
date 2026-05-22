@@ -7,12 +7,12 @@
 #include <filesystem>
 #include <fstream>
 
-#include <andy/lang/lang.hpp>
-#include <andy/lang/error.hpp>
-#include <andy/lang/api.hpp>
-#include <andy/lang/preprocessor.hpp>
-#include <andy/lang/interpreter.hpp>
-#include <andy/lang/extension.hpp>
+#include <lavi/lang/lang.hpp>
+#include <lavi/lang/error.hpp>
+#include <lavi/lang/api.hpp>
+#include <lavi/lang/preprocessor.hpp>
+#include <lavi/lang/interpreter.hpp>
+#include <lavi/lang/extension.hpp>
 
 void create_std_functions(lavi::lang::interpreter* interpreter)
 {

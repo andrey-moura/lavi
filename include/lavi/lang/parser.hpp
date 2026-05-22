@@ -7,7 +7,7 @@
 
 #include <andy/core.hpp>
 
-#include <andy/lang/lexer.hpp>
+#include <lavi/lang/lexer.hpp>
 
 namespace lavi
 {

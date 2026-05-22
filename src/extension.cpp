@@ -1,11 +1,11 @@
-#include <andy/lang/extension.hpp>
+#include <lavi/lang/extension.hpp>
 
 #include <iostream>
 #include <string>
 
 #include <andy.hpp>
 
-#include <andy/lang/interpreter.hpp>
+#include <lavi/lang/interpreter.hpp>
 
 #ifdef __linux__
 #   include <dlfcn.h>

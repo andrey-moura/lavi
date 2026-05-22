@@ -1,8 +1,8 @@
 #pragma once
-#include <andy/lang/class.hpp>
-#include <andy/lang/function.hpp>
-#include <andy/lang/object.hpp>
-#include "andy/lang/api.hpp"
+#include <lavi/lang/class.hpp>
+#include <lavi/lang/function.hpp>
+#include <lavi/lang/object.hpp>
+#include "lavi/lang/api.hpp"
 
 
 #define UNARY_OPERATOR_INLINE(op, T) \

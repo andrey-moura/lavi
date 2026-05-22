@@ -1,7 +1,7 @@
-#include <andy/lang/lang.hpp>
-#include <andy/lang/interpreter.hpp>
-#include <andy/lang/extension.hpp>
-#include <andy/lang/config.hpp>
+#include <lavi/lang/lang.hpp>
+#include <lavi/lang/interpreter.hpp>
+#include <lavi/lang/extension.hpp>
+#include <lavi/lang/config.hpp>
 
 #include <filesystem>
 

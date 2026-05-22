@@ -1,6 +1,6 @@
-#include <andy/lang/function.hpp>
-#include <andy/lang/object.hpp>
-#include <andy/lang/class.hpp>
+#include <lavi/lang/function.hpp>
+#include <lavi/lang/object.hpp>
+#include <lavi/lang/class.hpp>
 
 lavi::lang::fn_parameter::fn_parameter(std::string_view __name)
 {

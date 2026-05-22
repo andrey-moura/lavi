@@ -7,9 +7,9 @@
 #include <andy/console.hpp>
 #include <andy/file.hpp>
 
-#include <andy/lang/interpreter.hpp>
-#include <andy/lang/lexer.hpp>
-#include <andy/lang/class.hpp>
+#include <lavi/lang/interpreter.hpp>
+#include <lavi/lang/lexer.hpp>
+#include <lavi/lang/class.hpp>
 
 #include <clang-c/Index.h>  // This is libclang.
 
@@ -58,9 +58,9 @@ int create_extension() {
 
     output_file.open(output_file_path);
 
-    output_file << "#include <andy/lang/lang.hpp>" << std::endl;
-    output_file << "#include <andy/lang/interpreter.hpp>" << std::endl;
-    output_file << "#include <andy/lang/extension.hpp>" << std::endl;
+    output_file << "#include <lavi/lang/lang.hpp>" << std::endl;
+    output_file << "#include <lavi/lang/interpreter.hpp>" << std::endl;
+    output_file << "#include <lavi/lang/extension.hpp>" << std::endl;
     output_file << std::endl;
     for(const std::string_view& cls : all_classes) {
         std::string snake_case_name;
@@ -364,7 +364,7 @@ int main(int argc, char* argv[]) {
         output_file << "// Generated at " << buf << " UTC" << std::endl;
         output_file << "// Changes to this file will be overwritten on next build" << std::endl;
         output_file << std::endl;
-        output_file << "#include <andy/lang/api.hpp>" << std::endl;
+        output_file << "#include <lavi/lang/api.hpp>" << std::endl;
         output_file << std::endl;
         output_file << "#include <" << input_file_path.filename().string() << ">" << std::endl;
         output_file << std::endl;
