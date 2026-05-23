@@ -1,0 +1,200 @@
+name: Lavi CI
+
+on:
+  push:
+    branches:
+      - master
+      - '1.*.x'
+
+  pull_request:
+    branches:
+      - master
+      - '1.*.x'
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version_changed:
+    runs-on: ubuntu-22.04
+
+    outputs:
+      changed: ${{ steps.changed.outputs.changed }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check VERSION changes
+        id: changed
+        run: |
+          if git diff --name-only HEAD^ HEAD | grep -q '^VERSION$'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-22.04
+          - ubuntu-24.04
+          - macos-latest
+
+    runs-on: ${{ matrix.os }}
+
+    permissions:
+      id-token: write
+      contents: read
+      checks: write
+
+    steps:
+      - name: Checkout lavi
+        uses: actions/checkout@v4
+        with:
+          path: lavi
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install dependencies (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+
+          sudo apt-get install -y \
+            build-essential \
+            cmake
+
+      - name: Install dependencies (macOS)
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          brew install cmake
+
+      - name: Configure CMake
+        run: |
+          cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -B build \
+            .
+        working-directory: lavi
+
+      - name: Build project
+        run: |
+          cmake --build build --config Release --parallel
+        working-directory: lavi
+
+      - name: Install project
+        run: |
+          cmake --install build --prefix install
+        working-directory: lavi
+
+      - name: Check lavi version
+        run: |
+          ./install/bin/lavi --version
+        working-directory: lavi
+
+      - name: Run tests
+        run: |
+          ./install/bin/lavi --tests
+        working-directory: lavi
+
+      - name: Package artifacts
+        run: |
+          mkdir -p artifacts
+
+          tar -czf \
+            artifacts/lavi-${{ matrix.os }}.tar.gz \
+            -C install .
+        working-directory: lavi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lavi-${{ matrix.os }}
+          path: |
+            lavi/artifacts/*.tar.gz
+
+  release:
+    if: |
+      github.event_name == 'push' &&
+      startsWith(github.ref_name, '1.') &&
+      endsWith(github.ref_name, '.x') &&
+      needs.version_changed.outputs.changed == 'true'
+
+    needs:
+      - build
+      - version_changed
+
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version
+        id: version
+        run: |
+          VERSION=$(cat VERSION)
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Validate branch/version compatibility
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          BRANCH=${GITHUB_REF_NAME}
+
+          PREFIX=$(echo "$BRANCH" | sed 's/\.x$//')
+
+          if [[ "$VERSION" != ${PREFIX}.* ]]; then
+            echo "VERSION does not match branch"
+            echo "Branch: $BRANCH"
+            echo "Version: $VERSION"
+            exit 1
+          fi
+
+      - name: Fail if tag already exists
+        run: |
+          TAG=v${{ steps.version.outputs.version }}
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag already exists: $TAG"
+            exit 1
+          fi
+
+      - name: Create tag
+        run: |
+          TAG=v${{ steps.version.outputs.version }}
+
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Show artifacts
+        run: |
+          find artifacts
+
+      - name: Generate checksums
+        run: |
+          find artifacts -name '*.tar.gz' -exec sha256sum {} \; \
+            > SHA256SUMS.txt
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          files: |
+            artifacts/**/*.tar.gz
+            SHA256SUMS.txt
