@@ -76,6 +76,13 @@ jobs:
           cmake --build build --config Release --parallel
         working-directory: lavi
 
+      - name: Cache build
+        uses: actions/cache@v4
+        with:
+          path: |
+            lavi/build
+          key: ${{ runner.os }}-build
+
       - name: Install project (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
         run: |
@@ -169,6 +176,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: lavi-${{ matrix.os }}
+          path: |
+            lavi/artifacts/*.zip
 
   release:
     if: |
