@@ -1,0 +1,19 @@
+fn help
+  out "Usage: lavi cerri <command> [<args>]\n"
+  out "These are the available Cerri commands:\n"
+  out '  run:'
+  out "    The 'lavi cerri run' command executes a Cerri project."
+  out '    It requires all source files configured in the package.yml'
+  out "    and then executes the entry point defined in the package.yml.\n"
+  out "  help:"
+  out "    The 'lavi cerri help' command shows this message."
+end
+
+if __args__.size < 3
+  help
+  return 1
+end
+
+var command = __args__[2]
+
+send(command)
