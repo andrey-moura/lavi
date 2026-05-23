@@ -127,6 +127,7 @@ jobs:
         if: startsWith(matrix.os, 'windows')
         run: |
           & "C:\Program Files (x86)\lavi\bin\lavi.exe" --tests
+        working-directory: lavi
 
       - name: Package artifacts (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
