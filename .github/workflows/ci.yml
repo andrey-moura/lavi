@@ -82,7 +82,8 @@ jobs:
         if: startsWith(matrix.os, 'windows')
         uses: actions/cache@v4
         with:
-          path: ~\AppData\Local\Mozilla\sccache
+          path: |
+            C:\Users\runneradmin\AppData\Local\Mozilla\sccache\cache
           key: sccache-${{ matrix.os }}
 
       - name: Display build folder (Ubuntu)
@@ -122,12 +123,6 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           ccache --show-config
-
-      - name: Show sccache config
-        if: startsWith(matrix.os, 'windows')
-        shell: powershell
-        run: |
-          echo "SCCACHE_DIR=$env:SCCACHE_DIR"
 
       - name: Install project (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
