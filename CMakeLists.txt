@@ -128,7 +128,9 @@ elseif(WIN32)
     endif()
 
     add_dependencies(lavi-installer lavi)
-    SET_TARGET_PROPERTIES(lavi-installer PROPERTIES LINK_FLAGS "/MANIFESTUAC:/level='requireAdministrator' /uiAccess='false'")
+    if(MSVC)
+        SET_TARGET_PROPERTIES(lavi-installer PROPERTIES LINK_FLAGS "/MANIFESTUAC:/level='requireAdministrator' /uiAccess='false'")
+    endif()
     target_compile_definitions(lavi-lang PRIVATE _WIN32_WINNT=0x0A00)
 endif()
 
