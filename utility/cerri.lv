@@ -16,4 +16,10 @@ end
 
 var command = __args__[2]
 
-send(command)
+if respond_to?(command)
+  send(command)
+else
+  out "Unknown command: ${command}"
+  help
+  return 1
+end
