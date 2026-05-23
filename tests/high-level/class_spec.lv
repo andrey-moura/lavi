@@ -175,7 +175,7 @@ describe 'type' do
   end
 
   context 'when redefining a type' do
-    it 'accumulates members across type reopenings like Ruby' do
+    it 'accumulates members across type reopenings' do
       type User
         var name = null
       end
@@ -190,6 +190,17 @@ describe 'type' do
       u.set_name 'andrey'
 
       expect(u.name).to eq('andrey')
+    end
+  end
+
+  context 'when being assigned to a variable' do
+    it 'allows retreiving the name of the type' do
+      type Person
+        var name = null
+      end
+
+      var p = Person
+      expect(p.name).to eq('Person')
     end
   end
 end

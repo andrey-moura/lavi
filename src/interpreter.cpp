@@ -131,6 +131,14 @@ void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::structure> cls)
         });
     }
 
+    auto name_function = cls->functions.find("name");
+
+    if(name_function == cls->functions.end()) {
+        cls->functions["name"] = std::make_shared<lavi::lang::function>("name", [cls, this](lavi::lang::interpreter* interpreter) {
+            return lavi::lang::api::to_object(interpreter, cls->name);
+        });
+    }
+
     cls->cls = cls;
 
     current_context->classes[cls->name] = cls;
