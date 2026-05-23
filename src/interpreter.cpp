@@ -131,6 +131,14 @@ void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::structure> cls)
         });
     }
 
+    auto name_function = cls->functions.find("name");
+
+    if(name_function == cls->functions.end()) {
+        cls->functions["name"] = std::make_shared<lavi::lang::function>("name", [cls, this](lavi::lang::interpreter* interpreter) {
+            return lavi::lang::api::to_object(interpreter, cls->name);
+        });
+    }
+
     cls->cls = cls;
 
     current_context->classes[cls->name] = cls;
@@ -433,6 +441,10 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
 
     if(is_new) {
         ret = std::make_shared<lavi::lang::object>(current_context->cls);
+        // Self is set in initialize, but, here we need to call push_context_with_object before initialize to create a new clean context,
+        // so we set self here to make it available in the init function. It will be overwritten by initialize, but it doesn't matter
+        // since they should be the same.
+        ret->self = ret.get();
         stack.pop_back(); // Pop the context we pushed to search for the class, since we already have the class in current_context->cls.
         push_context_with_object(ret);
         ret->initialize(this);
@@ -610,12 +622,15 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
 
             if(current_context->self->cls->base) {
                 // call the base class constructor
+                auto base = current_context->self->cls->base;
                 push_context();
-                current_context->cls = current_context->self->cls->base;
-                auto base = execute_fn_call(*source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname));
-                pop_context();
-                current_context->self->base_instance = base;
-                pop_context_from_node_object_if_any(this, source_code);
+                current_context->cls = base;
+                auto base_instance = execute_fn_call(*source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname));
+                // The execute_fn_call will pop the context
+                // pop_context();
+                current_context->self->base_instance = base_instance;
+                // For some reason this causes errors
+                // pop_context_from_node_object_if_any(this, source_code);
             }
 
             auto self = current_context->self->shared_from_this();
