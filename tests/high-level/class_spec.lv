@@ -202,5 +202,21 @@ describe 'type' do
       var p = Person
       expect(p.name).to eq('Person')
     end
+    it 'allows creating instances through the variable' do
+      type Person
+        var name = null
+
+        fn init(n)
+          name = n
+        end
+      end
+
+      var P = Person
+      var p1 = P.new('Alice')
+      var p2 = P.new('Bob')
+
+      expect(p1.name).to eq('Alice')
+      expect(p2.name).to eq('Bob')
+    end
   end
 end
