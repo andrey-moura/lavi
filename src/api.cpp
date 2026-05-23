@@ -134,7 +134,19 @@ namespace lavi
                 std::shared_ptr<lavi::lang::object> ret = nullptr;
 
                 if(function->block_ast.childrens().size()) {
-                    ret = interpreter->execute(function->block_ast);
+                    for(size_t i = 0; i < function->positional_params.size(); i++) {
+                        interpreter->current_context->variables[function->positional_params[i].name] = interpreter->current_context->positional_params[i];
+                    }
+
+                    for(auto& [name, value] : interpreter->current_context->named_params) {
+                        interpreter->current_context->variables[name] = value;
+                    }
+                    
+                    if(function->block_ast.type() == lavi::lang::parser::ast_node_type::ast_node_context) {
+                        ret = interpreter->execute_all(function->block_ast);
+                    } else {
+                        ret = interpreter->execute(*function->block_ast.block());
+                    }
                 } else if(function->native_function) {
                     ret = function->native_function(interpreter);
                 }
