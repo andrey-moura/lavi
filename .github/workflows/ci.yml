@@ -274,7 +274,7 @@ jobs:
 
       - name: Create tag
         run: |
-          TAG=v${{ steps.version.outputs.version }}
+          TAG=${{ steps.version.outputs.version }}
 
           git tag "$TAG"
           git push origin "$TAG"
@@ -296,7 +296,8 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.version.outputs.version }}
+          tag_name: ${{ steps.version.outputs.version }}
+          body_path: RELEASE_NOTES.md
           files: |
             artifacts/**/*.tar.gz
             SHA256SUMS.txt
