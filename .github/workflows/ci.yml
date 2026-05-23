@@ -139,18 +139,21 @@ jobs:
 
       - name: Package artifacts (Windows)
         if: startsWith(matrix.os, 'windows')
+        shell: powershell
         run: |
-          mkdir artifacts
+          New-Item -ItemType Directory -Force artifacts
 
-          copy "C:\Program Files (x86)\lavi\bin\lavi.exe" artifacts\
-          copy "C:\Program Files (x86)\lavi\bin\lavi-analyzer.exe" artifacts\
+          Copy-Item `
+            "C:\Program Files (x86)\lavi\bin\lavi.exe" `
+            artifacts\
 
-          cd artifacts
+          Copy-Item `
+            "C:\Program Files (x86)\lavi\bin\lavi-analyzer.exe" `
+            artifacts\
 
-          tar -czf \
-            lavi-${{ matrix.os }}.tar.gz \
-            lavi.exe \
-            lavi-analyzer.exe
+          Compress-Archive `
+            -Path artifacts\* `
+            -DestinationPath lavi-${{ matrix.os }}.zip
         working-directory: lavi
 
       - name: Upload artifacts (Ubuntu)
