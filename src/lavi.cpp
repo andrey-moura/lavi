@@ -54,6 +54,9 @@ int main(int argc, char** argv) {
                     file_path = lavi::lang::config::src_dir() / "utility" / argv[1];
                     file_path.replace_extension(".lv");
                 }
+                if(!std::filesystem::exists(file_path)) {
+                    throw std::runtime_error("input file does not exist");
+                }
             }
 
             if(!std::filesystem::is_regular_file(file_path)) {
