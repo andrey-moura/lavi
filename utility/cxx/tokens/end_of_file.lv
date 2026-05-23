@@ -1,0 +1,12 @@
+#include 'base.lv'
+
+namespace CXX
+  namespace Tokens
+    // Matcher for end-of-file tokens.
+    type EndOfFile extends Base
+      fn match?(source)
+        return source.empty?
+      end
+    end
+  end
+end

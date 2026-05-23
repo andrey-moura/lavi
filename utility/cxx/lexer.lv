@@ -1,6 +1,6 @@
 #include 'token.lv'
-#include 'token_matchers/base.lv'
-#include 'token_matchers/*.lv'
+#include 'tokens/base.lv'
+#include 'tokens/*.lv'
 
 namespace CXX
   type Lexer
@@ -11,12 +11,14 @@ namespace CXX
     fn init(f)
       source = f
 
-      matchers = CXX::TokenMatchers::Base.subclasses.map! do (matcher_class)
+      var classes = CXX::Tokens::Base.subclasses
+      
+      matchers = classes.map do (matcher_class)
         matcher_class.new
       end
 
       out "Lexer initialized with source of length ${source.size}."
-      out "Matchers available: ${matchers}"
+      out "Matchers available: ${classes}"
 
       tokens = tokenize
     end
@@ -56,25 +58,18 @@ namespace CXX
       tokens.push(Token.new(kind))
     end
 
+    fn matching
+      matchers.each do (matcher)
+        if matcher.match?(source)
+          out "Matched with ${matcher.class}"
+        end
+      end
+    end
+
     fn read_next_token
       discard_whitespaces
 
-      if source.empty?
-        push_token(:eof)
-        return
-      end
-
-      if (source.size >= 2) && (source[0] == "/") && (source[1] == "*")
-        discard
-        discard
-
-        loop until (source.size >= 2) && (source[0] == "*") && (source[1] == "/")
-          read
-        end
-
-        discard
-        discard
-      end
+       matching
     end
 
     fn tokenize
