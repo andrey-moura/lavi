@@ -61,10 +61,17 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Retore build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            lavi/build
+          key: ${{ matrix.os }}-build
+
       - name: Display build folder (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          ls -la build
+          ls -la build || echo "No build folder"
         working-directory: lavi
 
       - name: Install dependencies (Ubuntu)
@@ -81,13 +88,6 @@ jobs:
         run: |
           cmake --build build --config Release --parallel
         working-directory: lavi
-
-      - name: Cache build
-        uses: actions/cache@v4
-        with:
-          path: |
-            lavi/build
-          key: ${{ matrix.os }}-build
 
       - name: Install project (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
