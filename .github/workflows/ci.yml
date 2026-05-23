@@ -1,5 +1,17 @@
 name: Lavi CI
 
+on:
+  push:
+    branches:
+      - master
+      - better_ci
+      - '1.*.x'
+
+  pull_request:
+    branches:
+      - master
+      - '1.*.x'
+
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
