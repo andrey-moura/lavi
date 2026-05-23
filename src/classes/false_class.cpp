@@ -17,10 +17,7 @@ std::shared_ptr<lavi::lang::structure> create_false_class(lavi::lang::interprete
 
     FalseClass->instance_functions["||"] = std::make_shared<lavi::lang::function>("||", std::initializer_list<std::string>{"other"}, [FalseClass](lavi::lang::interpreter* interpreter) {
         auto other = interpreter->current_context->positional_params[0];
-        //return other->cls->instance_functions["present?"]->call(other);
-        lavi::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
-
-        return std::make_shared<lavi::lang::object>(FalseClass);
+        return lavi::lang::api::to_object(interpreter, lavi::lang::api::is_truthy(interpreter, other));
     });
     
         FalseClass->instance_functions["!"] = std::make_shared<lavi::lang::function>("!", [](lavi::lang::interpreter* interpreter) {
