@@ -1,1 +1,3 @@
-import: cxx
+paths:
+  - src
+entry: src/main.lv
