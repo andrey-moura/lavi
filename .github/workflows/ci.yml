@@ -65,6 +65,7 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           ls -la build
+        working-directory: lavi
 
       - name: Install dependencies (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
