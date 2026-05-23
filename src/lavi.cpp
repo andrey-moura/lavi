@@ -35,18 +35,6 @@ int main(int argc, char** argv) {
                 } else if(arg == "--version") {
                     std::cout << LAVI_VERSION << std::endl;
                     return 0;
-                } else {
-                    arg.remove_prefix(2);
-                    file_path = lavi::lang::config::src_dir() / "utility" / arg;
-                    file_path.replace_extension(".lv");
-
-                    if(!std::filesystem::exists(file_path)) {
-                        throw std::runtime_error("utility does not exist");
-                    }
-
-                    if(!std::filesystem::is_regular_file(file_path)) {
-                        throw std::runtime_error("utility is not a regular file");
-                    }
                 }
             }
         }
@@ -63,7 +51,8 @@ int main(int argc, char** argv) {
                     file_path.replace_extension(".lv");
                 }
                 if(!std::filesystem::exists(file_path)) {
-                    throw std::runtime_error("input file does not exist");
+                    file_path = lavi::lang::config::src_dir() / "utility" / argv[1];
+                    file_path.replace_extension(".lv");
                 }
             }
 
