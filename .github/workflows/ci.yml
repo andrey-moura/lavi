@@ -75,7 +75,7 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         uses: actions/cache@v4
         with:
-          path: ~/.ccache
+          path: /home/runner/.cache/ccache
           key: ccache-${{ matrix.os }}
 
       - name: Restore sccache
@@ -113,10 +113,21 @@ jobs:
         run: |
           ccache -s
 
+      - name: Show sccache stats (Windows)
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          sccache --show-stats
+
       - name: Show ccache config (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           ccache --show-config
+
+      - name: Show sccache config
+        if: startsWith(matrix.os, 'windows')
+        shell: powershell
+        run: |
+          echo "SCCACHE_DIR=$env:SCCACHE_DIR"
 
       - name: Install project (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
