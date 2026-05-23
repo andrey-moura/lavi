@@ -1,5 +1,3 @@
-#include 'base.lv'
-
 namespace CXX
   namespace Tokens
     // Matcher for comment tokens.

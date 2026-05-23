@@ -1,7 +1,3 @@
-#include 'token.lv'
-#include 'tokens/base.lv'
-#include 'tokens/*.lv'
-
 namespace CXX
   type Lexer
     var source = null

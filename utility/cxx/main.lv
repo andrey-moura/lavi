@@ -1,5 +1,3 @@
-#include 'cxx/lexer.lv'
-
 if __args__.size < 3
   out 'Usage: lavi --cxx <file>'
   return 1
