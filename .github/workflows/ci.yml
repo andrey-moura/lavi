@@ -80,26 +80,32 @@ jobs:
 
       - name: Install project
         run: |
-          cmake --install build --prefix install
+          cmake --install build
         working-directory: lavi
 
       - name: Check lavi version
         run: |
-          ./install/bin/lavi --version
+          lavi --version
         working-directory: lavi
 
       - name: Run tests
         run: |
-          ./install/bin/lavi --tests
+          lavi --tests
         working-directory: lavi
 
       - name: Package artifacts
         run: |
           mkdir -p artifacts
 
+          cp build/lavi artifacts/
+          cp build/lavi-analyzer artifacts/
+
+          cd artifacts
+
           tar -czf \
-            artifacts/lavi-${{ matrix.os }}.tar.gz \
-            -C install .
+            lavi-${{ matrix.os }}.tar.gz \
+            lavi \
+            lavi-analyzer
         working-directory: lavi
 
       - name: Upload artifacts
