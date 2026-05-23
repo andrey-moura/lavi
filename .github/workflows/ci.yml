@@ -61,6 +61,11 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Display build folder (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          ls -la build
+
       - name: Install dependencies (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
         run: |
