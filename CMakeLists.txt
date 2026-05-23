@@ -54,7 +54,6 @@ add_library(lavi-lang
     ${CMAKE_CURRENT_LIST_DIR}/src/std_functions.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/src/hash.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/yaml.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/andy_config_class.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/array_class.cpp
