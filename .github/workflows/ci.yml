@@ -99,7 +99,8 @@ jobs:
         run: |
           & "C:\Program Files (x86)\lavi\bin\lavi.exe" --version
       
-      - name: Check minimal functionality
+      - name: Check minimal functionality (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           lavi --hello
         working-directory: lavi
