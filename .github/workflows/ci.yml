@@ -80,7 +80,7 @@ jobs:
 
       - name: Install project
         run: |
-          cmake --install build
+          sudo cmake --install build
         working-directory: lavi
 
       - name: Check lavi version
