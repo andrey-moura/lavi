@@ -8,10 +8,10 @@ void lavi::lang::error::internal(std::string_view message)
         << "ANDY LANGUAGE INTERNAL ERROR!!!" << std::endl
         << std::endl
         << message << std::endl << std::endl
-        << "You have encountered an internal error in the Andy Language." << std::endl
+        << "You have encountered an internal error in the Lavi Language." << std::endl
         << "This is likely a bug in the language itself." << std::endl
-        << "Please report this issue to the Andy Language developers at" << std::endl
-        << "https://github.com/Moonslate/andy-lang/issues"
+        << "Please report this issue to the Lavi developers at" << std::endl
+        << "https://github.com/Moonslate/lavi/issues"
         << std::endl;
 
     std::abort();
