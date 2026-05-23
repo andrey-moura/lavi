@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - better_ci
       - '1.*.x'
 
   pull_request:
