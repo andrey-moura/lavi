@@ -61,12 +61,17 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Retore build cache
+      - name: Install dependencies (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get install -y build-essential ccache
+
+      - name: Restore ccache
+        if: startsWith(matrix.os, 'ubuntu')
         uses: actions/cache@v4
         with:
-          path: |
-            lavi/build
-          key: ${{ matrix.os }}-build
+          path: ~/.ccache
+          key: ccache-${{ matrix.os }}
 
       - name: Display build folder (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
@@ -74,12 +79,14 @@ jobs:
           ls -la build || echo "No build folder"
         working-directory: lavi
 
-      - name: Install dependencies (Ubuntu)
+      - name: Configure CMake (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          sudo apt-get install -y build-essential
+          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -B build .
+        working-directory: lavi
 
-      - name: Configure CMake
+      - name: Configure CMake (Windows)
+        if: startsWith(matrix.os, 'windows')
         run: |
           cmake -DCMAKE_BUILD_TYPE=Release -B build .
         working-directory: lavi
