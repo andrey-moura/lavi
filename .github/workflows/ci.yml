@@ -108,6 +108,16 @@ jobs:
           cmake --build build --config Release --parallel
         working-directory: lavi
 
+      - name: Show ccache stats (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          ccache -s
+
+      - name: Show ccache config (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          ccache --show-config
+
       - name: Install project (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
         run: |
