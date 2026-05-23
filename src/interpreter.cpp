@@ -123,6 +123,14 @@ void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::structure> cls)
         });
     }
 
+    auto class_instance_function = cls->instance_functions.find("class");
+
+    if(class_instance_function == cls->instance_functions.end()) {
+        cls->instance_functions["class"] = std::make_shared<lavi::lang::function>("class", [](lavi::lang::interpreter* interpreter) {
+            return lavi::lang::api::to_object(interpreter, interpreter->current_context->self->cls);
+        });
+    }
+
     auto to_string_function = cls->functions.find("to_string");
 
     if(to_string_function == cls->functions.end()) {
