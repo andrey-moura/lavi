@@ -44,6 +44,7 @@ jobs:
         os:
           - ubuntu-22.04
           - ubuntu-24.04
+          - windows-2022
 
     runs-on: ${{ matrix.os }}
 
@@ -78,9 +79,16 @@ jobs:
           cmake --build build --config Release --parallel
         working-directory: lavi
 
-      - name: Install project
+      - name: Install project (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo cmake --install build
+        working-directory: lavi
+
+      - name: Install project (Windows)
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          cmake --install build --config Release
         working-directory: lavi
 
       - name: Check lavi version
@@ -88,12 +96,24 @@ jobs:
           lavi --version
         working-directory: lavi
 
-      - name: Run tests
+      - name: Check minimal functionality
+        run: |
+          lavi --hello
+        working-directory: lavi
+
+      - name: Run tests (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           lavi --tests
         working-directory: lavi
 
-      - name: Package artifacts
+      - name: Run tests (Windows)
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          & "C:\Program Files (x86)\lavi\bin\lavi.exe" --tests
+
+      - name: Package artifacts (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           mkdir -p artifacts
 
@@ -108,12 +128,35 @@ jobs:
             lavi-analyzer
         working-directory: lavi
 
-      - name: Upload artifacts
+      - name: Package artifacts (Windows)
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          mkdir artifacts
+
+          copy "C:\Program Files (x86)\lavi\bin\lavi.exe" artifacts\
+          copy "C:\Program Files (x86)\lavi\bin\lavi-analyzer.exe" artifacts\
+
+          cd artifacts
+
+          tar -czf \
+            lavi-${{ matrix.os }}.tar.gz \
+            lavi.exe \
+            lavi-analyzer.exe
+        working-directory: lavi
+
+      - name: Upload artifacts (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
         uses: actions/upload-artifact@v4
         with:
           name: lavi-${{ matrix.os }}
           path: |
             lavi/artifacts/*.tar.gz
+
+      - name: Upload artifacts (Windows)
+        if: startsWith(matrix.os, 'windows')
+        uses: actions/upload-artifact@v4
+        with:
+          name: lavi-${{ matrix.os }}
 
   release:
     if: |
