@@ -114,6 +114,14 @@ namespace lavi
                 }
 
                 if(!function) {
+                    auto run_it = interpreter->global_context->functions.find(function_name);
+
+                    if(run_it != interpreter->global_context->functions.end()) {
+                        function = run_it->second;
+                    }
+                }
+
+                if(!function) {
                     if(interpreter->current_context->self) {
                         throw std::runtime_error("function '" + std::string(function_name) + "' is not defined in object of type " + std::string(interpreter->current_context->cls->name));
                     } else if(interpreter->current_context->cls) {
