@@ -6,6 +6,11 @@ namespace CXX
         // To be implemented by subclasses.
         return false
       end
+
+      fn extract(source)
+        // To be implemented by subclasses.
+        return null
+      end
     end
   end
 end
