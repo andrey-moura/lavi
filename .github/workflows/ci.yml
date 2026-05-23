@@ -43,7 +43,6 @@ jobs:
         os:
           - ubuntu-22.04
           - ubuntu-24.04
-          - macos-latest
 
     runs-on: ${{ matrix.os }}
 
@@ -63,16 +62,7 @@ jobs:
       - name: Install dependencies (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          sudo apt-get update
-
-          sudo apt-get install -y \
-            build-essential \
-            cmake
-
-      - name: Install dependencies (macOS)
-        if: startsWith(matrix.os, 'macos')
-        run: |
-          brew install cmake
+          sudo apt-get install -y build-essential
 
       - name: Configure CMake
         run: |
