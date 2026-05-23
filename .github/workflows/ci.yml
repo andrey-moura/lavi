@@ -293,6 +293,35 @@ jobs:
           find artifacts -name '*.tar.gz' -exec sha256sum {} \; \
             > SHA256SUMS.txt
 
+      - name: Generate release notes (feat/fix only)
+        id: release_notes
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "No previous tag found"
+            RANGE=""
+          else
+            RANGE="$PREVIOUS_TAG..HEAD"
+          fi
+
+          echo "## Release $TAG" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+
+          echo "### Features" >> RELEASE_NOTES.md
+          git log $RANGE --pretty=format:"- %s (%h)" --grep="^feat" >> RELEASE_NOTES.md || true
+
+          echo "" >> RELEASE_NOTES.md
+          echo "### Fixes" >> RELEASE_NOTES.md
+          git log $RANGE --pretty=format:"- %s (%h)" --grep="^fix" >> RELEASE_NOTES.md || true
+
+          echo "" >> RELEASE_NOTES.md
+          echo "### Other changes" >> RELEASE_NOTES.md
+          git log $RANGE --pretty=format:"- %s (%h)" \
+            --invert-grep --grep="^feat" --grep="^fix" >> RELEASE_NOTES.md || true
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
