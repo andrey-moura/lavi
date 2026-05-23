@@ -300,4 +300,5 @@ jobs:
           body_path: RELEASE_NOTES.md
           files: |
             artifacts/**/*.tar.gz
+            artifacts/**/*.zip
             SHA256SUMS.txt
