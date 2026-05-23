@@ -111,7 +111,6 @@
     ],
     "cmake.debugConfig": {
         "args": [
-            "tests/high-level/class_spec.lv"
             "--cxx",
             "/usr/include/libelf.h"
         ],
