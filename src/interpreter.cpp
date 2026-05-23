@@ -123,6 +123,14 @@ void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::structure> cls)
         });
     }
 
+    auto class_instance_function = cls->instance_functions.find("class");
+
+    if(class_instance_function == cls->instance_functions.end()) {
+        cls->instance_functions["class"] = std::make_shared<lavi::lang::function>("class", [](lavi::lang::interpreter* interpreter) {
+            return lavi::lang::api::to_object(interpreter, interpreter->current_context->self->cls);
+        });
+    }
+
     auto to_string_function = cls->functions.find("to_string");
 
     if(to_string_function == cls->functions.end()) {
@@ -236,12 +244,12 @@ static std::shared_ptr<lavi::lang::structure> do_execute_classdecl(lavi::lang::i
     {
         auto object = lavi::lang::api::to_object(interpreter, cls);
 
-        interpreter->push_context_with_object(object);
+        // interpreter->push_context_with_object(object);
 
         auto declname_node = baseclass_node->child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
         auto base_class_object = interpreter->execute(*declname_node);
 
-        interpreter->pop_context();
+        // interpreter->pop_context();
         
         if(!base_class_object) {
             throw std::runtime_error("base class " + std::string(baseclass_node->decname()) + " not found");
@@ -499,7 +507,14 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
                     // the current_context->self as the self for the called function.
                     calling_function_same_object = true;
                 }
-            } else if(current_context->cls) {
+            } else if(current_context->self && current_context->self->base_instance) {
+                auto it = current_context->self->base_instance->cls->instance_functions.find(function_name);
+
+                if(it != current_context->self->base_instance->cls->instance_functions.end()) {
+                    method_to_call = it->second.get();
+                }
+            }
+            else if(current_context->cls) {
                 auto it = current_context->cls->functions.find(function_name);
 
                 if(it != current_context->cls->functions.end()) {
@@ -979,6 +994,12 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_declname(co
         auto variable_it = ctx->variables.find(name);
         if(variable_it != ctx->variables.end()) {
             return variable_it->second;
+        }
+        if(ctx->self && ctx->self->base_instance) {
+            auto base_instance_it = ctx->self->base_instance->variables.find(name);
+            if(base_instance_it != ctx->self->base_instance->variables.end()) {
+                return base_instance_it->second;
+            }
         }
         // If not found as a variable or function, it could be a class (in the case of a declname used as an expression), so we check for that before moving to the next context in the chain.
         auto class_it = ctx->classes.find(name);

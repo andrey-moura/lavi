@@ -219,4 +219,38 @@ describe 'type' do
       expect(p2.name).to eq('Bob')
     end
   end
+
+  context 'with base' do
+    it 'inherits instance variables' do
+      type Animal
+        var species = null
+
+        fn init
+          species = 'generic animal'
+        end
+      end
+
+      type Dog extends Animal
+      end
+
+      var d = Dog.new
+      expect(d.species).to eq('generic animal')
+    end
+    it 'inherits instance methods' do
+      type Speaker
+        fn speak(what)
+          what
+        end
+      end
+
+      type Dog extends Speaker
+        fn bark
+          speak :woof
+        end
+      end
+
+      var d = Dog.new
+      expect(d.bark).to eq('woof')
+    end
+  end
 end
