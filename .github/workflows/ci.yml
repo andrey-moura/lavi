@@ -88,15 +88,26 @@ jobs:
           cmake --install build --config Release
         working-directory: lavi
 
-      - name: Check lavi version
+      - name: Check lavi version (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           lavi --version
         working-directory: lavi
 
+      - name: Check lavi version (Windows)
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          & "C:\Program Files (x86)\lavi\bin\lavi.exe" --version
+      
       - name: Check minimal functionality
         run: |
           lavi --hello
         working-directory: lavi
+
+      - name: Check minimal functionality (Windows)
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          & "C:\Program Files (x86)\lavi\bin\lavi.exe" --hello
 
       - name: Run tests (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
