@@ -1473,7 +1473,9 @@ void lavi::lang::interpreter::update_current_context()
         current_context->functions["send"] = std::make_shared<lavi::lang::function>("send", std::initializer_list<std::string>{ "function"}, [](lavi::lang::interpreter* interpreter) -> std::shared_ptr<lavi::lang::object> {
             auto function_object = interpreter->current_context->positional_params[0];
             auto& function_string = function_object->as<std::string>();
-            return lavi::lang::api::call(interpreter, function_string, interpreter->current_context->self->shared_from_this());
+
+            std::shared_ptr<lavi::lang::object> self = interpreter->current_context->self ? interpreter->current_context->self->shared_from_this() : nullptr;
+            return lavi::lang::api::call(interpreter, function_string, self);
         });
     }
 }
