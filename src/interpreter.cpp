@@ -499,7 +499,14 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
                     // the current_context->self as the self for the called function.
                     calling_function_same_object = true;
                 }
-            } else if(current_context->cls) {
+            } else if(current_context->self && current_context->self->base_instance) {
+                auto it = current_context->self->base_instance->cls->instance_functions.find(function_name);
+
+                if(it != current_context->self->base_instance->cls->instance_functions.end()) {
+                    method_to_call = it->second.get();
+                }
+            }
+            else if(current_context->cls) {
                 auto it = current_context->cls->functions.find(function_name);
 
                 if(it != current_context->cls->functions.end()) {
@@ -979,6 +986,12 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_declname(co
         auto variable_it = ctx->variables.find(name);
         if(variable_it != ctx->variables.end()) {
             return variable_it->second;
+        }
+        if(ctx->self && ctx->self->base_instance) {
+            auto base_instance_it = ctx->self->base_instance->variables.find(name);
+            if(base_instance_it != ctx->self->base_instance->variables.end()) {
+                return base_instance_it->second;
+            }
         }
         // If not found as a variable or function, it could be a class (in the case of a declname used as an expression), so we check for that before moving to the next context in the chain.
         auto class_it = ctx->classes.find(name);
