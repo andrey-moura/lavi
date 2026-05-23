@@ -1,8 +1,6 @@
 {
     "files.associations": {
         "*.S": "arm",
-        "*.uva": "uva",
-        "*.andy": "andy",
         "any": "cpp",
         "array": "cpp",
         "atomic": "cpp",
@@ -113,7 +111,9 @@
     ],
     "cmake.debugConfig": {
         "args": [
-            "tests/high-level/fn_spec.andy"
+            "tests/high-level/class_spec.lv"
+            "--cxx",
+            "/usr/include/libelf.h"
         ],
         "cwd": "${workspaceFolder}",
         "visualizerFile": "${workspaceFolder}/natvis.xml",
