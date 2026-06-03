@@ -418,6 +418,9 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
             if(name) {
                 named_params[name->token().content] = value;
             } else {
+                if(!value) {
+                    value = lavi::lang::object::instantiate(this, NullClass);
+                }
                 positional_params.push_back(value);
             }
         }
