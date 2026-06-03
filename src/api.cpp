@@ -96,13 +96,11 @@ namespace lavi
 
                 std::shared_ptr<lavi::lang::function> function = nullptr;
 
-                if(interpreter->current_context->self)
-                {
-                    auto run_it = interpreter->current_context->cls->instance_functions.find(function_name);
+                auto run_it = interpreter->current_context->functions.find(function_name);
 
-                    if(run_it != interpreter->current_context->cls->instance_functions.end()) {
-                        function = run_it->second;
-                    }
+                if(run_it != interpreter->current_context->functions.end())
+                {
+                    function = run_it->second;
                 } else if(interpreter->current_context->cls)
                 {
                     auto run_it = interpreter->current_context->cls->functions.find(function_name);
