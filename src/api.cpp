@@ -14,7 +14,7 @@ namespace lavi
     {
         namespace api
         {
-            std::shared_ptr<lavi::lang::object> evaluate(std::filesystem::path path, int argc, char** argv)
+            std::shared_ptr<lavi::lang::object> evaluate(lavi::lang::interpreter* interpreter, std::filesystem::path path, int argc, char** argv)
             {
                 lavi::lang::parser::ast_node root_node;
 
@@ -35,15 +35,14 @@ namespace lavi
 
                 create_builtin_libs();
         
-                lavi::lang::interpreter interpreter;
-                interpreter.main_lexer = &l;
+                interpreter->main_lexer = &l;
 
                 for(int i = 0; i < argc; i++) {
-                    interpreter.args.push_back(argv[i]);
+                    interpreter->args.push_back(argv[i]);
                 }
 
-                interpreter.input_file_path = path;
-                std::shared_ptr<lavi::lang::object> ret = interpreter.execute_all(root_node);
+                interpreter->input_file_path = path;
+                std::shared_ptr<lavi::lang::object> ret = interpreter->execute_all(root_node);
         
                 return ret;
             }
