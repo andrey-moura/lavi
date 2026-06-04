@@ -312,6 +312,11 @@ static void extract_fn_yield_block_if_exists(lavi::lang::parser::ast_node& node,
 
 static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node& node, lavi::lang::parser& parser, lavi::lang::lexer& lexer)
 {
+    // if(chained_nodes.size() == 0) {
+        extract_fn_yield_block_if_exists(node, parser, node.token(), lexer);
+        // return node;
+    // }
+
     std::vector<lavi::lang::parser::ast_node> chained_nodes;
 
     while(true) {
@@ -364,11 +369,6 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
         } else {
             break;
         }
-    }
-
-    if(chained_nodes.size() == 0) {
-        extract_fn_yield_block_if_exists(node, parser, node.token(), lexer);
-        return node;
     }
 
     chained_nodes.insert(chained_nodes.begin(), std::move(node));
