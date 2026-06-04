@@ -1,0 +1,7 @@
+class HelloWorldError extends RuntimeError
+  fn init
+    super 'Hello, World!'
+  end
+end
+
+throw HelloWorldError.new
