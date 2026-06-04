@@ -896,8 +896,9 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_context(con
                 current_context->self ? current_context->self->shared_from_this() : nullptr
             );
             push_context_with_object(context_object);
-            return execute_all(source_code.childrens().begin() + 1, source_code.childrens().end());
+            auto ret = execute_all(source_code.childrens().begin() + 1, source_code.childrens().end());
             pop_context();
+            return ret;
         }
     }
 
