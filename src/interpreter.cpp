@@ -122,6 +122,17 @@ void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::structure> cls)
         });
     }
 
+    auto is_a_instance_function = cls->instance_functions.find("is_a?");
+
+    if(is_a_instance_function == cls->instance_functions.end()) {
+        cls->instance_functions["is_a?"] = std::make_shared<lavi::lang::function>("is_a?", std::initializer_list<std::string>{ "other" }, [cls, this](lavi::lang::interpreter* interpreter) {
+            auto other_object = interpreter->current_context->positional_params[0];
+            auto other_class = other_object->as<std::shared_ptr<lavi::lang::structure>>();
+
+            return lavi::lang::api::to_object(interpreter, lavi::lang::api::is_a(interpreter, interpreter->current_context->self, cls));
+        });
+    }
+
     auto init_instance_function = cls->instance_functions.find("init");
 
     if(init_instance_function == cls->instance_functions.end()) {
