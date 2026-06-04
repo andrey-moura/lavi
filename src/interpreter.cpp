@@ -1611,6 +1611,41 @@ void lavi::lang::interpreter::update_current_context()
     previous_context = current_context;
     current_context = stack.back();
 
+    auto respond_to = current_context->functions.find("respond_to?");
+
+    if(respond_to == current_context->functions.end()) {
+        current_context->functions["respond_to?"] = std::make_shared<lavi::lang::function>("respond_to?", std::initializer_list<std::string>{ "function" }, [](lavi::lang::interpreter* interpreter) {
+            auto function_name_object = interpreter->current_context->positional_params[0];
+            auto& function_name = function_name_object->as<std::string>();
+
+            auto variable_it = interpreter->current_context->variables.find(function_name);
+
+            if(variable_it != interpreter->current_context->variables.end()) {
+                return lavi::lang::api::to_object(interpreter, true);
+            }
+
+            auto function_it = interpreter->current_context->functions.find(function_name);
+
+            if(function_it != interpreter->current_context->functions.end()) {
+                return lavi::lang::api::to_object(interpreter, true);
+            }
+
+            auto global_variable_it = interpreter->global_context->variables.find(function_name);
+
+            if(global_variable_it != interpreter->global_context->variables.end()) {
+                return lavi::lang::api::to_object(interpreter, true);
+            }
+
+            auto global_function_it = interpreter->global_context->functions.find(function_name);
+
+            if(global_function_it != interpreter->global_context->functions.end()) {
+                return lavi::lang::api::to_object(interpreter, true);
+            }
+
+            return lavi::lang::api::to_object(interpreter, false);
+        });
+    }
+
     auto send_function_it = current_context->functions.find("send");
 
     if(send_function_it == current_context->functions.end()) {
