@@ -182,9 +182,21 @@ void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::structure> cls)
         });
     }
 
-    cls->cls = cls;
+    auto eq_function = cls->functions.find("==");
 
-    current_context->classes[cls->name] = cls;
+    if(eq_function == cls->functions.end()) {
+        cls->functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{ "other" }, [cls, this](lavi::lang::interpreter* interpreter) {
+            if(interpreter->current_context->positional_params[0]->cls != ClassClass) {
+                return lavi::lang::api::to_object(interpreter, false);
+            }
+
+            return lavi::lang::api::to_object(
+                interpreter,
+                interpreter->current_context->positional_params[0]->as<std::shared_ptr<lavi::lang::structure>>() == interpreter->current_context->cls
+            );
+        });
+    }
+
 }
 
 std::shared_ptr<lavi::lang::structure> lavi::lang::interpreter::find_class(const std::string_view& name)
