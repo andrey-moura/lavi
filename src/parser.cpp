@@ -627,7 +627,7 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword(lavi::lang::lexer
     const lavi::lang::lexer::token& token = lexer.see_next();
 
     static std::map<std::string_view, lavi::lang::parser::ast_node(lavi::lang::parser::*)(lavi::lang::lexer&)> keyword_parsers = {
-        { "type",      &lavi::lang::parser::parse_keyword_class     },
+        { "class",      &lavi::lang::parser::parse_keyword_class    },
         { "var",       &lavi::lang::parser::parse_keyword_var       },
         { "fn" ,       &lavi::lang::parser::parse_keyword_function  },
         { "return",    &lavi::lang::parser::parse_keyword_return    },
