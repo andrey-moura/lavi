@@ -23,6 +23,8 @@ lavi::lang::yaml lavi::lang::yaml::parse(std::string_view source)
                 // \n
                 source.remove_prefix(1);
             }
+
+            continue;
         }
 
         const char* key_start = source.data();
