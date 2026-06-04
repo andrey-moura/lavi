@@ -25,6 +25,11 @@ public:
 
         interpreter->load(net_class);
     }
+
+    virtual std::vector<std::string_view> define() override
+    {
+        return { "NET" };
+    }
 };
 
 std::shared_ptr<lavi::lang::extension> create_net_extension()

@@ -660,6 +660,8 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
 
             if(!method_to_call) {
                 std::string what;
+                what.reserve(100);
+
                 if(current_context->self) {
                     std::string to_string = lavi::lang::api::call(this, "to_string", current_context->self)->as<std::string>();
 
@@ -669,10 +671,19 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
                     to_string.append(current_context->self->cls->name);
 
                     what = "undefined function '" + std::string(function_name) + "' for " + to_string;
+
+                    to_string.clear();
                 } else if(current_context->cls) {
                     what = "undefined function '" + std::string(function_name) + "' for class '" + std::string(current_context->cls->name) + "'";
                 } else {
                     what = "undefined function '" + std::string(function_name) + "'";
+                }
+
+                auto extension = lavi::lang::extension::which_defines(function_name);
+
+                if(extension) {
+                    what.reserve(what.size() + extension->name().size() + 30);
+                    what.append(". Did you forget to import '" + extension->name() + "'?");
                 }
 
                 auto exception_object = lavi::lang::api::new_object(
