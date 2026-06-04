@@ -215,8 +215,13 @@ namespace lavi
             {
                 auto obj = object::instantiate(interpreter, cls);
 
-                if(obj->cls->base) {
-                    obj->base_instance = object::instantiate(interpreter, obj->cls->base);
+                auto current_initialization = obj;
+
+                while(current_initialization->cls->base) {
+                    auto base = object::instantiate(interpreter, current_initialization->cls->base);
+
+                    current_initialization->base_instance = base;
+                    current_initialization = base;
                 }
 
                 auto init_it = cls->instance_functions.find("init");
