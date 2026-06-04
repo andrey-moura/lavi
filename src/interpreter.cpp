@@ -183,6 +183,14 @@ void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::structure> cls)
         });
     }
 
+    auto class_instance_function = cls->instance_functions.find("class");
+
+    if(class_instance_function == cls->instance_functions.end()) {
+        cls->instance_functions["class"] = std::make_shared<lavi::lang::function>("class", [](lavi::lang::interpreter* interpreter) {
+            return lavi::lang::api::to_object(interpreter, interpreter->current_context->self->cls);
+        });
+    }
+
     auto to_string_function = cls->functions.find("to_string");
 
     if(to_string_function == cls->functions.end()) {
@@ -501,6 +509,9 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
             if(name) {
                 named_params[name->token().content] = value;
             } else {
+                if(!value) {
+                    value = lavi::lang::object::instantiate(this, NullClass);
+                }
                 positional_params.push_back(value);
             }
         }

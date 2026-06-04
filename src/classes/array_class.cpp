@@ -120,6 +120,31 @@ std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interprete
             return std::make_shared<lavi::lang::object>(interpreter->TrueClass);
         });
 
+    ArrayClass->instance_functions["each"] = std::make_shared<lavi::lang::function>("each", [](lavi::lang::interpreter* interpreter) {
+        std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
+
+        for(auto& item : items) {
+            lavi::lang::api::yield(interpreter, { item } );
+        }
+
+        return nullptr;
+    });
+
+    ArrayClass->instance_functions["map"] = std::make_shared<lavi::lang::function>("map", [](lavi::lang::interpreter* interpreter) {
+        std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
+
+        std::vector<std::shared_ptr<lavi::lang::object>> new_items;
+        new_items.reserve(items.size());
+
+        for(auto& item : items) {
+            auto result = lavi::lang::api::yield(interpreter, { item } );
+
+            new_items.push_back(result);
+        }
+
+        return lavi::lang::object::instantiate(interpreter, interpreter->ArrayClass, std::move(new_items));
+    });
+
     ArrayClass->instance_functions["map!"] = std::make_shared<lavi::lang::function>("map!", [](lavi::lang::interpreter* interpreter) {
         std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
 
