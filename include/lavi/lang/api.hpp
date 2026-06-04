@@ -137,6 +137,8 @@ namespace lavi
                     }
                     auto obj = lavi::lang::object::instantiate(interpreter, interpreter->ArrayClass, std::move(arr));
                     return obj;
+                 } else if constexpr(std::is_same_v<T, std::nullptr_t>) {
+                    return lavi::lang::object::instantiate(interpreter, interpreter->NullClass);
                  }
                 else {
                     throw std::runtime_error("Unsupported type for to_object: " + std::string(typeid(T).name()));
