@@ -98,6 +98,16 @@ namespace lavi
                     interpreter->push_context();
                 }
 
+                if(positional_params.empty() && named_params.empty()) {
+                    auto variable_it = interpreter->current_context->variables.find(function_name);
+
+                    if(variable_it != interpreter->current_context->variables.end()) {
+                        interpreter->pop_context();
+
+                        return variable_it->second;
+                    }
+                }
+
                 interpreter->current_context->positional_params = std::move(positional_params);
                 interpreter->current_context->named_params = std::move(named_params);
 
