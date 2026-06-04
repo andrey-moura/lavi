@@ -16,7 +16,7 @@ namespace lavi
             /// @brief Executes the code in a file and return the result.
             /// @param path The path to the source code.
             /// @return Returns a shared pointer to the object.
-            std::shared_ptr<lavi::lang::object> evaluate(std::filesystem::path path, int argc = 0, char** argv = nullptr);
+            std::shared_ptr<lavi::lang::object> evaluate(lavi::lang::interpreter* interpreter, std::filesystem::path path, int argc = 0, char** argv = nullptr);
             /// @brief Convert or cast the object to a specific type.
             /// @tparam T The type to convert to.
             /// @param interpreter The interpreter.
@@ -59,7 +59,13 @@ namespace lavi
             /// @param object The object.
             /// @param fn The function name.
             /// @return Returns a shared pointer to the object.
-            std::shared_ptr<lavi::lang::object> call(lavi::lang::interpreter* interpreter, std::string_view function_name, std::shared_ptr<lavi::lang::object> object, std::vector<std::shared_ptr<lavi::lang::object>> positional_params = {});
+            std::shared_ptr<lavi::lang::object> call(
+                lavi::lang::interpreter* interpreter,
+                std::string_view function_name,
+                std::shared_ptr<lavi::lang::object> object,
+                std::vector<std::shared_ptr<lavi::lang::object>> positional_params = {},
+                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params = {}
+            );
             /// @brief Yield a value to the caller block.
             /// @param interpreter The interpreter.
             /// @param value The value to yield.
@@ -131,16 +137,35 @@ namespace lavi
                     }
                     auto obj = lavi::lang::object::instantiate(interpreter, interpreter->ArrayClass, std::move(arr));
                     return obj;
+                 } else if constexpr(std::is_same_v<T, std::nullptr_t>) {
+                    return lavi::lang::object::instantiate(interpreter, interpreter->NullClass);
                  }
                 else {
                     throw std::runtime_error("Unsupported type for to_object: " + std::string(typeid(T).name()));
                 }
             }
+            /// @brief Creates a new object of a class with the given parameters.
+            /// @param interpreter The interpreter.
+            /// @param cls The class of the object.
+            /// @param positional_params The positional parameters to pass to the constructor.
+            /// @return Returns a shared pointer to the object.
+            std::shared_ptr<lavi::lang::object> new_object(
+                lavi::lang::interpreter* interpreter,
+                std::shared_ptr<lavi::lang::structure> cls,
+                std::vector<std::shared_ptr<lavi::lang::object>> positional_params = {},
+                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params = {}
+            );
             /// @brief Checks if the object is truthy (not null and not false).
             /// @param interpreter The interpreter.
             /// @param obj The object to check.
             /// @return Returns true if the object is truthy, false otherwise.
             bool is_truthy(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj);
+            /// @brief Determinates if the object is an instance of the class or one of its subclasses.
+            /// @param interpreter The interpreter
+            /// @param obj The object to check.
+            /// @param cls The class to check.
+            /// @return Returns true if the object is an instance of the class or one of its subclasses, false otherwise.
+            bool is_a(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj, std::shared_ptr<lavi::lang::structure> cls);
             /// @brief Adds a class to another class.
             /// @param interpreter The interpreter.
             /// @param cls The class.

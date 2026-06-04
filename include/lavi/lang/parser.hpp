@@ -237,7 +237,12 @@ namespace lavi
             /// @param lexer The lexer.
             /// @return The pair node.
             lavi::lang::parser::ast_node extract_pair(lavi::lang::lexer& lexer);
-            lavi::lang::parser::ast_node parse_identifier_or_literal(lavi::lang::lexer& lexer, bool chain = true);
+            /// @brief Parse an identifier or a literal. If it's followed by a '(', it's a function call, so it will extract the parameters and return a function call node. Otherwise, it will return a declname or a valuedecl node.
+            /// @param lexer The lexer.
+            /// @param chain Whether to allow chaining function calls and member accesses.
+            /// @param keyword Whether a keyword can be parsed as an identifier. This is useful when we can have something like obj.class
+            /// @return 
+            lavi::lang::parser::ast_node parse_identifier_or_literal(lavi::lang::lexer& lexer, bool chain = true, std::vector<std::string_view> keyword = {});
         // Parsers functions
         protected:
             /// @brief Parse a keyword.

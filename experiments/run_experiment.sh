@@ -73,7 +73,7 @@ print_results() {
 
 echo "Running $BASE experiment"
 
-run_and_time "Andy" "$SRC_DIR/$BASE.lv" andy
+run_and_time "Lavi" "$SRC_DIR/$BASE.lv" lavi
 run_and_time "Python3" "$SRC_DIR/$BASE.py" python3
 run_and_time "Ruby" "$SRC_DIR/$BASE.rb" ruby
 run_c "$SRC_DIR/$BASE.c"
