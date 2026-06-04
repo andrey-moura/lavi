@@ -23,10 +23,9 @@ namespace lavi {
             fn_parameter() = default;
             fn_parameter(std::string_view __name);
             fn_parameter(std::string __name, bool __named, const lavi::lang::parser::ast_node* __default_value_node)
-                : name(std::move(__name)), named(__named), default_value_node(__default_value_node), has_default_value(true) {
+                : name(std::move(__name)), named(__named), default_value_node(__default_value_node) {
             }
             std::string name;
-            bool has_default_value = false;
             const lavi::lang::parser::ast_node* default_value_node = nullptr;
             bool named = false;
         };

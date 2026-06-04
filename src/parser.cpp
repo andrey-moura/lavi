@@ -312,6 +312,11 @@ static void extract_fn_yield_block_if_exists(lavi::lang::parser::ast_node& node,
 
 static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node& node, lavi::lang::parser& parser, lavi::lang::lexer& lexer)
 {
+    // if(chained_nodes.size() == 0) {
+        extract_fn_yield_block_if_exists(node, parser, node.token(), lexer);
+        // return node;
+    // }
+
     std::vector<lavi::lang::parser::ast_node> chained_nodes;
 
     while(true) {
@@ -325,11 +330,10 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
             if(next_token.content == "." || next_token.content == "::") {
                 lexer.consume_token(); // Consume the '.' token
 
-                lavi::lang::parser::ast_node next_node = parser.parse_identifier_or_literal(lexer, false);
+                lavi::lang::parser::ast_node next_node = parser.parse_identifier_or_literal(lexer, false, { "class" });
                 chained_nodes.push_back(std::move(next_node));
             } else {
                 lavi::lang::parser::ast_node operator_node(lavi::lang::parser::ast_node_type::ast_node_fn_call);
-
                 lavi::lang::lexer::token& operator_token = lexer.next_token();
 
                 std::string matching;
@@ -367,11 +371,6 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
         }
     }
 
-    if(chained_nodes.size() == 0) {
-        extract_fn_yield_block_if_exists(node, parser, node.token(), lexer);
-        return node;
-    }
-
     chained_nodes.insert(chained_nodes.begin(), std::move(node));
 
     for(size_t i = 0; i < chained_nodes.size(); i++) {
@@ -403,7 +402,7 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
     return last_node;
 }
 
-lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lavi::lang::lexer &lexer, bool chain)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lavi::lang::lexer &lexer, bool chain, std::vector<std::string_view> keyword)
 {
     const lavi::lang::lexer::token& token = lexer.see_next();
 
@@ -521,6 +520,13 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lav
             }
         }
         break;
+        case lavi::lang::lexer::token_type::token_keyword:
+            if(keyword.size()) {
+                if(std::find(keyword.begin(), keyword.end(), token.content) != keyword.end()) {
+                    identifier_or_literal = std::move(lexer.next_token());
+                    break;
+                }
+            }
         default:
             throw std::runtime_error(token.error_message_at_current_position("Expected identifier or literal"));
             break;
@@ -621,12 +627,12 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword(lavi::lang::lexer
     const lavi::lang::lexer::token& token = lexer.see_next();
 
     static std::map<std::string_view, lavi::lang::parser::ast_node(lavi::lang::parser::*)(lavi::lang::lexer&)> keyword_parsers = {
-        { "type",      &lavi::lang::parser::parse_keyword_class     },
+        { "class",      &lavi::lang::parser::parse_keyword_class    },
         { "var",       &lavi::lang::parser::parse_keyword_var       },
         { "fn" ,       &lavi::lang::parser::parse_keyword_function  },
         { "return",    &lavi::lang::parser::parse_keyword_return    },
         { "if",        &lavi::lang::parser::parse_keyword_if        },
-        { "unless",    &lavi::lang::parser::parse_keyword_if    },
+        { "unless",    &lavi::lang::parser::parse_keyword_if        },
         { "loop",      &lavi::lang::parser::parse_keyword_loop      },
         { "namespace", &lavi::lang::parser::parse_keyword_namespace },
         { "break",     &lavi::lang::parser::parse_keyword_break     },
@@ -742,11 +748,27 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_function(lavi::la
 
             if(identifier_or_parenthesis.type == lexer::token_type::token_identifier) {
                 auto next_token = lexer.see_next(1);
+
+                ast_node param_node(ast_node_type::ast_node_undefined);
+
                 if (next_token.type == lexer::token_type::token_delimiter && next_token.content == ":") {
-                    params_node.add_child(extract_pair(lexer));
+                    param_node = std::move(extract_pair(lexer));
                 } else {
-                    params_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname));
+                    param_node = ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname);
                 }
+
+                auto possible_equal = lexer.see_next();
+
+                if(possible_equal.type == lexer::token_type::token_operator && possible_equal.content == "=") {
+                    lexer.consume_token(); // Consume the '=' token
+
+                    ast_node default_value_node(ast_node_type::ast_node_valuedecl);
+                    default_value_node.add_child(parse_identifier_or_literal(lexer));
+
+                    param_node.add_child(std::move(default_value_node));
+                }
+
+                params_node.add_child(std::move(param_node));
 
                 auto possible_comma = lexer.see_next();
 

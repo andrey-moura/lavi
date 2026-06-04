@@ -1,0 +1,6 @@
+fn say(what)
+  out what
+end
+
+// Output 'Hello, World!'
+say 'Hello, World!'

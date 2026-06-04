@@ -20,11 +20,16 @@ extern std::shared_ptr<lavi::lang::structure> create_string_class(lavi::lang::in
 extern std::shared_ptr<lavi::lang::structure> create_system_class(lavi::lang::interpreter*);
 extern std::shared_ptr<lavi::lang::structure> create_true_class(lavi::lang::interpreter*);
 extern std::shared_ptr<lavi::lang::structure> create_function_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_exception_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_no_function_error_class(lavi::lang::interpreter*);
+extern std::shared_ptr<lavi::lang::structure> create_runtime_error_class(lavi::lang::interpreter*);
 
 void create_std_functions(lavi::lang::interpreter*);
 
 void lavi::lang::structure::create_structures(lavi::lang::interpreter* interpreter)
 {
+    // FIRST
+    interpreter->load(interpreter->ClassClass       = create_class_class       (interpreter) );
     interpreter->load(interpreter->FalseClass       = create_false_class       (interpreter) );
     interpreter->load(interpreter->TrueClass        = create_true_class        (interpreter) );
     interpreter->load(interpreter->StringClass      = create_string_class      (interpreter) );
@@ -38,8 +43,10 @@ void lavi::lang::structure::create_structures(lavi::lang::interpreter* interpret
     interpreter->load(interpreter->SystemClass      = create_system_class      (interpreter) );
     interpreter->load(interpreter->PathClass        = create_path_class        (interpreter) );
     interpreter->load(interpreter->AndyConfigClass  = create_andy_config_class (interpreter) );
-    interpreter->load(interpreter->ClassClass       = create_class_class       (interpreter) );
     interpreter->load(interpreter->FunctionClass    = create_function_class    (interpreter) );
+    interpreter->load(interpreter->ExceptionClass   = create_exception_class   (interpreter) );
+    interpreter->load(interpreter->NoFunctionErrorClass = create_no_function_error_class(interpreter) );
+    interpreter->load(interpreter->RuntimeErrorClass = create_runtime_error_class(interpreter) );
 
     // These are not named on Interpreter because they are not used too often
     // Some of the one which are named should be moved to here soon.
@@ -48,7 +55,7 @@ void lavi::lang::structure::create_structures(lavi::lang::interpreter* interpret
 }
 
 lavi::lang::structure::structure(std::string_view __name, std::vector<lavi::lang::function> __methods)
-    : name(std::move(__name)), interpreter_context()
+    : name(std::move(__name))
 {
     for(auto& method : __methods) {
         if(method.storage_type == function_storage_type::class_function) {

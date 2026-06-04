@@ -9,15 +9,44 @@
 #include "lavi/lang/lang.hpp"
 #include "lavi/lang/api.hpp"
 
-struct andy_lang_runtime_exception {
-    andy_lang_runtime_exception(std::shared_ptr<lavi::lang::object> exception_object)
-        : exception_object(std::move(exception_object))
+struct andy_lang_exception : std::exception {
+    andy_lang_exception(
+        lavi::lang::interpreter* __interpreter,
+        std::shared_ptr<lavi::lang::object> __object
+    )
+        : exception_object(__object), interpreter(__interpreter)
     {
-        
+        if(!lavi::lang::api::is_a(interpreter, exception_object, interpreter->ExceptionClass)) {
+            exception_object = lavi::lang::api::new_object(
+                interpreter,
+                interpreter->RuntimeErrorClass,
+                {
+                    __object->cls == interpreter->StringClass
+                        ?
+                        __object
+                        : lavi::lang::api::call(interpreter, "to_string", __object)
+                }
+            );
+        }
+        fetch_what();
     }
-    std::shared_ptr<lavi::lang::object> exception_object;
-};
 
+    std::shared_ptr<lavi::lang::object> exception_object;
+    lavi::lang::interpreter* interpreter;
+    private:
+        std::string temp_message;
+    public:
+        void fetch_what()
+        {
+            auto variable = lavi::lang::api::call(interpreter, "message", exception_object);
+
+            temp_message = variable->as<std::string>();
+        }
+        const char* what() const noexcept override
+        {
+            return temp_message.c_str();
+        }
+};
 
 lavi::lang::function execute_method_definition(const lavi::lang::parser::ast_node& class_child)
 {
@@ -34,18 +63,23 @@ lavi::lang::function execute_method_definition(const lavi::lang::parser::ast_nod
 
         for(auto& param : params_node->childrens()) {
             lavi::lang::fn_parameter fn_param;
+            std::vector<lavi::lang::fn_parameter>* where_to_push = nullptr;
+
             if(param.type() == lavi::lang::parser::ast_node_type::ast_node_pair) {
                 auto* declname = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
 
                 fn_param.name = declname->childrens().front().token().content;
-                fn_param.default_value_node = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
                 fn_param.named = true;
-                fn_param.has_default_value = fn_param.default_value_node != nullptr;
-                named_params.push_back(std::move(fn_param));
+
+                where_to_push = &named_params;
             } else {
                 fn_param.name = std::string(param.token().content);
-                positional_params.push_back(std::move(fn_param));
+                where_to_push = &positional_params;
             }
+            
+            fn_param.default_value_node = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
+
+            where_to_push->push_back(std::move(fn_param));
         }
     }
 
@@ -80,6 +114,32 @@ void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::structure> cls)
         return lavi::lang::api::to_object(interpreter, std::move(subclasses));
     });
 
+    auto type_instance_function = cls->instance_functions.find("class");
+
+    if(type_instance_function == cls->instance_functions.end()) {
+        cls->instance_functions["class"] = std::make_shared<lavi::lang::function>("class", [cls, this](lavi::lang::interpreter* interpreter) {
+            return lavi::lang::api::to_object(interpreter, cls);
+        });
+    }
+
+    auto init_instance_function = cls->instance_functions.find("init");
+
+    if(init_instance_function == cls->instance_functions.end()) {
+        cls->instance_functions["init"] = std::make_shared<lavi::lang::function>("init", [](lavi::lang::interpreter* interpreter) {
+            auto base_instance = interpreter->current_context->self->base_instance;
+            if(base_instance) {
+                lavi::lang::api::call(
+                    interpreter,
+                    "init",
+                    base_instance,
+                    interpreter->current_context->positional_params,
+                    interpreter->current_context->named_params
+                );
+            }
+            return nullptr;
+        });
+    }
+
     auto to_string_instance_function = cls->instance_functions.find("to_string");
 
     if(to_string_instance_function == cls->instance_functions.end()) {
@@ -94,7 +154,7 @@ void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::structure> cls)
         cls->instance_functions["hash"] = std::make_shared<lavi::lang::function>("hash", [cls, this](lavi::lang::interpreter* interpreter) {
             // Default hash: the pointer of the object
             auto object = interpreter->current_context->self;
-            void* ptr = object;
+            void* ptr = object.get();
             std::hash<void*> hasher;
             size_t hash_value = hasher(ptr);
             return lavi::lang::api::to_object(interpreter, (int)hash_value);
@@ -105,7 +165,7 @@ void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::structure> cls)
 
     if(eq_instance_function == cls->instance_functions.end()) {
         cls->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", [cls, this](lavi::lang::interpreter* interpreter) {
-            auto object = interpreter->current_context->self;
+            auto object = interpreter->current_context->self.get();
             auto other_object = interpreter->current_context->positional_params[0].get();
 
             // Default equality: compare the pointers of the objects
@@ -147,25 +207,40 @@ void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::structure> cls)
         });
     }
 
-    cls->cls = cls;
+    auto eq_function = cls->functions.find("==");
 
-    current_context->classes[cls->name] = cls;
+    if(eq_function == cls->functions.end()) {
+        cls->functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{ "other" }, [cls, this](lavi::lang::interpreter* interpreter) {
+            if(interpreter->current_context->positional_params[0]->cls != ClassClass) {
+                return lavi::lang::api::to_object(interpreter, false);
+            }
+
+            return lavi::lang::api::to_object(
+                interpreter,
+                interpreter->current_context->positional_params[0]->as<std::shared_ptr<lavi::lang::structure>>() == interpreter->current_context->cls
+            );
+        });
+    }
+
+    current_context->variables[cls->name] = lavi::lang::api::to_object(this, cls);
 }
 
 std::shared_ptr<lavi::lang::structure> lavi::lang::interpreter::find_class(const std::string_view& name)
 {
     if(current_context != global_context) {
-        auto it = current_context->classes.find(name);
+        auto it = current_context->variables.find(name);
 
-        if(it != current_context->classes.end()) {
-            return it->second;
+        if(it != current_context->variables.end() && it->second->cls == ClassClass)
+        {
+            return it->second->as<std::shared_ptr<lavi::lang::structure>>();
         }
     }
 
-    auto it = global_context->classes.find(name);
+    auto it = global_context->variables.find(name);
 
-    if(it != global_context->classes.end()) {
-        return it->second;
+    if(it != global_context->variables.end() && it->second->cls == ClassClass)
+    {
+        return it->second->as<std::shared_ptr<lavi::lang::structure>>();
     }
 
     return nullptr;
@@ -281,7 +356,15 @@ static std::shared_ptr<lavi::lang::structure> do_execute_classdecl(lavi::lang::i
         break;
         case lavi::lang::parser::ast_node_type::ast_node_vardecl: {
             std::string_view var_name = class_child.decname();
-            cls->instance_variables[var_name] = class_child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_call);
+            const lavi::lang::parser::ast_node* fn_call = class_child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_call);
+            const lavi::lang::parser::ast_node* fn_params = nullptr;
+            const lavi::lang::parser::ast_node* param = nullptr;
+            
+            if(fn_params = fn_call->child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params)) {
+                param = fn_params->childrens().data();
+            }
+
+            cls->instance_variables[var_name] = param;
         }
         break;
         case lavi::lang::parser::ast_node_type::ast_node_classdecl: {
@@ -434,32 +517,24 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
         }
     }
 
-    bool is_new = function_name == "new";
     // If the function call has an object (obj.fn()), we need to push the context to search for the
     // function in the object and its class, and then pop it. If we don't have an object we need to
     // search in the current context and then in the global context.
     push_context_from_node_object_if_any(this, source_code);
 
-    if(is_new && !current_context->cls) {
-        throw std::runtime_error("new operator requires to be called in a class context");
-    }
+    if(function_name == "new") {
+        auto ret = lavi::lang::api::new_object(
+            this,
+            current_context->cls,
+            positional_params
+        );
 
-    if(is_new && current_context->self) {
-        throw std::runtime_error("new operator cannot be called on an object");
+        pop_context_from_node_object_if_any(this, source_code);
+
+        return ret;
     }
 
     std::shared_ptr<lavi::lang::object> ret = nullptr;
-
-    if(is_new) {
-        ret = std::make_shared<lavi::lang::object>(current_context->cls);
-        // Self is set in initialize, but, here we need to call push_context_with_object before initialize to create a new clean context,
-        // so we set self here to make it available in the init function. It will be overwritten by initialize, but it doesn't matter
-        // since they should be the same.
-        ret->self = ret.get();
-        stack.pop_back(); // Pop the context we pushed to search for the class, since we already have the class in current_context->cls.
-        push_context_with_object(ret);
-        ret->initialize(this);
-    }
 
     std::string_view object_name = "";
     bool is_super = function_name == "super";
@@ -467,12 +542,29 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
     lavi::lang::function* method_to_call = nullptr;
     bool calling_function_same_object = false;
 
+    if(is_super) {
+        if(!current_context->self->base_instance) {
+            throw std::runtime_error("super called but current object has no base class");
+        }
+
+        pop_context_from_node_object_if_any(this, source_code);
+
+        return lavi::lang::api::call(
+            this,
+            "init",
+            current_context->self->base_instance,
+            positional_params
+        );
+    }
+
     if(is_assignment && !current_context->self) {
+        pop_context_from_node_object_if_any(this, source_code);
         throw std::runtime_error("assignment operator '=' can only be used with a variable");
     }
 
     if(is_assignment) {
         if(positional_params.size() != 1) {
+            pop_context_from_node_object_if_any(this, source_code);
             throw std::runtime_error("assignment operator '=' requires exactly one parameter");
         }
         if(positional_params[0] == nullptr) {
@@ -486,214 +578,217 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
             } else {
                 auto copy = positional_params[0]->native_copy();
                 if(!copy) {
+                    pop_context_from_node_object_if_any(this, source_code);
                     throw std::runtime_error("object of class " + std::string(positional_params[0]->cls->name) + " cannot be assigned because it does not support copying");
                 }
                 *current_context->self = std::move(*copy.get());
             }
 
         }
-    } else {
-        if(is_new) {
-            auto it = current_context->functions.find("init");
 
-            if(it != current_context->functions.end()) {
+        pop_context_from_node_object_if_any(this, source_code);
+
+        return current_context->self;
+    }
+
+    auto it = current_context->functions.find(function_name);
+
+    if(it != current_context->functions.end()) {
+        method_to_call = it->second.get();
+        if(current_context->self) {
+            // If the method is found in the current context's functions, it means we are
+            // calling a function in the same object, so we set the flag to true to set
+            // the current_context->self as the self for the called function.
+            calling_function_same_object = true;
+        }
+    } else if(current_context->self && current_context->self->base_instance) {
+        auto it = current_context->self->base_instance->cls->instance_functions.find(function_name);
+
+        if(it != current_context->self->base_instance->cls->instance_functions.end()) {
+            method_to_call = it->second.get();
+        }
+    }
+    else if(current_context->cls) {
+        auto it = current_context->cls->functions.find(function_name);
+
+        if(it != current_context->cls->functions.end()) {
+            method_to_call = it->second.get();
+        }
+    }
+
+    // Search the lexical_parent chain for the function if not found yet.
+    if(!method_to_call) {
+        for(auto ctx = current_context->lexical_parent; ctx != nullptr; ctx = ctx->lexical_parent) {
+            auto it = ctx->functions.find(function_name);
+            if(it != ctx->functions.end()) {
                 method_to_call = it->second.get();
+                break;
             }
-        } else {
-            auto it = current_context->functions.find(function_name);
+        }
+    }
 
-            if(it != current_context->functions.end()) {
-                method_to_call = it->second.get();
-                if(current_context->self) {
-                    // If the method is found in the current context's functions, it means we are
-                    // calling a function in the same object, so we set the flag to true to set
-                    // the current_context->self as the self for the called function.
-                    calling_function_same_object = true;
-                }
-            } else if(current_context->self && current_context->self->base_instance) {
-                auto it = current_context->self->base_instance->cls->instance_functions.find(function_name);
+    if(!method_to_call) {
+        auto it = global_context->functions.find(function_name);
 
-                if(it != current_context->self->base_instance->cls->instance_functions.end()) {
+        if(it != global_context->functions.end()) {
+            method_to_call = it->second.get();
+        }
+
+        if(!method_to_call) {
+            // Last chance
+            for(auto ctx = current_context; ctx != nullptr; ctx = ctx->lexical_parent) {
+                auto it = ctx->functions.find("missing");
+                if(it != ctx->functions.end()) {
                     method_to_call = it->second.get();
+                    break;
                 }
             }
-            else if(current_context->cls) {
-                auto it = current_context->cls->functions.find(function_name);
 
+            if(!method_to_call && current_context->cls) {
+                auto it = current_context->cls->functions.find("missing");
                 if(it != current_context->cls->functions.end()) {
                     method_to_call = it->second.get();
                 }
             }
 
-            // Search the lexical_parent chain for the function if not found yet.
             if(!method_to_call) {
-                for(auto ctx = current_context->lexical_parent; ctx != nullptr; ctx = ctx->lexical_parent) {
-                    auto it = ctx->functions.find(function_name);
-                    if(it != ctx->functions.end()) {
-                        method_to_call = it->second.get();
-                        break;
-                    }
+                auto it = global_context->functions.find("missing");
+                if(it != global_context->functions.end()) {
+                    method_to_call = it->second.get();
                 }
+            }
+
+            if(!method_to_call) {
+                std::string what;
+                if(current_context->self) {
+                    std::string to_string = lavi::lang::api::call(this, "to_string", current_context->self)->as<std::string>();
+
+                    to_string.reserve(to_string.size() + 10 + current_context->self->cls->name.size());
+                    to_string.insert(to_string.begin(), '"');
+                    to_string.append("\":");
+                    to_string.append(current_context->self->cls->name);
+
+                    what = "undefined function '" + std::string(function_name) + "' for " + to_string;
+                } else if(current_context->cls) {
+                    what = "undefined function '" + std::string(function_name) + "' for class '" + std::string(current_context->cls->name) + "'";
+                } else {
+                    what = "undefined function '" + std::string(function_name) + "'";
+                }
+
+                auto exception_object = lavi::lang::api::new_object(
+                    this,
+                    NoFunctionErrorClass,
+                    { 
+                        lavi::lang::api::to_object(this, what)
+                    }
+                );
+
+                throw andy_lang_exception(this, exception_object);
+            }
+
+            auto previous_positional_params = std::move(positional_params);
+            positional_params = std::vector<std::shared_ptr<lavi::lang::object>>();
+
+            auto function_name_obj = lavi::lang::api::to_object(this, function_name);
+
+            positional_params.push_back(function_name_obj);
+            positional_params.push_back(lavi::lang::api::to_object(this, std::move(previous_positional_params)));
+            positional_params.push_back(lavi::lang::api::to_object(this, std::move(named_params)));
+        }
+    }
+
+    // If the function call has an object (obj.fn()), we have already pushed the context to search for
+    // the function in the object and its class, so we don't need to push it again. If we don't have an
+    // object we need to push the context to execute the function in it's own context.
+    if(!source_code.fn_object()) {
+        if(calling_function_same_object) {
+            push_context_with_object(current_context->self->shared_from_this());
+        } else {
+            // Creates a clean new context
+            push_context();
+        }
+    } else {
+        // Already in a clean context pushed with push_context_from_node_object_if_any, so do nothing.
+    }
+
+    current_context->caller_node = &source_code;
+    // Stores positional_params and named_params on the context so that they can be accessed by the called function and also by execute_yield.
+    current_context->positional_params = std::move(positional_params);
+    current_context->named_params = std::move(named_params);
+
+    // Store the call-site lexical context on the function's execution context so that
+    // execute_yield can use it as the lexical_parent for the DO...END block.
+    current_context->given_block_lexical_context = call_site_lexical_ctx;
+
+    if(method_to_call) {
+        if(current_context->positional_params.size() < method_to_call->positional_params.size()) {
+            for(size_t i = current_context->positional_params.size(); i < method_to_call->positional_params.size(); i++) {
+                if(method_to_call->positional_params[i].default_value_node) {
+                    current_context->positional_params.push_back(execute(method_to_call->positional_params[i].default_value_node->childrens().front()));
+                    continue;
+                }
+                // Found 1 or more missing positional parameters without default values, throw an error.
+                break;
             }
         }
 
-        if(!method_to_call) {
-            auto it = global_context->functions.find(function_name);
-
-            if(it != global_context->functions.end()) {
-                method_to_call = it->second.get();
-            }
-
-            if(!method_to_call && !is_new) {
-                // Last chance
-                for(auto ctx = current_context; ctx != nullptr; ctx = ctx->lexical_parent) {
-                    auto it = ctx->functions.find("missing");
-                    if(it != ctx->functions.end()) {
-                        method_to_call = it->second.get();
-                        break;
-                    }
-                }
-
-                if(!method_to_call && current_context->cls) {
-                    auto it = current_context->cls->functions.find("missing");
-                    if(it != current_context->cls->functions.end()) {
-                        method_to_call = it->second.get();
-                    }
-                }
-
-                if(!method_to_call) {
-                    auto it = global_context->functions.find("missing");
-                    if(it != global_context->functions.end()) {
-                        method_to_call = it->second.get();
-                    }
-                }
-
-                if(!method_to_call) {
-                    if(current_context->self) {
-                        throw std::runtime_error("function '" + std::string(function_name) + "' not found in object of type " + std::string(current_context->self->cls->name));
-                    }
-                    throw std::runtime_error("function '" + std::string(function_name) + "' not found in current context");
-                }
-
-                auto previous_positional_params = std::move(positional_params);
-                positional_params = std::vector<std::shared_ptr<lavi::lang::object>>();
-
-                auto function_name_obj = lavi::lang::api::to_object(this, function_name);
-
-                positional_params.push_back(function_name_obj);
-                positional_params.push_back(lavi::lang::api::to_object(this, std::move(previous_positional_params)));
-                positional_params.push_back(lavi::lang::api::to_object(this, std::move(named_params)));
-            }
+        if(current_context->positional_params.size() != method_to_call->positional_params.size()) {
+            throw std::runtime_error("function " + std::string(method_to_call->name) + " expects " + std::to_string(method_to_call->positional_params.size()) + " parameters, but " + std::to_string(current_context->positional_params.size()) + " were given");
         }
 
-        // If the function call has an object (obj.fn()), we have already pushed the context to search for
-        // the function in the object and its class, so we don't need to push it again. If we don't have an
-        // object we need to push the context to execute the function in it's own context.
-        if(!is_new && !source_code.fn_object()) {
-            if(calling_function_same_object) {
-                push_context_with_object(current_context->self->shared_from_this());
-            } else {
-                // Creates a clean new context
-                push_context();
-            }
-        }
+        for(const auto& param : method_to_call->named_params) {
+            auto it = current_context->named_params.find(param.name);
 
-        current_context->caller_node = &source_code;
-        // Stores positional_params and named_params on the context so that they can be accessed by the called function and also by execute_yield.
-        current_context->positional_params = std::move(positional_params);
-        current_context->named_params = std::move(named_params);
-
-        // Store the call-site lexical context on the function's execution context so that
-        // execute_yield can use it as the lexical_parent for the DO...END block.
-        current_context->given_block_lexical_context = call_site_lexical_ctx;
-
-        if(method_to_call) {
-            if(current_context->positional_params.size() != method_to_call->positional_params.size()) {
-                throw std::runtime_error("function " + std::string(method_to_call->name) + " expects " + std::to_string(method_to_call->positional_params.size()) + " parameters, but " + std::to_string(current_context->positional_params.size()) + " were given");
-            }
-
-            for(const auto& param : method_to_call->named_params) {
-                auto it = current_context->named_params.find(param.name);
-
-                if(it == current_context->named_params.end()) {
-                    if(param.has_default_value) {
-                        if(param.default_value_node) {
-                            current_context->named_params[param.name] = node_to_object(
-                                *param.default_value_node,
-                                current_context->cls,
-                                current_context->self ? current_context->self->shared_from_this() : nullptr
-                            );
-                        }
-                    } else {
-                        throw std::runtime_error("function '" + std::string(method_to_call->name) + "' called without named parameter " + param.name);
-                    }
+            if(it == current_context->named_params.end()) {
+                if(param.default_value_node) {
+                    current_context->named_params[param.name] = node_to_object(
+                        *param.default_value_node,
+                        current_context->cls,
+                        current_context->self ? current_context->self->shared_from_this() : nullptr
+                    );
+                    continue;
                 }
-            }
-        } else if(is_new) {
-            // Default constructor, no function body to execute, just need to check the parameters and set the self variable.
-            if(current_context->positional_params.size() != 0) {
-                throw std::runtime_error("init expects 0 parameters, but " + std::to_string(current_context->positional_params.size()) + " were given");
-            }
-            if(current_context->named_params.size() != 0) {
-                throw std::runtime_error("init does not expect named parameters, but " + std::to_string(current_context->named_params.size()) + " were given");
-            }
-
-            if(current_context->self->cls->base) {
-                // call the base class constructor
-                auto base = current_context->self->cls->base;
-                push_context();
-                current_context->cls = base;
-                auto base_instance = execute_fn_call(*source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname));
-                // The execute_fn_call will pop the context
-                // pop_context();
-                current_context->self->base_instance = base_instance;
-                // For some reason this causes errors
-                // pop_context_from_node_object_if_any(this, source_code);
-            }
-
-            auto self = current_context->self->shared_from_this();
-
-            pop_context();
-
-            return self;
-        }
-
-        current_context->given_block = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_yield_block);
-
-        if(method_to_call->block_ast.childrens().size()) {
-            for(size_t i = 0; i < method_to_call->positional_params.size(); i++) {
-                current_context->variables[method_to_call->positional_params[i].name] = current_context->positional_params[i];
-            }
-
-            for(auto& [name, value] : current_context->named_params) {
-                current_context->variables[name] = value;
-            }
-            
-            if(method_to_call->block_ast.type() == lavi::lang::parser::ast_node_type::ast_node_context) {
-                ret = execute_all(method_to_call->block_ast);
-            } else {
-                ret = execute(*method_to_call->block_ast.block());
-            }
-        } else if(method_to_call->native_function) {
-            ret = method_to_call->native_function(this);
-        }
-
-        if(is_new) {
-            ret = current_context->self->shared_from_this();
-        }
-
-        for (auto& [name, value] : current_context->variables) {
-            if(value && value->base_instance) {
-                if(value.use_count() == 2) {
-                    // used by base_instance and current_context->variables
-                    value->base_instance = nullptr;
-                    // Now the use count is 1, it will be destroyed when the current_context is destroyed
-                }
+                throw std::runtime_error("function '" + std::string(method_to_call->name) + "' called without named parameter " + param.name);
             }
         }
     }
 
-// Todo: Use the current_context.return_value and current_context.has_returned to handle returns
+    current_context->given_block = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_yield_block);
+
+    if(!method_to_call) {
+        lavi::lang::error::internal("function '{}' not found, but the execution have continued", function_name);
+        exit(1);
+    }
+
+    if(method_to_call->block_ast.childrens().size()) {
+        for(size_t i = 0; i < method_to_call->positional_params.size(); i++) {
+            current_context->variables[method_to_call->positional_params[i].name] = current_context->positional_params[i];
+        }
+
+        for(auto& [name, value] : current_context->named_params) {
+            current_context->variables[name] = value;
+        }
+        
+        if(method_to_call->block_ast.type() == lavi::lang::parser::ast_node_type::ast_node_context) {
+            ret = execute_all(method_to_call->block_ast);
+        } else {
+            ret = execute(*method_to_call->block_ast.block());
+        }
+    } else if(method_to_call->native_function) {
+        ret = method_to_call->native_function(this);
+    }
+
+    for (auto& [name, value] : current_context->variables) {
+        if(value && value->base_instance) {
+            if(value.use_count() == 2) {
+                // used by base_instance and current_context->variables
+                value->base_instance = nullptr;
+                // Now the use count is 1, it will be destroyed when the current_context is destroyed
+            }
+        }
+    }
+
+    // Todo: Use the current_context.return_value and current_context.has_returned to handle returns
 
     pop_context();
 
@@ -775,7 +870,6 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_vardecl(con
 {
     std::string_view var_name = source_code.decname();
     std::shared_ptr<lavi::lang::object> value = std::make_shared<lavi::lang::object>(NullClass);
-    value->self = value.get();
     current_context->variables[var_name] = value;
 
     if(auto fn_call = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_call)) {
@@ -850,8 +944,9 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_context(con
                 current_context->self ? current_context->self->shared_from_this() : nullptr
             );
             push_context_with_object(context_object);
-            return execute_all(source_code.childrens().begin() + 1, source_code.childrens().end());
+            auto ret = execute_all(source_code.childrens().begin() + 1, source_code.childrens().end());
             pop_context();
+            return ret;
         }
     }
 
@@ -951,7 +1046,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_yield(const
     auto block = current_context->given_block;
 
     if(!block) {
-        throw andy_lang_runtime_exception(lavi::lang::api::to_object(this, "No block given to yield"));
+        throw andy_lang_exception(this, lavi::lang::api::to_object(this, "No block given to yield"));
     }
 
     // Create a block context whose lexical_parent is the context where the DO...END block
@@ -1003,12 +1098,6 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_declname(co
             if(base_instance_it != ctx->self->base_instance->variables.end()) {
                 return base_instance_it->second;
             }
-        }
-        // If not found as a variable or function, it could be a class (in the case of a declname used as an expression), so we check for that before moving to the next context in the chain.
-        auto class_it = ctx->classes.find(name);
-        if(class_it != ctx->classes.end()) {
-            auto cls_object = lavi::lang::object::create(this, ClassClass, class_it->second);
-            return cls_object;
         }
         return nullptr;
     };
@@ -1071,11 +1160,14 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_try(const l
 
         auto context = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context);
         execute(*context);
-    } catch(const andy_lang_runtime_exception& e) {
+    } catch(const andy_lang_exception& e) {
         // Go back to the push_context on the beginning of this function
         while(current_context && !current_context->catching_exception) {
             pop_context();
         }
+
+        current_context->catching_exception = false;
+
         auto catcher = catchers.find(e.exception_object->cls->name);
         if(catcher == catchers.end()) {
             // If we don't have a catcher for the exception type, we have to throw it again to be caught by an outer
@@ -1105,7 +1197,10 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_throw(const
 {
     auto exception_object = execute(source_code.childrens().front());
 
-    throw andy_lang_runtime_exception(exception_object);
+    throw andy_lang_exception(
+        this,
+        exception_object
+    );
 
     return exception_object;
 }
@@ -1142,7 +1237,14 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute(const lavi:
         lavi::lang::error::internal("No executor found for node type " + std::to_string(static_cast<int>(source_code.type())));
     }
 
+    size_t context_stack_size_before = stack.size();
+
     auto ret = (this->*it->second)(source_code);
+
+    if(stack.size() != context_stack_size_before && source_code.type() != lavi::lang::parser::ast_node_type::ast_node_try) {
+        lavi::lang::error::internal("Node of type '{}' corrupted the context stack by pushing and popping an inconsistent number of contexts", (int)source_code.type());
+        exit(1);
+    }
 
     return ret;
 }
@@ -1182,7 +1284,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_all(const l
 
 void lavi::lang::interpreter::init()
 {
-    // The global context
+    // The global context. It will not be popped until the end of the program.
     push_context();
     lavi::lang::structure::create_structures(this);
 }
@@ -1429,21 +1531,60 @@ void lavi::lang::interpreter::push_context(std::shared_ptr<lavi::lang::object> o
 void lavi::lang::interpreter::push_context_with_object(std::shared_ptr<lavi::lang::object> object)
 {
     std::string_view class_name = object->cls ? object->cls->name : "null";
+    auto new_context = std::make_shared<interpreter_context>();
 
-    if(object->cls == ClassClass) {
-        auto cls = object->as<std::shared_ptr<lavi::lang::structure>>();
-        // Temporary workaround
-        if(!cls->cls) {
-            cls->cls = cls;
-        }
-        stack.push_back(std::static_pointer_cast<interpreter_context>(cls));
-    } else {
-        stack.push_back(std::static_pointer_cast<interpreter_context>(object));
-    }
-
-    lavi::console::log_debug("Pushing context with {}#{}", class_name, (void*)object.get());
+    stack.push_back(new_context);
 
     update_current_context();
+
+    if(object->cls == ClassClass) {
+        lavi::console::log_debug("Pushing context with {}", class_name);
+
+        auto cls = object->as<std::shared_ptr<lavi::lang::structure>>();
+        new_context->cls = cls;
+        class_name = new_context->cls->name;
+
+        for(auto& variable : cls->variables) {
+            new_context->variables[variable.first] = variable.second;
+        }
+
+        for(auto& function : cls->functions) {
+            new_context->functions[function.first] = function.second;
+        }
+
+        for(auto& function : cls->inline_functions) {
+            new_context->inline_functions[function.first] = function.second;
+        }
+
+    } else {
+        lavi::console::log_debug("Pushing context with {}#{}", class_name, (void*)object.get());
+
+        set_current_context_object(object);
+    }
+}
+
+void lavi::lang::interpreter::set_current_context_object(std::shared_ptr<lavi::lang::object> object)
+{
+    auto base = object->base_instance;
+
+    if(base) {
+        set_current_context_object(base);
+    }
+
+    // Keeps the object alive while the context is alive
+    current_context->self = object;
+
+    for(auto& variable : object->variables) {
+        current_context->variables[variable.first] = variable.second;
+    }
+
+    for(auto& function : object->functions) {
+        current_context->functions[function.first] = function.second;
+    }
+
+    for(auto& function : object->inline_functions) {
+        current_context->inline_functions[function.first] = function.second;
+    }
 }
 
 void lavi::lang::interpreter::pop_context()

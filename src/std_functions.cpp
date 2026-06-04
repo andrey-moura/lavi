@@ -124,10 +124,6 @@ void create_std_functions(lavi::lang::interpreter* interpreter)
 
         auto ret = interpreter->execute_all(*ast);
 
-        for(auto& cls : interpreter->current_context->classes) {
-            interpreter->previous_context->classes[cls.first] = cls.second;
-        }
-
         for(auto& fn : interpreter->current_context->functions) {
             interpreter->previous_context->functions[fn.first] = fn.second;
         }

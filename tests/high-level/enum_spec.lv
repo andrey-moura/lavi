@@ -3,7 +3,7 @@
 describe 'enums' do
   context 'declaration' do
     context 'inside a type' do
-      type Car
+      class Car
         enum Color
           red
           green
@@ -26,8 +26,6 @@ describe 'enums' do
         expect(car.blue?).to eq(true)
         expect(car.red?).to eq(false)
         expect(car.red?).to eq(false)
-      end
-      pending 'should not allow setting the attribute with an invalid value' do
       end
     end
   end
