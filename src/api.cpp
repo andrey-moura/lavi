@@ -84,7 +84,13 @@ namespace lavi
                 return ret;
             }
 
-            std::shared_ptr<lavi::lang::object> call(lavi::lang::interpreter* interpreter, std::string_view function_name, std::shared_ptr<lavi::lang::object> object, std::vector<std::shared_ptr<lavi::lang::object>> positional_params)
+            std::shared_ptr<lavi::lang::object> call(
+                lavi::lang::interpreter* interpreter,
+                std::string_view function_name,
+                std::shared_ptr<lavi::lang::object> object,
+                std::vector<std::shared_ptr<lavi::lang::object>> positional_params,
+                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params
+            )
             {
                 if(object) {
                     interpreter->push_context_with_object(object);
@@ -93,6 +99,7 @@ namespace lavi
                 }
 
                 interpreter->current_context->positional_params = std::move(positional_params);
+                interpreter->current_context->named_params = std::move(named_params);
 
                 std::shared_ptr<lavi::lang::function> function = nullptr;
 

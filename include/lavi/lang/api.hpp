@@ -59,7 +59,13 @@ namespace lavi
             /// @param object The object.
             /// @param fn The function name.
             /// @return Returns a shared pointer to the object.
-            std::shared_ptr<lavi::lang::object> call(lavi::lang::interpreter* interpreter, std::string_view function_name, std::shared_ptr<lavi::lang::object> object, std::vector<std::shared_ptr<lavi::lang::object>> positional_params = {});
+            std::shared_ptr<lavi::lang::object> call(
+                lavi::lang::interpreter* interpreter,
+                std::string_view function_name,
+                std::shared_ptr<lavi::lang::object> object,
+                std::vector<std::shared_ptr<lavi::lang::object>> positional_params = {},
+                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params = {}
+            );
             /// @brief Yield a value to the caller block.
             /// @param interpreter The interpreter.
             /// @param value The value to yield.
