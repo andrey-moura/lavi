@@ -1191,7 +1191,14 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute(const lavi:
         lavi::lang::error::internal("No executor found for node type " + std::to_string(static_cast<int>(source_code.type())));
     }
 
+    size_t context_stack_size_before = stack.size();
+
     auto ret = (this->*it->second)(source_code);
+
+    if(stack.size() != context_stack_size_before && source_code.type() != lavi::lang::parser::ast_node_type::ast_node_try) {
+        lavi::lang::error::internal("Node of type '{}' corrupted the context stack by pushing and popping an inconsistent number of contexts", (int)source_code.type());
+        exit(1);
+    }
 
     return ret;
 }
