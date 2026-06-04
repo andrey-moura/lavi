@@ -48,10 +48,11 @@ int main(int argc, char** argv) {
                 file_path = std::filesystem::absolute("application.lv");
             }
 
+            if(file_path.extension() != ".lv") {
+                file_path.replace_extension(".lv");
+            }
+
             if(!std::filesystem::exists(file_path)) {
-                if(file_path.extension() != ".lv") {
-                    file_path.replace_extension(".lv");
-                }
                 if(!std::filesystem::exists(file_path)) {
                     file_path = lavi::lang::config::src_dir() / "utility" / argv[1];
                     file_path.replace_extension(".lv");
