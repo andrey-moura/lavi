@@ -1122,6 +1122,9 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_try(const l
         while(current_context && !current_context->catching_exception) {
             pop_context();
         }
+
+        current_context->catching_exception = false;
+
         auto catcher = catchers.find(e.exception_object->cls->name);
         if(catcher == catchers.end()) {
             // If we don't have a catcher for the exception type, we have to throw it again to be caught by an outer
