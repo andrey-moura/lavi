@@ -232,6 +232,21 @@ namespace lavi
 
                 return obj->cls != interpreter->FalseClass && obj->cls != interpreter->NullClass;
             }
+
+            bool is_a(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj, std::shared_ptr<lavi::lang::structure> cls)
+            {
+                auto current_cls = obj->cls;
+
+                while(current_cls) {
+                    if(current_cls == cls) {
+                        return true;
+                    }
+                    current_cls = current_cls->base;
+                }
+
+                return false;
+            }
+            
         };
     }; // namespace lang
 };

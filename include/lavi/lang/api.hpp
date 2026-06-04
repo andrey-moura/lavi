@@ -160,6 +160,12 @@ namespace lavi
             /// @param obj The object to check.
             /// @return Returns true if the object is truthy, false otherwise.
             bool is_truthy(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj);
+            /// @brief Determinates if the object is an instance of the class or one of its subclasses.
+            /// @param interpreter The interpreter
+            /// @param obj The object to check.
+            /// @param cls The class to check.
+            /// @return Returns true if the object is an instance of the class or one of its subclasses, false otherwise.
+            bool is_a(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj, std::shared_ptr<lavi::lang::structure> cls);
             /// @brief Adds a class to another class.
             /// @param interpreter The interpreter.
             /// @param cls The class.
