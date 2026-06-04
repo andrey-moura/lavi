@@ -9,6 +9,8 @@
     #define try if(true)
     #define catch(e) if(false)
 
+    std::exception e;
+#endif
 
 std::shared_ptr<lavi::lang::interpreter> interpreter;
 
