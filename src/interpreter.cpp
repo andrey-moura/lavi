@@ -1117,7 +1117,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_try(const l
 
         auto context = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context);
         execute(*context);
-    } catch(const andy_lang_runtime_exception& e) {
+    } catch(const andy_lang_exception& e) {
         // Go back to the push_context on the beginning of this function
         while(current_context && !current_context->catching_exception) {
             pop_context();
