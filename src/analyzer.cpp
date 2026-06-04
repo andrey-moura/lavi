@@ -711,39 +711,6 @@ int main(int argc, char** argv) {
                     }
                 }
                 break;
-                case lavi::lang::parser::ast_node_type::ast_node_foreach:
-                    {
-                        push_context(true);
-
-                        tokens_to_write.push_back({ "keyword", node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_decltype)->token() });
-                        auto* vardecl = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_vardecl);
-                        if(vardecl) {
-                            auto* declname_node = vardecl->child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
-                            if(declname_node) {
-                                std::string_view variable_name = declname_node->token().content;
-
-                                analyzer_declaration decl;
-                                decl.name = variable_name;
-                                decl.type = "variable";
-                                decl.file = *declname_node->token().file_name;
-                                decl.start = declname_node->token().start;
-                                decl.end = declname_node->token().end;
-
-                                tokens_to_write.push_back({ "variable", declname_node->token() });
-                                current_context->variables.push_back(std::move(decl));
-                            }
-                        }
-                        auto* value_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
-                        if(value_node) {
-                            inspect_node(value_node->childrens().front());
-                            tokens_to_write.push_back({ "keyword", value_node->childrens().back().token() });
-                        }
-                        for(const auto& child : node.context()->childrens()) {
-                            inspect_node(child);
-                        }
-                        pop_context();
-                    }
-                break;
                 default:
                     // std::cerr << "unhandled node type " << (int)node.type() << std::endl;
                 break;

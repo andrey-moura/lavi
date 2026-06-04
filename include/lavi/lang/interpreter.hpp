@@ -63,7 +63,6 @@ namespace lavi
             std::shared_ptr<lavi::lang::object> execute_for_start(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_for_step(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_for_end(const lavi::lang::parser::ast_node& source_code);
-            std::shared_ptr<lavi::lang::object> execute_foreach(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_break(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_else(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_condition(const lavi::lang::parser::ast_node& source_code);

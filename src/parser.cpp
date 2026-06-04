@@ -875,7 +875,6 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_loop(lavi::lang::
 
     static std::map<std::string_view, lavi::lang::parser::ast_node(lavi::lang::parser::*)(lavi::lang::lexer&)> loop_parsers = {
         { "while",   &lavi::lang::parser::parse_keyword_while   },
-        { "for",     &lavi::lang::parser::parse_keyword_foreach },
         { "times",   &lavi::lang::parser::parse_keyword_for },
         { "until",   &lavi::lang::parser::parse_keyword_while   }
     };
@@ -908,45 +907,6 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_for(lavi::lang::l
     for_node.add_child(std::move(context_node));
     for_node.set_end_token(lexer.next_token()); // Consume the closing 'end'
     return for_node;
-}
-
-lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_foreach(lavi::lang::lexer &lexer) {
-    ast_node foreach_node(ast_node_type::ast_node_foreach);
-    foreach_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
-
-    ast_node var_node(ast_node_type::ast_node_vardecl);
-    const lavi::lang::lexer::token& identifier_token = lexer.next_token();
-
-    if(identifier_token.type != lexer::token_type::token_identifier) {
-        throw std::runtime_error(identifier_token.error_message_at_current_position("Expected variable name after 'var'"));
-    }
-
-    var_node.add_child(ast_node(std::move(identifier_token), ast_node_type::ast_node_declname));
-
-    foreach_node.add_child(std::move(var_node));
-
-    const lavi::lang::lexer::token& in_token = lexer.next_token();
-
-    if(in_token.type != lavi::lang::lexer::token_type::token_identifier || in_token.content != "in") {
-        throw std::runtime_error(in_token.error_message_at_current_position("Expected 'in' after variable name"));
-    }
-
-    auto array_node = parse_identifier_or_literal(lexer);
-
-    if(array_node.type() != ast_node_type::ast_node_arraydecl && array_node.type() != ast_node_type::ast_node_declname) {
-        throw std::runtime_error(array_node.token().error_message_at_current_position("Expected array or hash after 'in'"));
-    }
-
-    ast_node value_node(ast_node_type::ast_node_valuedecl);
-    value_node.add_child(std::move(array_node));
-    value_node.add_child(ast_node(std::move(in_token), ast_node_type::ast_node_decltype));
-    foreach_node.add_child(std::move(value_node));
-
-    ast_node context_node = extract_context(lexer, *this);
-    foreach_node.add_child(std::move(context_node));
-    foreach_node.set_end_token(lexer.next_token()); // Consume the closing 'end'
-
-    return foreach_node;
 }
 
 lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_while(lavi::lang::lexer &lexer)

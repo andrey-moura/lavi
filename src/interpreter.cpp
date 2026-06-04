@@ -982,49 +982,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_return(c
         }
         return nullptr;
 }
-std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_foreach(const lavi::lang::parser::ast_node& source_code)
-{
-    auto* valuedecl = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
 
-    std::shared_ptr<lavi::lang::object> array_or_hash = node_to_object(valuedecl->childrens().front());
-
-    auto* vardecl = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_vardecl);
-
-    if(array_or_hash->cls == ArrayClass) {
-        std::vector<std::shared_ptr<lavi::lang::object>>& array_values = array_or_hash->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
-        for(auto& value : array_values) {
-            push_block_context();
-
-            current_context->variables[vardecl->decname()] = value;
-            execute_all(*source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context));
-
-            pop_context();
-        }
-    } else if(array_or_hash->cls == HashClass) {
-        lavi::lang::hash& hash_values = array_or_hash->as<lavi::lang::hash>();
-        for(auto& key : hash_values.keys) {
-            if(!key) {
-                continue;
-            }
-
-            push_block_context();
-
-            auto value = hash_values.get(key);
-
-            std::vector<std::shared_ptr<lavi::lang::object>> params = { key, value };
-            std::shared_ptr<lavi::lang::object> params_object = lavi::lang::object::instantiate(this, ArrayClass, params);
-
-            current_context->variables[vardecl->decname()] = params_object;
-
-            execute_all(*source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context));
-
-            pop_context();
-        }
-    } else {
-        throw std::runtime_error("foreach should iterate over an array or a hash");
-    }
-    return nullptr;
-}
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_for(const lavi::lang::parser::ast_node& source_code)
 {
     auto* valuedecl = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
@@ -1233,7 +1191,6 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute(const lavi:
         { lavi::lang::parser::ast_node_type::ast_node_conditional,         &lavi::lang::interpreter::execute_conditional         },
         { lavi::lang::parser::ast_node_type::ast_node_while,               &lavi::lang::interpreter::execute_while               },
         { lavi::lang::parser::ast_node_type::ast_node_for,                 &lavi::lang::interpreter::execute_for                 },
-        { lavi::lang::parser::ast_node_type::ast_node_foreach,             &lavi::lang::interpreter::execute_foreach             },
         { lavi::lang::parser::ast_node_type::ast_node_break,               &lavi::lang::interpreter::execute_break               },
         { lavi::lang::parser::ast_node_type::ast_node_condition,           &lavi::lang::interpreter::execute_condition           },
         { lavi::lang::parser::ast_node_type::ast_node_else,                &lavi::lang::interpreter::execute_else                },
