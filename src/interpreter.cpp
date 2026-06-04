@@ -38,18 +38,9 @@ struct andy_lang_exception : std::exception {
     public:
         void fetch_what()
         {
-            if(exception_object && exception_object->base_instance && exception_object->base_instance->cls == interpreter->ExceptionClass) {
-                auto variable_it = exception_object->base_instance->variables.find("message");
+            auto variable = lavi::lang::api::call(interpreter, "message", exception_object);
 
-                if(variable_it != exception_object->base_instance->variables.end()) {
-                    temp_message = variable_it->second->as<std::string>();
-                    return;
-                }
-            }
-
-            auto inspect = lavi::lang::api::call(interpreter, "inspect", exception_object);
-
-            temp_message = std::move(inspect->as<std::string>());
+            temp_message = variable->as<std::string>();
         }
         const char* what() const noexcept override
         {
