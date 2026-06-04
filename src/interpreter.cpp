@@ -9,15 +9,41 @@
 #include "lavi/lang/lang.hpp"
 #include "lavi/lang/api.hpp"
 
-struct andy_lang_runtime_exception {
-    andy_lang_runtime_exception(std::shared_ptr<lavi::lang::object> exception_object)
-        : exception_object(std::move(exception_object))
+struct andy_lang_exception : std::exception {
+    andy_lang_exception(
+        lavi::lang::interpreter* __interpreter,
+        std::shared_ptr<lavi::lang::object> __object
+    )
+        : exception_object(__object), interpreter(__interpreter)
     {
-        
+        fetch_what();
     }
-    std::shared_ptr<lavi::lang::object> exception_object;
-};
 
+    std::shared_ptr<lavi::lang::object> exception_object;
+    lavi::lang::interpreter* interpreter;
+    private:
+        std::string temp_message;
+    public:
+        void fetch_what()
+        {
+            if(exception_object && exception_object->base_instance && exception_object->base_instance->cls == interpreter->ExceptionClass) {
+                auto variable_it = exception_object->base_instance->variables.find("message");
+
+                if(variable_it != exception_object->base_instance->variables.end()) {
+                    temp_message = variable_it->second->as<std::string>();
+                    return;
+                }
+            }
+
+            auto inspect = lavi::lang::api::call(interpreter, "inspect", exception_object);
+
+            temp_message = std::move(inspect->as<std::string>());
+        }
+        const char* what() const noexcept override
+        {
+            return temp_message.c_str();
+        }
+};
 
 lavi::lang::function execute_method_definition(const lavi::lang::parser::ast_node& class_child)
 {
@@ -566,12 +592,31 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
                     }
                 }
 
-                if(!method_to_call) {
-                    if(current_context->self) {
-                        throw std::runtime_error("function '" + std::string(function_name) + "' not found in object of type " + std::string(current_context->self->cls->name));
-                    }
-                    throw std::runtime_error("function '" + std::string(function_name) + "' not found in current context");
+            if(!method_to_call) {
+                std::string what;
+                if(current_context->self) {
+                    std::string to_string = lavi::lang::api::call(this, "to_string", current_context->self)->as<std::string>();
+
+                    to_string.reserve(to_string.size() + 10 + current_context->self->cls->name.size());
+                    to_string.insert(to_string.begin(), '"');
+                    to_string.append("\":");
+                    to_string.append(current_context->self->cls->name);
+
+                    what = "undefined function '" + std::string(function_name) + "' for " + to_string;
+                } else {
+                    what = "undefined function '" + std::string(function_name) + "'";
                 }
+
+                auto exception_object = lavi::lang::api::new_object(
+                    this,
+                    NoFunctionErrorClass,
+                    { 
+                        lavi::lang::api::to_object(this, what)
+                    }
+                );
+
+                throw andy_lang_exception(this, exception_object);
+            }
 
                 auto previous_positional_params = std::move(positional_params);
                 positional_params = std::vector<std::shared_ptr<lavi::lang::object>>();
@@ -949,7 +994,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_yield(const
     auto block = current_context->given_block;
 
     if(!block) {
-        throw andy_lang_runtime_exception(lavi::lang::api::to_object(this, "No block given to yield"));
+        throw andy_lang_exception(this, lavi::lang::api::to_object(this, "No block given to yield"));
     }
 
     // Create a block context whose lexical_parent is the context where the DO...END block
@@ -1103,7 +1148,10 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_throw(const
 {
     auto exception_object = execute(source_code.childrens().front());
 
-    throw andy_lang_runtime_exception(exception_object);
+    throw andy_lang_exception(
+        this,
+        exception_object
+    );
 
     return exception_object;
 }
