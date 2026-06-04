@@ -1653,7 +1653,7 @@ void lavi::lang::interpreter::update_current_context()
             auto function_object = interpreter->current_context->positional_params[0];
             auto& function_string = function_object->as<std::string>();
 
-            std::shared_ptr<lavi::lang::object> self = interpreter->current_context->self ? interpreter->current_context->self->shared_from_this() : nullptr;
+            std::shared_ptr<lavi::lang::object> self = interpreter->current_context->self;
             return lavi::lang::api::call(interpreter, function_string, self);
         });
     }
