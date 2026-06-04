@@ -23,7 +23,6 @@ lavi::lang::fn_parameter::fn_parameter(std::string_view __name)
             name = node->child_content_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
             named = true;
             default_value_node = node->child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
-            has_default_value = default_value_node != nullptr;
             break;
         default:
             throw std::runtime_error("Invalid parameter type: " + std::to_string(static_cast<int>(node->type())));
