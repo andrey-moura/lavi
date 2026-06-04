@@ -50,6 +50,7 @@ static size_t utf8_char_length(const char& c)
 const static std::vector<std::string_view> keywords_lookup = {
     "break",
     "catch",
+    "class",
     "else",
     "enum",
     "fn",
@@ -60,7 +61,6 @@ const static std::vector<std::string_view> keywords_lookup = {
     "static",
     "throw",
     "try",
-    "type",
     "unless",
     "var",
     "within",

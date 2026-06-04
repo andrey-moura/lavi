@@ -114,6 +114,15 @@ namespace lavi
             /// @brief The global function class.
             std::shared_ptr<lavi::lang::structure> FunctionClass;
 
+            /// @brief The global exception class.
+            std::shared_ptr<lavi::lang::structure> ExceptionClass;
+
+            /// @brief The global no function error class.
+            std::shared_ptr<lavi::lang::structure> NoFunctionErrorClass;
+
+            /// @brief The global runtime error class.
+            std::shared_ptr<lavi::lang::structure> RuntimeErrorClass;
+
             std::shared_ptr<lavi::lang::structure> find_class(const std::string_view& name);
 
             const std::shared_ptr<lavi::lang::object> try_object_from_declname
@@ -147,6 +156,7 @@ namespace lavi
             void push_block_context();
             void push_context(std::shared_ptr<lavi::lang::object> object);
             void pop_context();
+            void set_current_context_object(std::shared_ptr<lavi::lang::object> object);
             void push_context_with_object(std::shared_ptr<lavi::lang::object> object);
         protected:
             /// @brief Initialize the interpreter. This method will create the global classes and objects. It also load extensions.

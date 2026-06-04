@@ -446,26 +446,26 @@ int main(int argc, char** argv) {
             decl.type = "function";
             current_context->functions.push_back(std::move(decl));
         }
-        for(const auto& cls : interpreter.stack[0]->classes) {
-            analyzer_declaration cls_decl;
-            cls_decl.name = cls.first;
-            cls_decl.type = "class";
+        // for(const auto& cls : interpreter.stack[0]->classes) {
+        //     analyzer_declaration cls_decl;
+        //     cls_decl.name = cls.first;
+        //     cls_decl.type = "class";
 
-            for(const auto& var : cls.second->variables) {
-                if(var.first.ends_with("?")) {
-                    analyzer_declaration decl;
-                    decl.name = var.first;
-                    decl.type = "function";
-                    cls_decl.functions.push_back(std::move(decl));
-                } else {
-                    analyzer_declaration decl;
-                    decl.name = var.first;
-                    decl.type = "variable";
-                    cls_decl.variables.push_back(std::move(decl));
-                }
-            }
-            current_context->classes.push_back(cls_decl);
-        }
+        //     for(const auto& var : cls.second->variables) {
+        //         if(var.first.ends_with("?")) {
+        //             analyzer_declaration decl;
+        //             decl.name = var.first;
+        //             decl.type = "function";
+        //             cls_decl.functions.push_back(std::move(decl));
+        //         } else {
+        //             analyzer_declaration decl;
+        //             decl.name = var.first;
+        //             decl.type = "variable";
+        //             cls_decl.variables.push_back(std::move(decl));
+        //         }
+        //     }
+        //     current_context->classes.push_back(cls_decl);
+        // }
         std::function<void(const lavi::lang::parser::ast_node& node)> inspect_node;
         std::function<void(const lavi::lang::parser::ast_node& node)> switch_type;
         auto push_context_from_node_object_if_any = [&](const lavi::lang::parser::ast_node& node) {

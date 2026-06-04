@@ -1,0 +1,20 @@
+// Declares a custom type
+class Greeter
+  var name = null
+
+  // Initializes a new Greeter
+  fn init(n)
+    name = n
+  end
+
+  // Salutes someone
+  fn salute
+    out "Hello, ${name}!"
+  end
+end
+
+// Creates a new object of type Greeter
+var greeter = Greeter.new('World')
+
+// Output 'Hello, World!'
+greeter.salute
