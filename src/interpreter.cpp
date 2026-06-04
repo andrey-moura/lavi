@@ -63,18 +63,23 @@ lavi::lang::function execute_method_definition(const lavi::lang::parser::ast_nod
 
         for(auto& param : params_node->childrens()) {
             lavi::lang::fn_parameter fn_param;
+            std::vector<lavi::lang::fn_parameter>* where_to_push = nullptr;
+
             if(param.type() == lavi::lang::parser::ast_node_type::ast_node_pair) {
                 auto* declname = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
 
                 fn_param.name = declname->childrens().front().token().content;
-                fn_param.default_value_node = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
                 fn_param.named = true;
-                fn_param.has_default_value = fn_param.default_value_node != nullptr;
-                named_params.push_back(std::move(fn_param));
+
+                where_to_push = &named_params;
             } else {
                 fn_param.name = std::string(param.token().content);
-                positional_params.push_back(std::move(fn_param));
+                where_to_push = &positional_params;
             }
+            
+            fn_param.default_value_node = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
+
+            where_to_push->push_back(std::move(fn_param));
         }
     }
 
@@ -654,6 +659,17 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
         current_context->given_block_lexical_context = call_site_lexical_ctx;
 
         if(method_to_call) {
+        if(current_context->positional_params.size() < method_to_call->positional_params.size()) {
+            for(size_t i = current_context->positional_params.size(); i < method_to_call->positional_params.size(); i++) {
+                if(method_to_call->positional_params[i].default_value_node) {
+                    current_context->positional_params.push_back(execute(method_to_call->positional_params[i].default_value_node->childrens().front()));
+                    continue;
+                }
+                // Found 1 or more missing positional parameters without default values, throw an error.
+                break;
+            }
+        }
+
             if(current_context->positional_params.size() != method_to_call->positional_params.size()) {
                 throw std::runtime_error("function " + std::string(method_to_call->name) + " expects " + std::to_string(method_to_call->positional_params.size()) + " parameters, but " + std::to_string(current_context->positional_params.size()) + " were given");
             }
@@ -662,15 +678,14 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
                 auto it = current_context->named_params.find(param.name);
 
                 if(it == current_context->named_params.end()) {
-                    if(param.has_default_value) {
                         if(param.default_value_node) {
                             current_context->named_params[param.name] = node_to_object(
                                 *param.default_value_node,
                                 current_context->cls,
                                 current_context->self ? current_context->self->shared_from_this() : nullptr
                             );
+                    continue;
                         }
-                    } else {
                         throw std::runtime_error("function '" + std::string(method_to_call->name) + "' called without named parameter " + param.name);
                     }
                 }

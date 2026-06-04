@@ -748,11 +748,27 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_function(lavi::la
 
             if(identifier_or_parenthesis.type == lexer::token_type::token_identifier) {
                 auto next_token = lexer.see_next(1);
+
+                ast_node param_node(ast_node_type::ast_node_undefined);
+
                 if (next_token.type == lexer::token_type::token_delimiter && next_token.content == ":") {
-                    params_node.add_child(extract_pair(lexer));
+                    param_node = std::move(extract_pair(lexer));
                 } else {
-                    params_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname));
+                    param_node = ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname);
                 }
+
+                auto possible_equal = lexer.see_next();
+
+                if(possible_equal.type == lexer::token_type::token_operator && possible_equal.content == "=") {
+                    lexer.consume_token(); // Consume the '=' token
+
+                    ast_node default_value_node(ast_node_type::ast_node_valuedecl);
+                    default_value_node.add_child(parse_identifier_or_literal(lexer));
+
+                    param_node.add_child(std::move(default_value_node));
+                }
+
+                params_node.add_child(std::move(param_node));
 
                 auto possible_comma = lexer.see_next();
 
