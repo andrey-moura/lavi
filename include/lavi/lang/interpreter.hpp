@@ -125,12 +125,6 @@ namespace lavi
 
             std::shared_ptr<lavi::lang::structure> find_class(const std::string_view& name);
 
-            const std::shared_ptr<lavi::lang::object> try_object_from_declname
-            (
-                const lavi::lang::parser::ast_node& node,
-                std::shared_ptr<lavi::lang::structure> cls = nullptr,
-                std::shared_ptr<lavi::lang::object> object = nullptr
-            );
             const std::shared_ptr<lavi::lang::object> node_to_object(const lavi::lang::parser::ast_node& node, std::shared_ptr<lavi::lang::structure> cls = nullptr, std::shared_ptr<lavi::lang::object> object = nullptr);
 
             void load_extension(lavi::lang::extension* extension);
