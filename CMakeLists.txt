@@ -50,7 +50,6 @@ add_library(lavi-lang
     ${CMAKE_CURRENT_LIST_DIR}/src/parser.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/config.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/builtin_libs.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/function_call.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/std_functions.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/src/hash.cpp

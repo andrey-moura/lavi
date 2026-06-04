@@ -52,38 +52,6 @@ namespace lavi
                 cls->variables[contained->name] = cls_obj;
             }
 
-            std::shared_ptr<lavi::lang::object> call(lavi::lang::interpreter *interpreter, lavi::lang::function_call __call) {
-                if(__call.name == "yield") {
-                    lavi::lang::lexer lexer("", std::string(__call.name));
-                    lexer.tokenize();
-                    lavi::lang::parser parser;
-                    auto ast = parser.parse_all(lexer);
-                    ast = ast.childrens().front();
-                    auto ret = interpreter->execute(ast);
-                    return ret;
-                }
-
-                if(__call.object) {
-                    interpreter->push_context_with_object(__call.object);
-
-                    auto method = __call.object->cls->instance_functions.find(__call.name);
-
-                    if(method == __call.object->cls->instance_functions.end()) {
-                        throw std::runtime_error("Class " + std::string(__call.object->cls->name) + " does not have an instance function called '" + std::string(__call.name) + "'");
-                    }
-
-                    __call.method = method->second.get();
-                }
-
-                // std::shared_ptr<lavi::lang::object> ret = interpreter->call(__call);
-                lavi::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
-
-                interpreter->pop_context();
-
-                std::shared_ptr<lavi::lang::object> ret = nullptr;
-                return ret;
-            }
-
             std::shared_ptr<lavi::lang::object> call(
                 lavi::lang::interpreter* interpreter,
                 std::string_view function_name,
