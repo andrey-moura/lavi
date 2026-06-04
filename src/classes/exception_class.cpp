@@ -22,3 +22,12 @@ std::shared_ptr<lavi::lang::structure> create_no_function_error_class(lavi::lang
 
   return NoFunctionErrorClass;
 }
+
+std::shared_ptr<lavi::lang::structure> create_runtime_error_class(lavi::lang::interpreter* interpreter)
+{
+  std::shared_ptr<lavi::lang::structure> RuntimeErrorClass = std::make_shared<lavi::lang::structure>("RuntimeError");
+  RuntimeErrorClass->base = interpreter->ExceptionClass;
+
+  return RuntimeErrorClass;
+}
+

@@ -114,6 +114,15 @@ namespace lavi
             /// @brief The global function class.
             std::shared_ptr<lavi::lang::structure> FunctionClass;
 
+            /// @brief The global exception class.
+            std::shared_ptr<lavi::lang::structure> ExceptionClass;
+
+            /// @brief The global no function error class.
+            std::shared_ptr<lavi::lang::structure> NoFunctionErrorClass;
+
+            /// @brief The global runtime error class.
+            std::shared_ptr<lavi::lang::structure> RuntimeErrorClass;
+
             std::shared_ptr<lavi::lang::structure> find_class(const std::string_view& name);
 
             const std::shared_ptr<lavi::lang::object> try_object_from_declname

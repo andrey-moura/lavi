@@ -1,4 +1,4 @@
-type ExpectationNotMet
+type ExpectationNotMet extends RuntimeError
     var message = null
     fn init(msg)
         message = msg

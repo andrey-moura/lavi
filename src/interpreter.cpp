@@ -16,6 +16,18 @@ struct andy_lang_exception : std::exception {
     )
         : exception_object(__object), interpreter(__interpreter)
     {
+        if(!lavi::lang::api::is_a(interpreter, exception_object, interpreter->ExceptionClass)) {
+            exception_object = lavi::lang::api::new_object(
+                interpreter,
+                interpreter->RuntimeErrorClass,
+                {
+                    __object->cls == interpreter->StringClass
+                        ?
+                        __object
+                        : lavi::lang::api::call(interpreter, "to_string", __object)
+                }
+            );
+        }
         fetch_what();
     }
 
