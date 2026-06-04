@@ -8,6 +8,31 @@
 
 extern void create_builtin_libs();
 
+std::map<std::string_view, lavi::lang::parser::ast_node> node_cache;
+
+lavi::lang::parser::ast_node& parse_and_cache_node(
+    lavi::lang::interpreter* interpreter,
+    std::string_view source_code
+)
+{
+    if(auto it = node_cache.find(source_code); it != node_cache.end()) {
+        return it->second;
+    }
+
+    // Yes, the cache is kept alive during the execution of the program
+    lavi::lang::lexer* lexer = new lavi::lang::lexer("", std::move(std::string(source_code)));
+
+    lexer->tokenize();
+
+    lavi::lang::preprocessor preprocessor;
+    preprocessor.process(source_code, *lexer);
+
+    lavi::lang::parser p;
+    auto node = p.parse_all(*lexer);
+
+    return node_cache[source_code] = std::move(node.childrens().front());
+}
+
 namespace lavi
 {
     namespace lang
@@ -136,6 +161,37 @@ namespace lavi
                 interpreter->pop_context();
 
                 return ret;
+            }
+
+            std::shared_ptr<lavi::lang::object> call(
+                lavi::lang::interpreter* interpreter,
+                std::string_view function_name,
+                std::initializer_list<std::shared_ptr<lavi::lang::object>> positional_params,
+                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params
+            )
+            {
+                std::shared_ptr<lavi::lang::object> object = nullptr;
+
+                const auto& node = parse_and_cache_node(interpreter, function_name);
+
+                const lavi::lang::parser::ast_node* object_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_object);
+
+                if(object_node) {
+                    object = interpreter->execute(object_node->childrens().front());
+                }
+
+                switch(node.type())
+                {
+                    // declname interpreted as a function call with no parameters
+                    case lavi::lang::parser::ast_node_type::ast_node_declname:
+                        function_name = node.token().content;
+                    break;
+                    default:
+                        function_name = node.decname();
+                    break;
+                }
+
+                return call(interpreter, function_name, object, std::move(positional_params), std::move(named_params));
             }
 
             std::shared_ptr<lavi::lang::object> yield(lavi::lang::interpreter* interpreter, std::vector<std::shared_ptr<lavi::lang::object>> position_params, std::map<std::string, std::shared_ptr<lavi::lang::object>> named_params)
