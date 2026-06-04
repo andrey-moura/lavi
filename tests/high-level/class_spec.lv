@@ -246,4 +246,31 @@ describe 'type' do
       expect(d.bark).to eq('woof')
     end
   end
+  context 'when declaring variable inside instance function' do
+    it 'should not be accessible outside the function' do
+      class Foo
+        fn bar
+          var x = 42
+          x
+        end
+      end
+
+      var f = Foo.new
+      expect(f.bar).to eq(42)
+
+      var exeception = null
+
+      try
+        f.x
+      catch(e)
+        exeception = e
+      end
+
+      if exeception
+        expect(exeception.class).to eq(NoFunctionError)
+      else
+        throw ExpectationNotMetError.new('no exception thrown')
+      end
+    end
+  end
 end

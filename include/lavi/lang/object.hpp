@@ -8,7 +8,7 @@
 
 #include "lavi/lang/function.hpp"
 #include "lavi/lang/class.hpp"
-#include "lavi/lang/interpreter_context.hpp"
+#include "lavi/lang/scope.hpp"
 
 namespace lavi
 {
@@ -17,7 +17,7 @@ namespace lavi
         class structure;
         class interpreter;
         constexpr size_t max_native_size = 40;
-        class object : public std::enable_shared_from_this<object>, public interpreter_context
+        class object : public std::enable_shared_from_this<object>, public scope
         {
         public:
             object(std::shared_ptr<lavi::lang::structure> c);
@@ -25,6 +25,7 @@ namespace lavi
         public:
             const std::string& default_string_representation();
         public:
+            std::shared_ptr<structure> cls;
             std::shared_ptr<object> base_instance = nullptr;
             std::shared_ptr<object> derived_instance = nullptr;
             // #ifdef __ANDY_DEBUG__
@@ -49,19 +50,19 @@ namespace lavi
             std::shared_ptr<object> (*native_copy_ptr)(lavi::lang::object* obj) = nullptr;
 #ifdef __ANDY_DEBUG__
             int* native_int = (int*)native;
+            std::string* native_string = (std::string*)native;
 #endif
             std::string string_representation_cache;
         public:
             void initialize(lavi::lang::interpreter* interpreter);
-            void initialize(lavi::lang::interpreter* interpreter, lavi::lang::function_call new_call);
         public:
             /// @brief Initialize the object with a value.
             /// @param cls The class of the object.
             /// @return Returns a shared pointer to the object.
-            static auto instantiate(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls, lavi::lang::function_call new_call = {})
+            static auto instantiate(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls)
             {
                 auto obj = std::make_shared<lavi::lang::object>(cls);
-                obj->initialize(interpreter, std::move(new_call));
+                obj->initialize(interpreter);
 
                 return obj;
             }
@@ -86,7 +87,7 @@ namespace lavi
             /// @param value The value.
             /// @return Returns a shared pointer to the object.
             template<typename T>
-            static std::enable_if<!std::is_pointer<T>::value, std::shared_ptr<lavi::lang::object>>::type instantiate(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls, T value, std::vector<std::shared_ptr<lavi::lang::object>> params = {})
+            static std::enable_if<!std::is_pointer<T>::value, std::shared_ptr<lavi::lang::object>>::type instantiate(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls, T value)
             {
                 auto obj = std::make_shared<lavi::lang::object>(cls);
 
@@ -94,10 +95,7 @@ namespace lavi
                     obj->set_native<T>(std::move(value));
                 }
 
-                lavi::lang::function_call new_call;
-                new_call.positional_params = std::move(params);
-
-                obj->initialize(interpreter, std::move(new_call));
+                obj->initialize(interpreter);
 
                 return obj;
             }
@@ -199,7 +197,6 @@ namespace lavi
 
                 obj->native_copy_ptr = [](lavi::lang::object* obj) -> std::shared_ptr<lavi::lang::object> {
                     std::shared_ptr<lavi::lang::object> other = std::make_shared<lavi::lang::object>(obj->cls);
-                    other->self = other.get();
 
                     if constexpr(std::is_copy_constructible<T>::value)
                     {
@@ -226,7 +223,6 @@ namespace lavi
                 };
 
                 obj->native_move_ptr = [](object* dest, object* src) {
-                    dest->self = dest;
                     dest->cls = std::move(src->cls);
                     dest->base_instance = std::move(src->base_instance);
                     dest->derived_instance = std::move(src->derived_instance);
@@ -281,7 +277,6 @@ namespace lavi
                         this->variables = std::move(other.variables);
                         this->functions = std::move(other.functions);
                         this->inline_functions = std::move(other.inline_functions);
-                        this->self = this;
 
                         other.native_destructor = nullptr;
                         other.native_copy_ptr = nullptr;

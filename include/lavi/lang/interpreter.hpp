@@ -156,6 +156,7 @@ namespace lavi
             void push_block_context();
             void push_context(std::shared_ptr<lavi::lang::object> object);
             void pop_context();
+            void set_current_context_object(std::shared_ptr<lavi::lang::object> object);
             void push_context_with_object(std::shared_ptr<lavi::lang::object> object);
         protected:
             /// @brief Initialize the interpreter. This method will create the global classes and objects. It also load extensions.
