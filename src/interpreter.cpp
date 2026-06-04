@@ -1297,7 +1297,7 @@ const std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::node_to_objec
         return execute(node);
     }
 
-    throw std::runtime_error("interpreter: unknown node type");
+    lavi::lang::error::internal("Unknown node type ({})", (int)node.type());
 
     return nullptr;
 }
