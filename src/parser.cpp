@@ -325,11 +325,10 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
             if(next_token.content == "." || next_token.content == "::") {
                 lexer.consume_token(); // Consume the '.' token
 
-                lavi::lang::parser::ast_node next_node = parser.parse_identifier_or_literal(lexer, false);
+                lavi::lang::parser::ast_node next_node = parser.parse_identifier_or_literal(lexer, false, { "class" });
                 chained_nodes.push_back(std::move(next_node));
             } else {
                 lavi::lang::parser::ast_node operator_node(lavi::lang::parser::ast_node_type::ast_node_fn_call);
-
                 lavi::lang::lexer::token& operator_token = lexer.next_token();
 
                 std::string matching;
@@ -403,7 +402,7 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
     return last_node;
 }
 
-lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lavi::lang::lexer &lexer, bool chain)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lavi::lang::lexer &lexer, bool chain, std::vector<std::string_view> keyword)
 {
     const lavi::lang::lexer::token& token = lexer.see_next();
 
@@ -521,6 +520,13 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lav
             }
         }
         break;
+        case lavi::lang::lexer::token_type::token_keyword:
+            if(keyword.size()) {
+                if(std::find(keyword.begin(), keyword.end(), token.content) != keyword.end()) {
+                    identifier_or_literal = std::move(lexer.next_token());
+                    break;
+                }
+            }
         default:
             throw std::runtime_error(token.error_message_at_current_position("Expected identifier or literal"));
             break;
@@ -626,7 +632,7 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword(lavi::lang::lexer
         { "fn" ,       &lavi::lang::parser::parse_keyword_function  },
         { "return",    &lavi::lang::parser::parse_keyword_return    },
         { "if",        &lavi::lang::parser::parse_keyword_if        },
-        { "unless",    &lavi::lang::parser::parse_keyword_if    },
+        { "unless",    &lavi::lang::parser::parse_keyword_if        },
         { "loop",      &lavi::lang::parser::parse_keyword_loop      },
         { "namespace", &lavi::lang::parser::parse_keyword_namespace },
         { "break",     &lavi::lang::parser::parse_keyword_break     },
