@@ -38,7 +38,7 @@ describe 'Net' do
       end
       describe 'http://httpbin.org/json' do
         it 'should have json? as true' do
-        var res = Net::HTTP.get('http://httpbin.org/json')
+          var res = Net::HTTP.get('http://httpbin.org/json')
           expect(res.status_code).to eq(200) 
           expect(res.json?).to eq(true)
         end
