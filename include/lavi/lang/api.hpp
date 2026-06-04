@@ -144,6 +144,17 @@ namespace lavi
                     throw std::runtime_error("Unsupported type for to_object: " + std::string(typeid(T).name()));
                 }
             }
+            /// @brief Creates a new object of a class with the given parameters.
+            /// @param interpreter The interpreter.
+            /// @param cls The class of the object.
+            /// @param positional_params The positional parameters to pass to the constructor.
+            /// @return Returns a shared pointer to the object.
+            std::shared_ptr<lavi::lang::object> new_object(
+                lavi::lang::interpreter* interpreter,
+                std::shared_ptr<lavi::lang::structure> cls,
+                std::vector<std::shared_ptr<lavi::lang::object>> positional_params = {},
+                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params = {}
+            );
             /// @brief Checks if the object is truthy (not null and not false).
             /// @param interpreter The interpreter.
             /// @param obj The object to check.

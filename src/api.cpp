@@ -196,6 +196,34 @@ namespace lavi
                 return ret;
             }
 
+            std::shared_ptr<lavi::lang::object> new_object(
+                lavi::lang::interpreter* interpreter,
+                std::shared_ptr<lavi::lang::structure> cls,
+                std::vector<std::shared_ptr<lavi::lang::object>> positional_params,
+                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params
+            )
+            {
+                auto obj = object::instantiate(interpreter, cls);
+
+                if(obj->cls->base) {
+                    obj->base_instance = object::instantiate(interpreter, obj->cls->base);
+                }
+
+                auto init_it = cls->instance_functions.find("init");
+
+                if(init_it != cls->instance_functions.end()) {
+                    call(interpreter, "init", obj, std::move(positional_params), std::move(named_params));
+                } else {
+                    // Default constructor
+
+                    if(obj->cls->base) {
+                        call(interpreter, "init", obj->base_instance, std::move(positional_params), std::move(named_params));
+                    }
+                }
+
+                return obj;
+            }
+
             bool is_truthy(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj)
             {
                 if(!obj) {
