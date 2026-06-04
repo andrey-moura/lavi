@@ -9,8 +9,8 @@
     #define try if(true)
     #define catch(e) if(false)
 
-    std::exception e;
-#endif
+
+std::shared_ptr<lavi::lang::interpreter> interpreter;
 
 int main(int argc, char** argv) {
     try {
@@ -77,7 +77,9 @@ int main(int argc, char** argv) {
             }
         }
 
-        std::shared_ptr<lavi::lang::object> ret = lavi::lang::api::evaluate(file_path, argc, argv);
+        interpreter = std::make_shared<lavi::lang::interpreter>();
+
+        std::shared_ptr<lavi::lang::object> ret = lavi::lang::api::evaluate(interpreter.get(), file_path, argc, argv);
 
         if(!ret) {
             return 0;
@@ -90,7 +92,7 @@ int main(int argc, char** argv) {
         }
         
     } catch (const std::exception& e) {
-        lavi::console::log_error(e.what());
+        std::cerr << e.what() << std::endl;
         return 1;
     }
 
