@@ -12,7 +12,7 @@ fn greet(name)
   return 'Hello, ' + name + '!'
 end
 
-describe 'fn' do
+describe 'functions' do
   context 'when defining a function with parameters' do
     it 'allows calling the function with arguments and returning a value' do
       expect(add(2, 3)).to eq(5)
