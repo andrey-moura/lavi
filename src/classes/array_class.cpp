@@ -17,7 +17,7 @@ std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interprete
                 result += ", ";
             }
 
-            result += lavi::lang::api::call(interpreter, "to_string", item)->as<std::string>();
+            result += lavi::lang::api::call(interpreter, "inspect", item)->as<std::string>();
         }
 
         result += "]";
