@@ -4,7 +4,9 @@ out "current_dir: ${Dir.current}"
 
 var spec_files = Dir.current.glob('tests/**/*_spec.lv')
 
-out "spec_files: ${spec_files}"
+var tests_path = Path.new(Dir.current.path / 'tests')
+
+out tests_path.exists?
 
 spec_files.each do (file)
   if __args__.size > 2
