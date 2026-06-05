@@ -1,0 +1,5 @@
+namespace Say
+  fn hello
+    out 'Hello, World!'
+  end
+end

@@ -1,3 +1,5 @@
+import :yaml
+
 fn help
   out "Usage: lavi cerri <command> [<args>]\n"
   out "These are the available Cerri commands:\n"
@@ -7,6 +9,29 @@ fn help
   out "    and then executes the entry point defined in the package.yml.\n"
   out "  help:"
   out "    The 'lavi cerri help' command shows this message."
+end
+
+fn run
+  var project_file = Dir.current.path / 'package.yaml'
+
+  unless project_file.exists?
+    throw RuntimeError.new('Could not find package.yaml in current directory')
+  end
+
+  var project = YAML.parse(project_file)
+
+  if project.load_paths.present?
+    var folder = Dir.new(project.load_paths)
+    folder.glob('**/*.lv').each do (file)
+      // require file
+    end
+  end
+
+  unless project.entry.present?
+    throw RuntimeError.new('Missing main entry point in package.yaml')
+  end
+
+  require project.entry
 end
 
 if __args__.size < 3

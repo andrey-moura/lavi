@@ -1,0 +1,3 @@
+# The file to be executed when cerri run is invoked
+entry: src/main.lv
+load_paths: lib
