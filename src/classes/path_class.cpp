@@ -18,7 +18,15 @@ std::shared_ptr<lavi::lang::structure> create_path_class(lavi::lang::interpreter
     });
 
     PathClass->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
-        return lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(interpreter->current_context->self->as<std::filesystem::path>().string()));
+        return lavi::lang::api::to_object(interpreter, std::move(interpreter->current_context->self->as<std::filesystem::path>().string()));
+    });
+
+    PathClass->instance_functions["inspect"] = std::make_shared<lavi::lang::function>("inspect", [](lavi::lang::interpreter* interpreter) {
+        return lavi::lang::api::call(
+            interpreter,
+            "inspect",
+            lavi::lang::api::to_object(interpreter, std::move(interpreter->current_context->self->as<std::filesystem::path>().string()))
+        );
     });
 
     PathClass->instance_functions["exists?"] = std::make_shared<lavi::lang::function>("exists?", [](lavi::lang::interpreter* interpreter) {

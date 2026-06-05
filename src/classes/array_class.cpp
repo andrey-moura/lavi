@@ -17,16 +17,12 @@ std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interprete
                 result += ", ";
             }
 
-            result += lavi::lang::api::call(interpreter, "to_string", item)->as<std::string>();
+            result += lavi::lang::api::call(interpreter, "inspect", item)->as<std::string>();
         }
 
         result += "]";
 
         return lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(result));
-    });
-
-    ArrayClass->instance_functions["inspect"] = std::make_shared<lavi::lang::function>("inspect", [](lavi::lang::interpreter* interpreter) {
-        return lavi::lang::api::call(interpreter, "to_string", interpreter->current_context->self->shared_from_this());
     });
 
         ArrayClass->instance_functions["join"] = std::make_shared<lavi::lang::function>("join", std::vector<std::string>{"separator"}, [](lavi::lang::interpreter* interpreter) {
