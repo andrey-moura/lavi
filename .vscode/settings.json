@@ -113,8 +113,10 @@
     ],
     "cmake.debugConfig": {
         "args": [
-            "/home/andrey/Moonslate/lavi/tests/high-level/fn_spec.lv"
+            "cerri",
+            "run"
         ],
+        "cwd": "${workspaceFolder}/examples/project",
         "visualizerFile": "${workspaceFolder}/natvis.xml",
         "showDisplayString": true,
         "type": "lldb",
