@@ -1,8 +1,12 @@
 #include 'std/tests'
 
-var tests_dir = Dir.current.glob('tests/**/*_spec.lv')
+out "current_dir: ${Dir.current}"
 
-tests_dir.each do (file)
+var spec_files = Dir.current.glob('tests/**/*_spec.lv')
+
+out "spec_files: ${spec_files}"
+
+spec_files.each do (file)
   if __args__.size > 2
     __args__.each do(arg)
       if file.to_string.ends_with?(arg)
