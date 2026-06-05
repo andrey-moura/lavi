@@ -122,15 +122,14 @@ void create_std_functions(lavi::lang::interpreter* interpreter)
         lavi::lang::parser parser;
         auto* ast = new lavi::lang::parser::ast_node(std::move(parser.parse_all(lexer)));
 
+        auto global_context = interpreter->global_context;
+
+        interpreter->stack.push_back(global_context);
+        interpreter->update_current_context();
+
         auto ret = interpreter->execute_all(*ast);
 
-        for(auto& fn : interpreter->current_context->functions) {
-            interpreter->previous_context->functions[fn.first] = fn.second;
-        }
-
-        for(auto& var : interpreter->current_context->variables) {
-            interpreter->previous_context->variables[var.first] = var.second;
-        }
+        interpreter->pop_context();
 
         return ret;
     });
