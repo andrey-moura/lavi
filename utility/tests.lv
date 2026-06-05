@@ -6,7 +6,11 @@ var spec_files = Dir.current.glob('tests/**/*_spec.lv')
 
 var tests_path = Path.new(Dir.current.path / 'tests')
 
-out tests_path.exists?
+out "tests_path: ${tests_path}"
+out "tests_path.exists?: ${tests_path.exists?}"
+out "high_level.exists?: ${Path.new(tests_path / 'high-level').exists?}"
+
+out "spec_files: ${spec_files}"
 
 spec_files.each do (file)
   if __args__.size > 2
