@@ -2,9 +2,9 @@
 
 var tests_dir = Dir.current.glob('tests/**/*_spec.lv')
 
-loop for file in tests_dir
+tests_dir.each do (file)
   if __args__.size > 2
-    loop for arg in __args__
+    __args__.each do(arg)
       if file.to_string.ends_with?(arg)
         require file
         break

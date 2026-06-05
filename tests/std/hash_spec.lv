@@ -11,6 +11,9 @@ describe 'Hash' do
         it 'should allow accessing values with string keys' do
           expect(hash["key"]).to eq("value")
         end
+        it 'allows accessing values with the operator.' do
+          expect(hash.key).to eq("value")
+        end
       end
       context 'using string keys' do
         var hash = { "key": "value" }
@@ -19,6 +22,9 @@ describe 'Hash' do
         end
         it 'should allow accessing values with string keys' do
           expect(hash["key"]).to eq("value")
+        end
+        it 'allows accessing values with the operator.' do
+          expect(hash.key).to eq("value")
         end
       end
     end

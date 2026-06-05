@@ -30,33 +30,24 @@ std::shared_ptr<lavi::lang::structure> create_hash_class(lavi::lang::interpreter
         HashClass->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
             std::string result = "{";
             auto& hash = interpreter->current_context->self->as<lavi::lang::hash>();
+            result.reserve(hash.keys.size() * 25);
             for(auto& key : hash.keys) {
+                if(result.size() > 1) {
+                    result += ", ";
+                }
                 auto value = hash.get(key);
-                result += lavi::lang::api::call<std::string>(interpreter, lavi::lang::function_call{
-                    "to_string",
-                    key->cls,
-                    key,
-                    key->cls->instance_functions["to_string"].get(),
-                    {},
-                    {},
-                    nullptr
-                });
+                result += lavi::lang::api::call(interpreter, "to_string", key)->as<std::string>();
                 result += ": ";
-                result += lavi::lang::api::call<std::string>(interpreter, lavi::lang::function_call{
-                    "to_string",
-                    value->cls,
-                    value,
-                    value->cls->instance_functions["to_string"].get(),
-                    {},
-                    {},
-                    nullptr
-                });
-                result += ", ";
+                result += lavi::lang::api::call(interpreter, "inspect", value)->as<std::string>();
             }
             result += "}";
             return lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(result));
         });
 
-    
+    HashClass->instance_functions["missing"] = std::make_shared<lavi::lang::function>("missing", std::initializer_list<std::string>{"name", "aargs", "kwargs"}, [](lavi::lang::interpreter* interpreter) {
+        auto it = interpreter->current_context->self->as<lavi::lang::hash>().get(interpreter->current_context->positional_params[0]);
+        return it;
+    });
+
     return HashClass;
 }

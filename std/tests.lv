@@ -50,6 +50,21 @@ class EndsWith
     end
 end
 
+class BeA
+    var expected = null
+    fn init(value)
+        expected = value
+    end
+
+    fn match(actual)
+        if actual.is_a?(expected)
+            true
+        else
+            throw ExpectationNotMet.new("Expected ${actual} to be a ${expected}")
+        end
+    end
+end
+
 class Expect
     var actual = null
     fn init(value)
@@ -145,6 +160,10 @@ fn pending(what)
     out indent warning "${what} (pending)"
     total_tests += 1
     pending_tests += 1
+end
+
+fn be_a(what)
+    BeA.new(what)
 end
 
 fn print_summary()

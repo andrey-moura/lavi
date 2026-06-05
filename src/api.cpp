@@ -8,6 +8,31 @@
 
 extern void create_builtin_libs();
 
+std::map<std::string_view, lavi::lang::parser::ast_node> node_cache;
+
+lavi::lang::parser::ast_node& parse_and_cache_node(
+    lavi::lang::interpreter* interpreter,
+    std::string_view source_code
+)
+{
+    if(auto it = node_cache.find(source_code); it != node_cache.end()) {
+        return it->second;
+    }
+
+    // Yes, the cache is kept alive during the execution of the program
+    lavi::lang::lexer* lexer = new lavi::lang::lexer("", std::move(std::string(source_code)));
+
+    lexer->tokenize();
+
+    lavi::lang::preprocessor preprocessor;
+    preprocessor.process(source_code, *lexer);
+
+    lavi::lang::parser p;
+    auto node = p.parse_all(*lexer);
+
+    return node_cache[source_code] = std::move(node.childrens().front());
+}
+
 namespace lavi
 {
     namespace lang
@@ -50,38 +75,6 @@ namespace lavi
             void contained_class(lavi::lang::interpreter *interpreter, std::shared_ptr<lavi::lang::structure> cls, std::shared_ptr<lavi::lang::structure> contained) {
                 auto cls_obj = to_object(interpreter, contained);
                 cls->variables[contained->name] = cls_obj;
-            }
-
-            std::shared_ptr<lavi::lang::object> call(lavi::lang::interpreter *interpreter, lavi::lang::function_call __call) {
-                if(__call.name == "yield") {
-                    lavi::lang::lexer lexer("", std::string(__call.name));
-                    lexer.tokenize();
-                    lavi::lang::parser parser;
-                    auto ast = parser.parse_all(lexer);
-                    ast = ast.childrens().front();
-                    auto ret = interpreter->execute(ast);
-                    return ret;
-                }
-
-                if(__call.object) {
-                    interpreter->push_context_with_object(__call.object);
-
-                    auto method = __call.object->cls->instance_functions.find(__call.name);
-
-                    if(method == __call.object->cls->instance_functions.end()) {
-                        throw std::runtime_error("Class " + std::string(__call.object->cls->name) + " does not have an instance function called '" + std::string(__call.name) + "'");
-                    }
-
-                    __call.method = method->second.get();
-                }
-
-                // std::shared_ptr<lavi::lang::object> ret = interpreter->call(__call);
-                lavi::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
-
-                interpreter->pop_context();
-
-                std::shared_ptr<lavi::lang::object> ret = nullptr;
-                return ret;
             }
 
             std::shared_ptr<lavi::lang::object> call(
@@ -168,6 +161,37 @@ namespace lavi
                 interpreter->pop_context();
 
                 return ret;
+            }
+
+            std::shared_ptr<lavi::lang::object> call(
+                lavi::lang::interpreter* interpreter,
+                std::string_view function_name,
+                std::initializer_list<std::shared_ptr<lavi::lang::object>> positional_params,
+                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params
+            )
+            {
+                std::shared_ptr<lavi::lang::object> object = nullptr;
+
+                const auto& node = parse_and_cache_node(interpreter, function_name);
+
+                const lavi::lang::parser::ast_node* object_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_object);
+
+                if(object_node) {
+                    object = interpreter->execute(object_node->childrens().front());
+                }
+
+                switch(node.type())
+                {
+                    // declname interpreted as a function call with no parameters
+                    case lavi::lang::parser::ast_node_type::ast_node_declname:
+                        function_name = node.token().content;
+                    break;
+                    default:
+                        function_name = node.decname();
+                    break;
+                }
+
+                return call(interpreter, function_name, object, std::move(positional_params), std::move(named_params));
             }
 
             std::shared_ptr<lavi::lang::object> yield(lavi::lang::interpreter* interpreter, std::vector<std::shared_ptr<lavi::lang::object>> position_params, std::map<std::string, std::shared_ptr<lavi::lang::object>> named_params)

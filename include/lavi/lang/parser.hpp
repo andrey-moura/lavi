@@ -78,7 +78,6 @@ namespace lavi
                 ast_node_for_start,
                 ast_node_for_step,
                 ast_node_for_end,
-                ast_node_foreach,
                 ast_node_break,
                 ast_node_else,
                 ast_node_condition,
@@ -241,8 +240,9 @@ namespace lavi
             /// @param lexer The lexer.
             /// @param chain Whether to allow chaining function calls and member accesses.
             /// @param keyword Whether a keyword can be parsed as an identifier. This is useful when we can have something like obj.class
-            /// @return 
-            lavi::lang::parser::ast_node parse_identifier_or_literal(lavi::lang::lexer& lexer, bool chain = true, std::vector<std::string_view> keyword = {});
+            /// @param pair Whether to allow parsing a pair.
+            /// @return The identifier or literal node.
+            lavi::lang::parser::ast_node parse_identifier_or_literal(lavi::lang::lexer& lexer, bool chain = true, bool pair = true, std::vector<std::string_view> keyword = {});
         // Parsers functions
         protected:
             /// @brief Parse a keyword.
@@ -270,7 +270,6 @@ namespace lavi
             lavi::lang::parser::ast_node parse_keyword_namespace(lavi::lang::lexer& lexer);
             lavi::lang::parser::ast_node parse_keyword_loop(lavi::lang::lexer& lexer);
             lavi::lang::parser::ast_node parse_keyword_for(lavi::lang::lexer& lexer);
-            lavi::lang::parser::ast_node parse_keyword_foreach(lavi::lang::lexer& lexer);
             lavi::lang::parser::ast_node parse_keyword_while(lavi::lang::lexer& lexer);
             lavi::lang::parser::ast_node parse_keyword_break(lavi::lang::lexer& lexer);
             lavi::lang::parser::ast_node parse_keyword_static(lavi::lang::lexer& lexer);

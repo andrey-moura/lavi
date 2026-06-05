@@ -101,17 +101,6 @@ std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interprete
                 return std::make_shared<lavi::lang::object>(interpreter->FalseClass);
             }
             for(size_t i = 0; i < other_items.size(); ++i) {
-                auto it = items[i]->cls->instance_functions.find("==");
-                if(it == items[i]->cls->instance_functions.end()) {
-                    throw std::runtime_error("class " + std::string(items[i]->cls->name) + " does not have a method '=='");
-                }
-                lavi::lang::function_call call{
-                    "==",
-                    items[i]->cls,
-                    items[i],
-                    it->second.get(),
-                    { other_items[i] }
-                };
                 auto result = lavi::lang::api::call(interpreter, "==", items[i], { other_items[i] });
                 if(result->cls == interpreter->FalseClass) {
                     return result;

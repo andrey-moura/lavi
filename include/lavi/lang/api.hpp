@@ -43,21 +43,18 @@ namespace lavi
             }
             /// @brief Call a function.
             /// @param interpreter The interpreter.
-            /// @param object The object.
-            /// @param fn The function name.
+            /// @param function_name The function name.
             /// @return Returns a shared pointer to the object.
-            std::shared_ptr<lavi::lang::object> call(lavi::lang::interpreter* interpreter, lavi::lang::function_call __call);
-            template<typename T>
-            T call(lavi::lang::interpreter* interpreter, lavi::lang::function_call __call)
-            {
-                std::shared_ptr<lavi::lang::object> obj = call(interpreter, std::move(__call));
-
-                return cast_object_to<T>(interpreter, std::move(obj));
-            }
+            std::shared_ptr<lavi::lang::object> call(
+                lavi::lang::interpreter* interpreter,
+                std::string_view function_name,
+                std::initializer_list<std::shared_ptr<lavi::lang::object>> positional_params = {},
+                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params = {}
+            );
             /// @brief Call a function.
             /// @param interpreter The interpreter.
             /// @param object The object.
-            /// @param fn The function name.
+            /// @param function_name The function name.
             /// @return Returns a shared pointer to the object.
             std::shared_ptr<lavi::lang::object> call(
                 lavi::lang::interpreter* interpreter,

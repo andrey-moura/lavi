@@ -66,9 +66,9 @@ lavi::lang::function execute_method_definition(const lavi::lang::parser::ast_nod
             std::vector<lavi::lang::fn_parameter>* where_to_push = nullptr;
 
             if(param.type() == lavi::lang::parser::ast_node_type::ast_node_pair) {
-                auto* declname = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
+                auto* declname = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname)->childrens().data();
 
-                fn_param.name = declname->childrens().front().token().content;
+                fn_param.name = declname->token().content;
                 fn_param.named = true;
 
                 where_to_push = &named_params;
@@ -76,8 +76,10 @@ lavi::lang::function execute_method_definition(const lavi::lang::parser::ast_nod
                 fn_param.name = std::string(param.token().content);
                 where_to_push = &positional_params;
             }
-            
-            fn_param.default_value_node = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
+
+            if(auto* default_node = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl)) {
+                fn_param.default_value_node = default_node->childrens().data();
+            }
 
             where_to_push->push_back(std::move(fn_param));
         }
@@ -119,6 +121,17 @@ void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::structure> cls)
     if(type_instance_function == cls->instance_functions.end()) {
         cls->instance_functions["class"] = std::make_shared<lavi::lang::function>("class", [cls, this](lavi::lang::interpreter* interpreter) {
             return lavi::lang::api::to_object(interpreter, cls);
+        });
+    }
+
+    auto is_a_instance_function = cls->instance_functions.find("is_a?");
+
+    if(is_a_instance_function == cls->instance_functions.end()) {
+        cls->instance_functions["is_a?"] = std::make_shared<lavi::lang::function>("is_a?", std::initializer_list<std::string>{ "other" }, [cls, this](lavi::lang::interpreter* interpreter) {
+            auto other_object = interpreter->current_context->positional_params[0];
+            auto other_class = other_object->as<std::shared_ptr<lavi::lang::structure>>();
+
+            return lavi::lang::api::to_object(interpreter, lavi::lang::api::is_a(interpreter, interpreter->current_context->self, cls));
         });
     }
 
@@ -498,7 +511,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
             const lavi::lang::parser::ast_node* value_node = &param;
             const lavi::lang::parser::ast_node* name = nullptr;
             if(param.type() == lavi::lang::parser::ast_node_type::ast_node_pair) {
-                value_node = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
+                value_node = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl)->childrens().data();
                 name = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname)->childrens().data();
             }
 
@@ -660,6 +673,8 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
 
             if(!method_to_call) {
                 std::string what;
+                what.reserve(100);
+
                 if(current_context->self) {
                     std::string to_string = lavi::lang::api::call(this, "to_string", current_context->self)->as<std::string>();
 
@@ -669,10 +684,19 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
                     to_string.append(current_context->self->cls->name);
 
                     what = "undefined function '" + std::string(function_name) + "' for " + to_string;
+
+                    to_string.clear();
                 } else if(current_context->cls) {
                     what = "undefined function '" + std::string(function_name) + "' for class '" + std::string(current_context->cls->name) + "'";
                 } else {
                     what = "undefined function '" + std::string(function_name) + "'";
+                }
+
+                auto extension = lavi::lang::extension::which_defines(function_name);
+
+                if(extension) {
+                    what.reserve(what.size() + extension->name().size() + 30);
+                    what.append(". Did you forget to import '" + extension->name() + "'?");
                 }
 
                 auto exception_object = lavi::lang::api::new_object(
@@ -816,7 +840,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_hashdecl(co
         auto value_node = child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
 
         std::shared_ptr<lavi::lang::object> key = node_to_object(key_node->childrens().front());
-        std::shared_ptr<lavi::lang::object> value = node_to_object(*value_node);
+        std::shared_ptr<lavi::lang::object> value = node_to_object(value_node->childrens().front());
 
         hash.set(std::move(key), std::move(value));
     }
@@ -971,49 +995,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_return(c
         }
         return nullptr;
 }
-std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_foreach(const lavi::lang::parser::ast_node& source_code)
-{
-    auto* valuedecl = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
 
-    std::shared_ptr<lavi::lang::object> array_or_hash = node_to_object(valuedecl->childrens().front());
-
-    auto* vardecl = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_vardecl);
-
-    if(array_or_hash->cls == ArrayClass) {
-        std::vector<std::shared_ptr<lavi::lang::object>>& array_values = array_or_hash->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
-        for(auto& value : array_values) {
-            push_block_context();
-
-            current_context->variables[vardecl->decname()] = value;
-            execute_all(*source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context));
-
-            pop_context();
-        }
-    } else if(array_or_hash->cls == HashClass) {
-        lavi::lang::hash& hash_values = array_or_hash->as<lavi::lang::hash>();
-        for(auto& key : hash_values.keys) {
-            if(!key) {
-                continue;
-            }
-
-            push_block_context();
-
-            auto value = hash_values.get(key);
-
-            std::vector<std::shared_ptr<lavi::lang::object>> params = { key, value };
-            std::shared_ptr<lavi::lang::object> params_object = lavi::lang::object::instantiate(this, ArrayClass, params);
-
-            current_context->variables[vardecl->decname()] = params_object;
-
-            execute_all(*source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context));
-
-            pop_context();
-        }
-    } else {
-        throw std::runtime_error("foreach should iterate over an array or a hash");
-    }
-    return nullptr;
-}
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_for(const lavi::lang::parser::ast_node& source_code)
 {
     auto* valuedecl = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
@@ -1222,7 +1204,6 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute(const lavi:
         { lavi::lang::parser::ast_node_type::ast_node_conditional,         &lavi::lang::interpreter::execute_conditional         },
         { lavi::lang::parser::ast_node_type::ast_node_while,               &lavi::lang::interpreter::execute_while               },
         { lavi::lang::parser::ast_node_type::ast_node_for,                 &lavi::lang::interpreter::execute_for                 },
-        { lavi::lang::parser::ast_node_type::ast_node_foreach,             &lavi::lang::interpreter::execute_foreach             },
         { lavi::lang::parser::ast_node_type::ast_node_break,               &lavi::lang::interpreter::execute_break               },
         { lavi::lang::parser::ast_node_type::ast_node_condition,           &lavi::lang::interpreter::execute_condition           },
         { lavi::lang::parser::ast_node_type::ast_node_else,                &lavi::lang::interpreter::execute_else                },
@@ -1289,163 +1270,6 @@ void lavi::lang::interpreter::init()
     lavi::lang::structure::create_structures(this);
 }
 
-const std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::try_object_from_declname(
-    const lavi::lang::parser::ast_node& node,
-    std::shared_ptr<lavi::lang::structure> cls,
-    std::shared_ptr<lavi::lang::object> object
-)
-{
-    auto* fn_object = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_object);
-    const lavi::lang::parser::ast_node* fn_object_decname = nullptr;
-    std::string_view var_name = node.token().content;
-
-    if(fn_object) {
-        fn_object_decname = fn_object->child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
-        
-        if(fn_object_decname) {    
-            object = try_object_from_declname(*fn_object_decname, cls, object);
-        } else if(auto fn_value = fn_object->child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl)) {
-            object = node_to_object(*fn_value, cls, object);
-        }
-        else {
-            auto fn_object_fn_call = fn_object->child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_call);
-
-            if(fn_object_fn_call) {
-                std::shared_ptr fn_object = execute(*fn_object_fn_call);
-                if(fn_object) {
-                    auto it = fn_object->variables.find(node.token().content);
-                    if(it != fn_object->variables.end()) {
-                        return it->second;
-                    }
-                    throw std::runtime_error("Class " + std::string(fn_object->cls->name) + " does not have a variable called " + std::string(node.token().content));
-                } else {
-                    throw std::runtime_error("Cannot read property '" + std::string(node.token().content) + "' of null");
-                }
-            } else {
-                throw std::runtime_error("Cannot determine the object for '" + std::string(node.token().content) + "'");
-            }
-        }
-    }
-
-    if(object) {
-        auto it = object->variables.find(var_name);
-
-        if(it != object->variables.end()) {
-            return it->second;
-        }
-
-        if(object->cls == ClassClass) {
-            auto cls = object->as<std::shared_ptr<lavi::lang::structure>>();
-            auto it = cls->variables.find(var_name);
-
-            if(it != cls->variables.end()) {
-                return it->second;
-            }
-        }
-        lavi::lang::function* method = nullptr;
-        auto method_it = object->cls->instance_functions.find(var_name);
-        if(method_it != object->cls->instance_functions.end()) {
-            method = method_it->second.get();
-        } else if(object->cls->base) {
-            method_it = object->cls->base->instance_functions.find(var_name);
-            if(method_it != object->cls->base->instance_functions.end()) {
-                method = method_it->second.get();
-                object = object->base_instance;
-            }
-        }
-
-        if(method) {
-            auto __call = lavi::lang::function_call{
-                var_name,
-                object->cls,
-                object,
-                method_it->second.get(),
-                {},
-                {},
-                fn_object
-            };
-            lavi::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
-            // return call(__call);
-        }
-
-        if(fn_object) {
-            throw std::runtime_error("type " + std::string(object->cls->name) + " does not have a variable or function called '" + std::string(node.token().content) + "'");
-        }
-    }
-
-    if(fn_object_decname) {
-        std::string_view class_name = fn_object_decname->token().content;
-            
-        auto cls = find_class(class_name);
-
-        if(!cls) {
-            throw std::runtime_error("class or variable '" + std::string(class_name) + "' not found");
-        }
-
-        auto it = cls->variables.find(var_name);
-
-        if(it == cls->variables.end()) {
-            // Andy supports calling functions which does not have parameters without parentheses
-            if(auto it = cls->functions.find(var_name); it != cls->functions.end()) {
-                auto __call = lavi::lang::function_call{
-                    var_name,
-                    cls,
-                    nullptr,
-                    it->second.get(),
-                    {},
-                    {},
-                    fn_object
-                };
-                lavi::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
-                // return call(__call);
-            }
-            throw std::runtime_error("class " + std::string(class_name) + " does not have a variable or function called '" + std::string(var_name) + "'");
-        } else {
-            return it->second;
-        }
-    }
-
-    // Walk the lexical_parent chain to find the variable.
-    for(auto ctx = current_context; ctx != nullptr; ctx = ctx->lexical_parent) {
-        auto it = ctx->variables.find(node.token().content);
-        if(it != ctx->variables.end()) {
-            return it->second;
-        }
-
-        auto fn_it = ctx->functions.find(node.token().content);
-        if(fn_it != ctx->functions.end()) {
-            auto method = fn_it->second;
-            lavi::lang::function_call __call = {
-                method->name,
-                nullptr,
-                nullptr,
-                method.get(),
-                {},
-                {},
-                node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context)
-            };
-            lavi::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
-            // return call(__call);
-        }
-    }
-
-    // Always check the global context as a fallback.
-    if(current_context != global_context) {
-        auto it = global_context->variables.find(node.token().content);
-        if(it != global_context->variables.end()) {
-            return it->second;
-        }
-    }
-
-    cls = find_class(node.token().content);
-
-    if(cls) {
-        return lavi::lang::api::to_object(this, cls);
-    }
-
-    return nullptr;
-}
-
 const std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::node_to_object(const lavi::lang::parser::ast_node& node, std::shared_ptr<lavi::lang::structure> cls, std::shared_ptr<lavi::lang::object> object)
 {
     if(node.token().type == lavi::lang::lexer::token_type::token_literal) {
@@ -1457,25 +1281,26 @@ const std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::node_to_objec
     } else if(node.type() == lavi::lang::parser::ast_node_type::ast_node_arraydecl) {
         // Logic moved to execute_arraydecl to support array literals in more places
         return execute(node);
-    } else if(node.type() == lavi::lang::parser::ast_node_type::ast_node_hashdecl) {
+    }
+    else if(node.type() == lavi::lang::parser::ast_node_type::ast_node_pair) {
         lavi::lang::hash map(this);
 
-        for(auto& child : node.childrens()) {
-            const lavi::lang::parser::ast_node* name_node = child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
-            const lavi::lang::parser::ast_node* value_node = child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
+        const lavi::lang::parser::ast_node* name_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
+        const lavi::lang::parser::ast_node* value_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
 
-            std::shared_ptr<lavi::lang::object> key   = node_to_object(name_node->childrens().front());
-            std::shared_ptr<lavi::lang::object> value = node_to_object(value_node->childrens().front());
+        std::shared_ptr<lavi::lang::object> key   = node_to_object(name_node->childrens().front());
+        std::shared_ptr<lavi::lang::object> value = node_to_object(value_node->childrens().front());
 
-            map.set(key, value);
-        }
+        map.set(key, value);
 
-        return lavi::lang::object::instantiate(this, HashClass, std::move(map));
+        return lavi::lang::api::to_object(this, map);
+    } else if(node.type() == lavi::lang::parser::ast_node_type::ast_node_hashdecl) {
+        return execute(node);
     } else if(node.type() == lavi::lang::parser::ast_node_type::ast_node_interpolated_string) {
         return execute(node);
     }
 
-    throw std::runtime_error("interpreter: unknown node type");
+    lavi::lang::error::internal("Unknown node type ({})", (int)node.type());
 
     return nullptr;
 }
@@ -1610,4 +1435,51 @@ void lavi::lang::interpreter::update_current_context()
     global_context = stack.front();
     previous_context = current_context;
     current_context = stack.back();
+
+    auto respond_to = current_context->functions.find("respond_to?");
+
+    if(respond_to == current_context->functions.end()) {
+        current_context->functions["respond_to?"] = std::make_shared<lavi::lang::function>("respond_to?", std::initializer_list<std::string>{ "function" }, [](lavi::lang::interpreter* interpreter) {
+            auto function_name_object = interpreter->current_context->positional_params[0];
+            auto& function_name = function_name_object->as<std::string>();
+
+            auto variable_it = interpreter->current_context->variables.find(function_name);
+
+            if(variable_it != interpreter->current_context->variables.end()) {
+                return lavi::lang::api::to_object(interpreter, true);
+            }
+
+            auto function_it = interpreter->current_context->functions.find(function_name);
+
+            if(function_it != interpreter->current_context->functions.end()) {
+                return lavi::lang::api::to_object(interpreter, true);
+            }
+
+            auto global_variable_it = interpreter->global_context->variables.find(function_name);
+
+            if(global_variable_it != interpreter->global_context->variables.end()) {
+                return lavi::lang::api::to_object(interpreter, true);
+            }
+
+            auto global_function_it = interpreter->global_context->functions.find(function_name);
+
+            if(global_function_it != interpreter->global_context->functions.end()) {
+                return lavi::lang::api::to_object(interpreter, true);
+            }
+
+            return lavi::lang::api::to_object(interpreter, false);
+        });
+    }
+
+    auto send_function_it = current_context->functions.find("send");
+
+    if(send_function_it == current_context->functions.end()) {
+        current_context->functions["send"] = std::make_shared<lavi::lang::function>("send", std::initializer_list<std::string>{ "function"}, [](lavi::lang::interpreter* interpreter) -> std::shared_ptr<lavi::lang::object> {
+            auto function_object = interpreter->current_context->positional_params[0];
+            auto& function_string = function_object->as<std::string>();
+
+            std::shared_ptr<lavi::lang::object> self = interpreter->current_context->self;
+            return lavi::lang::api::call(interpreter, function_string, self);
+        });
+    }
 }

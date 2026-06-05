@@ -29,32 +29,6 @@ namespace lavi {
             const lavi::lang::parser::ast_node* default_value_node = nullptr;
             bool named = false;
         };
-        struct function_call
-        {
-            function_call() = default;
-            function_call(
-                std::string_view __name,
-                std::shared_ptr<lavi::lang::object> __object = nullptr,
-                std::vector<std::shared_ptr<lavi::lang::object>> __positional_params = {},
-                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> __named_params = {}
-            );
-            function_call(
-                std::string_view __name,
-                std::shared_ptr<lavi::lang::structure> __cls,
-                std::shared_ptr<lavi::lang::object> __object,
-                const lavi::lang::function* method = nullptr,
-                std::vector<std::shared_ptr<lavi::lang::object>> __positional_params = {},
-                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> __named_params = {},
-                const lavi::lang::parser::ast_node* __given_block = nullptr
-            );
-            std::string_view                                                name;
-            std::shared_ptr<lavi::lang::structure>                          cls;
-            std::shared_ptr<lavi::lang::object>                             object;
-            const lavi::lang::function*                                     method = nullptr;
-            std::vector<std::shared_ptr<lavi::lang::object>>                positional_params;
-            std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params = {};
-            const lavi::lang::parser::ast_node*                             given_block = nullptr;
-        };
         class function
         {
         public:

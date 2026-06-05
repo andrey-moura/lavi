@@ -16,6 +16,7 @@
 #include <andy/file.hpp>
 
 std::map<std::string_view, std::shared_ptr<lavi::lang::extension>> lavi::lang::extension::builtins;
+std::map<std::string_view, std::shared_ptr<lavi::lang::extension>> symbol_to_extension;
 
 lavi::lang::extension::extension(const std::string &name)
     : m_name(name)
@@ -25,6 +26,12 @@ lavi::lang::extension::extension(const std::string &name)
 
 void lavi::lang::extension::add_builtin(std::shared_ptr<lavi::lang::extension> extension)
 {
+    auto symbols = extension->define();
+
+    for(const auto& symbol : symbols) {
+        symbol_to_extension[symbol] = extension;
+    }
+
     builtins.insert({ extension->name(), extension });
 }
 
@@ -151,4 +158,15 @@ void lavi::lang::extension::import(lavi::lang::interpreter* interpreter, std::st
 
     interpreter->stack.pop_back();
     interpreter->update_current_context();
+}
+
+std::shared_ptr<lavi::lang::extension> lavi::lang::extension::which_defines(std::string_view symbol)
+{
+    auto it = symbol_to_extension.find(symbol);
+
+    if(it != symbol_to_extension.end()) {
+        return it->second;
+    }
+
+    return nullptr;
 }

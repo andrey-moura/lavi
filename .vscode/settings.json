@@ -113,9 +113,10 @@
     ],
     "cmake.debugConfig": {
         "args": [
-            "/home/andrey/Moonslate/andy-lang/tests/high-level/fn_spec.andy",
+            "cerri",
+            "run"
         ],
-        "cwd": "${workspaceFolder}",
+        "cwd": "${workspaceFolder}/examples/project",
         "visualizerFile": "${workspaceFolder}/natvis.xml",
         "showDisplayString": true,
         "type": "lldb",
