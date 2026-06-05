@@ -169,7 +169,8 @@ jobs:
         working-directory: lavi
 
       - name: Display Lavi folder (Windows)
-        run: dir /b
+        if: startsWith(matrix.os, 'windows')
+        run: Get-ChildItem -Name
         working-directory: lavi
 
       - name: Run tests (Windows)
