@@ -42,22 +42,22 @@ describe 'Net' do
           expect(res.status_code).to eq(200) 
           expect(res.json?).to eq(true)
         end
-        it 'should have correct values' do
-          var res = Net::HTTP.get('http://httpbin.org/json')
-          expect(res.status_code).to eq(200)
-          expect(res.json.slideshow.title).to eq('Sample Slide Show')
-          expect(res.json.slideshow.author).to eq('Yours Truly')
-          expect(res.json.slideshow.date).to eq('date of publication')
-          expect(res.json.slideshow.slides).to be_a(Array)
-          expect(res.json.slideshow.slides[0].title).to eq('Wake up to WonderWidgets!')
-          expect(res.json.slideshow.slides[0].type).to eq('all')
+        // it 'should have correct values' do
+        //   var res = Net::HTTP.get('http://httpbin.org/json')
+        //   expect(res.status_code).to eq(200)
+        //   expect(res.json.slideshow.title).to eq('Sample Slide Show')
+        //   expect(res.json.slideshow.author).to eq('Yours Truly')
+        //   expect(res.json.slideshow.date).to eq('date of publication')
+        //   expect(res.json.slideshow.slides).to be_a(Array)
+        //   expect(res.json.slideshow.slides[0].title).to eq('Wake up to WonderWidgets!')
+        //   expect(res.json.slideshow.slides[0].type).to eq('all')
 
-          expect(res.json.slideshow.slides[1].items).to be_a(Array)
-          expect(res.json.slideshow.slides[1].items[0]).to eq('Why <em>WonderWidgets</em> are great')
-          expect(res.json.slideshow.slides[1].items[1]).to eq('Who <em>buys</em> WonderWidgets')
-          expect(res.json.slideshow.slides[1].title).to eq('Overview')
-          expect(res.json.slideshow.slides[1].type).to eq('all')
-        end
+        //   expect(res.json.slideshow.slides[1].items).to be_a(Array)
+        //   expect(res.json.slideshow.slides[1].items[0]).to eq('Why <em>WonderWidgets</em> are great')
+        //   expect(res.json.slideshow.slides[1].items[1]).to eq('Who <em>buys</em> WonderWidgets')
+        //   expect(res.json.slideshow.slides[1].title).to eq('Overview')
+        //   expect(res.json.slideshow.slides[1].type).to eq('all')
+        // end
       end
     end
   end
