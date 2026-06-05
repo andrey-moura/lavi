@@ -178,8 +178,7 @@ void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::structure> cls)
     if(inspect_instance_function == cls->instance_functions.end()) {
         cls->instance_functions["inspect"] = std::make_shared<lavi::lang::function>("inspect", [cls, this](lavi::lang::interpreter* interpreter) {
             auto object = interpreter->current_context->self;
-            std::string inspection = object->default_string_representation();
-            return lavi::lang::api::to_object(interpreter, std::move(inspection));
+            return lavi::lang::api::call(interpreter, "to_string", object);
         });
     }
 
