@@ -126,9 +126,9 @@ std::shared_ptr<lavi::lang::structure> create_directory_class(lavi::lang::interp
             throw std::runtime_error("invalid path");
         }
         if(std::filesystem::exists(path) && std::filesystem::is_directory(path)) {
-            return std::make_shared<lavi::lang::object>(interpreter->TrueClass);
+            return lavi::lang::api::to_object(interpreter, true);
         } else {
-            return std::make_shared<lavi::lang::object>(interpreter->FalseClass);
+            return lavi::lang::api::to_object(interpreter, false);
         }
     });
 
