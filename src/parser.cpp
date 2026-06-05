@@ -128,25 +128,29 @@ lavi::lang::parser::ast_node lavi::lang::parser::extract_pair(lavi::lang::lexer 
     // Parse the key
     ast_node pair_node(ast_node_type::ast_node_pair);
 
-    auto& key_token = lexer.next_token();
+    ast_node key_node(ast_node_type::ast_node_declname);
 
-    if(key_token.type == lavi::lang::lexer::token_type::token_identifier) {
-        key_token.type = lavi::lang::lexer::token_type::token_literal;
-        key_token.kind = lavi::lang::lexer::token_kind::token_string;
-        key_token.string_literal = key_token.content;
+    auto key_value_node = parse_identifier_or_literal(lexer, false, false);
+
+    if(key_value_node.type() == ast_node_type::ast_node_declname) {
+        // An identifier, convert it to a string literal
+        key_value_node.set_type(ast_node_type::ast_node_valuedecl);
+
+        key_value_node.token().string_literal = key_value_node.token().content;
+        key_value_node.token().type = lavi::lang::lexer::token_type::token_literal;
+        key_value_node.token().kind = lavi::lang::lexer::token_kind::token_string;
     }
 
-    ast_node key_node = ast_node(ast_node_type::ast_node_declname);
-    key_node.add_child(ast_node(std::move(key_token), ast_node_type::ast_node_valuedecl));
+    key_node.add_child(key_value_node);
 
-    pair_node.add_child(std::move(key_node));
-    
     // Consume the ':' token
     lexer.next_token();
 
     // Extract the value
-    ast_node value_node = parse_identifier_or_literal(lexer);
-    value_node.set_type(ast_node_type::ast_node_valuedecl);
+    ast_node value_node(ast_node_type::ast_node_valuedecl);
+    value_node.add_child(parse_identifier_or_literal(lexer));
+
+    pair_node.add_child(std::move(key_node));
     pair_node.add_child(std::move(value_node));
 
     return pair_node;
@@ -330,7 +334,7 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
             if(next_token.content == "." || next_token.content == "::") {
                 lexer.consume_token(); // Consume the '.' token
 
-                lavi::lang::parser::ast_node next_node = parser.parse_identifier_or_literal(lexer, false, { "class" });
+                lavi::lang::parser::ast_node next_node = parser.parse_identifier_or_literal(lexer, false, true, { "class" });
                 chained_nodes.push_back(std::move(next_node));
             } else {
                 lavi::lang::parser::ast_node operator_node(lavi::lang::parser::ast_node_type::ast_node_fn_call);
@@ -402,7 +406,7 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
     return last_node;
 }
 
-lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lavi::lang::lexer &lexer, bool chain, std::vector<std::string_view> keyword)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lavi::lang::lexer &lexer, bool chain, bool pair, std::vector<std::string_view> keyword)
 {
     const lavi::lang::lexer::token& token = lexer.see_next();
 
@@ -412,7 +416,7 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lav
         case lavi::lang::lexer::token_type::token_literal:
         case lavi::lang::lexer::token_type::token_identifier: {
             auto possible_colon = lexer.see_next(1);
-            if(possible_colon.type == lavi::lang::lexer::token_type::token_delimiter && possible_colon.content == ":") {
+            if(pair && possible_colon.type == lavi::lang::lexer::token_type::token_delimiter && possible_colon.content == ":") {
                 return extract_pair(lexer);
             }
             identifier_or_literal = std::move(lexer.next_token());

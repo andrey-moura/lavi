@@ -66,9 +66,9 @@ lavi::lang::function execute_method_definition(const lavi::lang::parser::ast_nod
             std::vector<lavi::lang::fn_parameter>* where_to_push = nullptr;
 
             if(param.type() == lavi::lang::parser::ast_node_type::ast_node_pair) {
-                auto* declname = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
+                auto* declname = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname)->childrens().data();
 
-                fn_param.name = declname->childrens().front().token().content;
+                fn_param.name = declname->token().content;
                 fn_param.named = true;
 
                 where_to_push = &named_params;
@@ -76,8 +76,10 @@ lavi::lang::function execute_method_definition(const lavi::lang::parser::ast_nod
                 fn_param.name = std::string(param.token().content);
                 where_to_push = &positional_params;
             }
-            
-            fn_param.default_value_node = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
+
+            if(auto* default_node = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl)) {
+                fn_param.default_value_node = default_node->childrens().data();
+            }
 
             where_to_push->push_back(std::move(fn_param));
         }
@@ -509,7 +511,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
             const lavi::lang::parser::ast_node* value_node = &param;
             const lavi::lang::parser::ast_node* name = nullptr;
             if(param.type() == lavi::lang::parser::ast_node_type::ast_node_pair) {
-                value_node = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
+                value_node = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl)->childrens().data();
                 name = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname)->childrens().data();
             }
 
@@ -838,7 +840,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_hashdecl(co
         auto value_node = child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
 
         std::shared_ptr<lavi::lang::object> key = node_to_object(key_node->childrens().front());
-        std::shared_ptr<lavi::lang::object> value = node_to_object(*value_node);
+        std::shared_ptr<lavi::lang::object> value = node_to_object(value_node->childrens().front());
 
         hash.set(std::move(key), std::move(value));
     }
@@ -1279,20 +1281,21 @@ const std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::node_to_objec
     } else if(node.type() == lavi::lang::parser::ast_node_type::ast_node_arraydecl) {
         // Logic moved to execute_arraydecl to support array literals in more places
         return execute(node);
-    } else if(node.type() == lavi::lang::parser::ast_node_type::ast_node_hashdecl) {
+    }
+    else if(node.type() == lavi::lang::parser::ast_node_type::ast_node_pair) {
         lavi::lang::hash map(this);
 
-        for(auto& child : node.childrens()) {
-            const lavi::lang::parser::ast_node* name_node = child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
-            const lavi::lang::parser::ast_node* value_node = child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
+        const lavi::lang::parser::ast_node* name_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
+        const lavi::lang::parser::ast_node* value_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
 
-            std::shared_ptr<lavi::lang::object> key   = node_to_object(name_node->childrens().front());
-            std::shared_ptr<lavi::lang::object> value = node_to_object(value_node->childrens().front());
+        std::shared_ptr<lavi::lang::object> key   = node_to_object(name_node->childrens().front());
+        std::shared_ptr<lavi::lang::object> value = node_to_object(value_node->childrens().front());
 
-            map.set(key, value);
-        }
+        map.set(key, value);
 
-        return lavi::lang::object::instantiate(this, HashClass, std::move(map));
+        return lavi::lang::api::to_object(this, map);
+    } else if(node.type() == lavi::lang::parser::ast_node_type::ast_node_hashdecl) {
+        return execute(node);
     } else if(node.type() == lavi::lang::parser::ast_node_type::ast_node_interpolated_string) {
         return execute(node);
     }
