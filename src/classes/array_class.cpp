@@ -25,10 +25,6 @@ std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interprete
         return lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(result));
     });
 
-    ArrayClass->instance_functions["inspect"] = std::make_shared<lavi::lang::function>("inspect", [](lavi::lang::interpreter* interpreter) {
-        return lavi::lang::api::call(interpreter, "to_string", interpreter->current_context->self->shared_from_this());
-    });
-
         ArrayClass->instance_functions["join"] = std::make_shared<lavi::lang::function>("join", std::vector<std::string>{"separator"}, [](lavi::lang::interpreter* interpreter) {
             const std::string& separator = interpreter->current_context->positional_params[0]->as<std::string>();
             std::string result;
