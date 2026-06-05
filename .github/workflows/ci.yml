@@ -76,7 +76,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /home/runner/.cache/ccache
-          key: ccache-${{ matrix.os }}
+          key: ccache-${{ matrix.os }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ matrix.os }}-
 
       - name: Restore sccache
         if: startsWith(matrix.os, 'windows')
@@ -84,7 +86,9 @@ jobs:
         with:
           path: |
             C:\Users\runneradmin\AppData\Local\Mozilla\sccache\cache
-          key: sccache-${{ matrix.os }}
+          key: sccache-${{ matrix.os }}-${{ github.sha }}
+          restore-keys: |
+            sccache-${{ matrix.os }}-
 
       - name: Display build folder (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
