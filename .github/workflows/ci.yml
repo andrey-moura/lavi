@@ -168,6 +168,10 @@ jobs:
           lavi tests
         working-directory: lavi
 
+      - name: Display Lavi folder (Windows)
+        run: dir /b
+        working-directory: lavi
+
       - name: Run tests (Windows)
         if: startsWith(matrix.os, 'windows')
         run: |
