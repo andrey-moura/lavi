@@ -33,12 +33,7 @@ std::shared_ptr<lavi::lang::structure> create_directory_class(lavi::lang::interp
 
     DirectoryClass->instance_functions["glob"] = std::make_shared<lavi::lang::function>("glob", std::initializer_list<std::string>{"pattern"}, [](lavi::lang::interpreter* interpreter) {
         std::filesystem::path& root_path = interpreter->current_context->self->as<std::filesystem::path>();
-#ifdef _WIN32
-        std::string pattern = interpreter->current_context->positional_params[0]->as<std::string>();
-        std::replace(pattern.begin(), pattern.end(), '/', '\\');
-#else
         const std::string& pattern = interpreter->current_context->positional_params[0]->as<std::string>();
-#endif
 
         std::vector<std::shared_ptr<lavi::lang::object>> results;
 
