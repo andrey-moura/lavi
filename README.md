@@ -3,7 +3,7 @@
   <h1 align="center">Lavi</hi>
 </p>
 
-<p align="center" style="font-size: 50%">
+<p align="center" style="font-size: 18px">
   A lightweight interpreted, object-oriented, multi-purpose, programming language.
 </p>
 
