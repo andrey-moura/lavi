@@ -3,8 +3,8 @@
   <h1 align="center">Lavi</hi>
 </p>
 
-<p align="center" style="font-size: 18px">
-  A lightweight interpreted, object-oriented, multi-purpose, programming language.
+<p align="center">
+  <sub><sub>A lightweight interpreted, object-oriented, multi-purpose, programming language.</sub></sub>
 </p>
 
 <p align="center">
@@ -21,20 +21,19 @@
 
 If you want to run examples, try:
 
-```sh
+```rb
   lavi examples/minimal.lv
 ```
 
 This file has the content:
 
-<pre style="background: #2E2E2E; color: #d4d4d4; padding: 1em; font-family: 'Fira Code', monospace; border-radius: 4px;">
-<code><span style="color: #DCDCAA;">  out</span> <span style="color: #CE9178;">'Hello from minimal!'</span>
-</code>
-</pre>
+```rb
+  out 'Hellow, world!'
+```
 
 The result is:
 
-```
+```rb
   Hello from minimal!
 ```
 
