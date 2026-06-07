@@ -1,7 +1,7 @@
 namespace CXX
   namespace Tokens
     // Matcher for comment tokens.
-    type Comment extends Base
+    class Comment extends Base
       fn match?(content)
         return content.starts_with?("//") || content.starts_with?("/*")
       end

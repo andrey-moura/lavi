@@ -1,23 +1,22 @@
 namespace CXX
-  type Lexer
+  class Lexer
     var source = null
     var matchers = null
     var tokens = null
-    var results = []
+    var tokenizers = null
 
     fn init(f)
       source = f
 
       var classes = CXX::Tokens::Base.subclasses
       
-      tokens = classes.map do (token_class)
-        token_class.new
-      end
+      // tokens = classes.map do (token_class)
+      //   token_class.new
+      // end
 
       out "Lexer initialized with source of length ${source.size}"
-      out "Tokens available: ${classes}"
 
-      tokenize
+      // tokenize
     end
 
     fn see_char

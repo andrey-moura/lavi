@@ -1,5 +1,5 @@
 namespace CXX
-  type Token
+  class Token
     enum Kind
       eof
     end

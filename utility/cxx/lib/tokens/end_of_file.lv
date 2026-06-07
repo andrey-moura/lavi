@@ -1,7 +1,7 @@
 namespace CXX
   namespace Tokens
     // Matcher for end-of-file tokens.
-    type EndOfFile extends Base
+    class EndOfFile extends Base
       fn match?(source)
         return source.empty?
       end

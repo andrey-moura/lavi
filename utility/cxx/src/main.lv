@@ -1,9 +1,9 @@
-if __args__.size < 3
+if __args__.size < 4
   out 'Usage: lavi --cxx <file>'
   return 1
 end
 
-var cxx_file_path = __args__[2]
+var cxx_file_path = __args__[3]
 
 unless File.exists?(cxx_file_path)
   out "Input file '${cxx_file_path}' not found."

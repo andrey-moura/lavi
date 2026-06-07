@@ -22,7 +22,7 @@ fn run
 
   if project.load_paths.present?
     var folder = Dir.new(project.load_paths)
-    folder.glob('*.lv').each do (file)
+    folder.glob('**/*.lv').each do (file)
       require file
     end
   end
