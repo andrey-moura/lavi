@@ -53,8 +53,8 @@ sudo cmake --install build --config Release  # Linux
 ```
 
 ### Running Tests
-  - To run the tests for the full project, use the command `build/andy --tests`
-  - To run a specific test file, use `build/andy --tests tests/high-level/your_test.lv`
+  - To run the tests for the full project, use the command `build/andy tests`
+  - To run a specific test file, use `build/andy tests tests/high-level/your_test.lv`
 
 Tests are written in C++ (using a custom testing framework) and in Andy language itself.
 

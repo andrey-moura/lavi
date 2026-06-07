@@ -17,16 +17,12 @@ std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interprete
                 result += ", ";
             }
 
-            result += lavi::lang::api::call(interpreter, "to_string", item)->as<std::string>();
+            result += lavi::lang::api::call(interpreter, "inspect", item)->as<std::string>();
         }
 
         result += "]";
 
         return lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(result));
-    });
-
-    ArrayClass->instance_functions["inspect"] = std::make_shared<lavi::lang::function>("inspect", [](lavi::lang::interpreter* interpreter) {
-        return lavi::lang::api::call(interpreter, "to_string", interpreter->current_context->self->shared_from_this());
     });
 
         ArrayClass->instance_functions["join"] = std::make_shared<lavi::lang::function>("join", std::vector<std::string>{"separator"}, [](lavi::lang::interpreter* interpreter) {
@@ -101,17 +97,6 @@ std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interprete
                 return std::make_shared<lavi::lang::object>(interpreter->FalseClass);
             }
             for(size_t i = 0; i < other_items.size(); ++i) {
-                auto it = items[i]->cls->instance_functions.find("==");
-                if(it == items[i]->cls->instance_functions.end()) {
-                    throw std::runtime_error("class " + std::string(items[i]->cls->name) + " does not have a method '=='");
-                }
-                lavi::lang::function_call call{
-                    "==",
-                    items[i]->cls,
-                    items[i],
-                    it->second.get(),
-                    { other_items[i] }
-                };
                 auto result = lavi::lang::api::call(interpreter, "==", items[i], { other_items[i] });
                 if(result->cls == interpreter->FalseClass) {
                     return result;

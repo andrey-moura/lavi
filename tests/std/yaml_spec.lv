@@ -1,0 +1,24 @@
+#include 'std/tests'
+
+import :yaml
+
+fn parse(what)
+  YAML.parse(what)
+end
+
+describe 'YAML' do
+  describe '#parse' do
+    describe 'comment' do
+      it 'is ignorated' do
+        expect(parse('# comment')).to be_a(Hash)
+      end
+    end
+    describe 'simple key-value pair' do
+      it 'is extracted correctly' do
+        var parsed = parse('name: value')
+        expect(parsed).to be_a(Hash)
+        expect(parsed.name).to eq('value')
+      end
+    end
+  end
+end

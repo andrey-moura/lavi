@@ -3,6 +3,7 @@
 #include <lavi/lang/class.hpp>
 #include <lavi/lang/function.hpp>
 #include <lavi/lang/interpreter.hpp>
+#include <lavi/lang/api.hpp>
 
 #include <andy/console.hpp>
 
@@ -37,20 +38,15 @@ const std::string& lavi::lang::object::default_string_representation()
 
 void lavi::lang::object::initialize(lavi::lang::interpreter* interpreter)
 {
-    self = shared_from_this().get();
     for(auto& instance_variable : cls->instance_variables) {
-        variables[instance_variable.first] = lavi::lang::object::create(interpreter, interpreter->NullClass);
-        if(instance_variable.second) {
-            interpreter->execute(*instance_variable.second);
+        if(instance_variable.second == nullptr) {
+            variables[instance_variable.first] = lavi::lang::api::to_object(interpreter, nullptr);
+        } else {
+            variables[instance_variable.first] = interpreter->execute(*instance_variable.second);
         }
     }
     functions = cls->instance_functions;
     inline_functions = cls->instance_inline_functions;
-}
-
-void lavi::lang::object::initialize(lavi::lang::interpreter *interpreter, lavi::lang::function_call new_call)
-{
-    initialize(interpreter);
 }
 
 void lavi::lang::object::log_native_destructor()

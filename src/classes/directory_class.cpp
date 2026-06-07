@@ -17,14 +17,23 @@ std::shared_ptr<lavi::lang::structure> create_directory_class(lavi::lang::interp
         return nullptr;
     });
 
+    DirectoryClass->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
+        auto& object = interpreter->current_context->self;
+        auto& path = object->as<std::filesystem::path>();
+
+        return lavi::lang::api::to_object(interpreter, path.string());
+    });
+
+    DirectoryClass->instance_functions["path"] = std::make_shared<lavi::lang::function>("path", [](lavi::lang::interpreter* interpreter) {
+        auto& object = interpreter->current_context->self;
+        auto& path = object->as<std::filesystem::path>();
+
+        return lavi::lang::api::to_object(interpreter, path);
+    });
+
     DirectoryClass->instance_functions["glob"] = std::make_shared<lavi::lang::function>("glob", std::initializer_list<std::string>{"pattern"}, [](lavi::lang::interpreter* interpreter) {
         std::filesystem::path& root_path = interpreter->current_context->self->as<std::filesystem::path>();
-#ifdef _WIN32
-        std::string pattern = interpreter->current_context->positional_params[0]->as<std::string>();
-        std::replace(pattern.begin(), pattern.end(), '/', '\\');
-#else
         const std::string& pattern = interpreter->current_context->positional_params[0]->as<std::string>();
-#endif
 
         std::vector<std::shared_ptr<lavi::lang::object>> results;
 
@@ -112,9 +121,9 @@ std::shared_ptr<lavi::lang::structure> create_directory_class(lavi::lang::interp
             throw std::runtime_error("invalid path");
         }
         if(std::filesystem::exists(path) && std::filesystem::is_directory(path)) {
-            return std::make_shared<lavi::lang::object>(interpreter->TrueClass);
+            return lavi::lang::api::to_object(interpreter, true);
         } else {
-            return std::make_shared<lavi::lang::object>(interpreter->FalseClass);
+            return lavi::lang::api::to_object(interpreter, false);
         }
     });
 

@@ -1,11 +1,11 @@
-type ExpectationNotMet
+class ExpectationNotMet extends RuntimeError
     var message = null
     fn init(msg)
         message = msg
     end
 end
 
-type EQ
+class EQ
     var expected = null
     fn init(value)
         expected = value
@@ -20,7 +20,7 @@ type EQ
     end
 end
 
-type Include
+class Include
     var expected = null
     fn init(value)
         expected = value
@@ -35,7 +35,7 @@ type Include
     end
 end
 
-type EndsWith
+class EndsWith
     var expected = null
     fn init(value)
         expected = value
@@ -50,7 +50,22 @@ type EndsWith
     end
 end
 
-type Expect
+class BeA
+    var expected = null
+    fn init(value)
+        expected = value
+    end
+
+    fn match(actual)
+        if actual.is_a?(expected)
+            true
+        else
+            throw ExpectationNotMet.new("Expected ${actual} to be a ${expected}")
+        end
+    end
+end
+
+class Expect
     var actual = null
     fn init(value)
         actual = value
@@ -112,7 +127,7 @@ fn it(what)
         error_msg = e.message
         errors.push("${describe_stack.join(' ')} ${what}\n${error_msg}")
     catch(e)
-        error_msg = "Unexpected error: ${e.inspect}"
+        error_msg = "${e.class}: ${e.message}"
         errors.push("${describe_stack.join(' ')} ${what}\n${error_msg}")
     end
     total_tests += 1
@@ -145,6 +160,10 @@ fn pending(what)
     out indent warning "${what} (pending)"
     total_tests += 1
     pending_tests += 1
+end
+
+fn be_a(what)
+    BeA.new(what)
 end
 
 fn print_summary()

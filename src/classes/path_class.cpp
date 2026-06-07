@@ -4,6 +4,7 @@
 #include <lavi/lang/lang.hpp>
 #include <lavi/lang/interpreter.hpp>
 #include <lavi/lang/extension.hpp>
+#include <lavi/lang/api.hpp>
 
 std::shared_ptr<lavi::lang::structure> create_path_class(lavi::lang::interpreter* interpreter)
 {
@@ -17,17 +18,25 @@ std::shared_ptr<lavi::lang::structure> create_path_class(lavi::lang::interpreter
     });
 
     PathClass->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
-        return lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(interpreter->current_context->self->as<std::filesystem::path>().string()));
+        return lavi::lang::api::to_object(interpreter, std::move(interpreter->current_context->self->as<std::filesystem::path>().string()));
+    });
+
+    PathClass->instance_functions["inspect"] = std::make_shared<lavi::lang::function>("inspect", [](lavi::lang::interpreter* interpreter) {
+        return lavi::lang::api::call(
+            interpreter,
+            "inspect",
+            lavi::lang::api::to_object(interpreter, std::move(interpreter->current_context->self->as<std::filesystem::path>().string()))
+        );
     });
 
     PathClass->instance_functions["exists?"] = std::make_shared<lavi::lang::function>("exists?", [](lavi::lang::interpreter* interpreter) {
         std::filesystem::path& path = interpreter->current_context->self->as<std::filesystem::path>();
 
         if(std::filesystem::exists(path)) {
-            return std::make_shared<lavi::lang::object>(interpreter->TrueClass);
+            return lavi::lang::api::to_object(interpreter, true);
         }
 
-        return std::make_shared<lavi::lang::object>(interpreter->FalseClass);
+        return lavi::lang::api::to_object(interpreter, false);
     });
 
     PathClass->instance_functions["/="] = std::make_shared<lavi::lang::function>("/=", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {

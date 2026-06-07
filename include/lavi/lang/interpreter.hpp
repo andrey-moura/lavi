@@ -63,7 +63,6 @@ namespace lavi
             std::shared_ptr<lavi::lang::object> execute_for_start(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_for_step(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_for_end(const lavi::lang::parser::ast_node& source_code);
-            std::shared_ptr<lavi::lang::object> execute_foreach(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_break(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_else(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_condition(const lavi::lang::parser::ast_node& source_code);
@@ -114,14 +113,17 @@ namespace lavi
             /// @brief The global function class.
             std::shared_ptr<lavi::lang::structure> FunctionClass;
 
+            /// @brief The global exception class.
+            std::shared_ptr<lavi::lang::structure> ExceptionClass;
+
+            /// @brief The global no function error class.
+            std::shared_ptr<lavi::lang::structure> NoFunctionErrorClass;
+
+            /// @brief The global runtime error class.
+            std::shared_ptr<lavi::lang::structure> RuntimeErrorClass;
+
             std::shared_ptr<lavi::lang::structure> find_class(const std::string_view& name);
 
-            const std::shared_ptr<lavi::lang::object> try_object_from_declname
-            (
-                const lavi::lang::parser::ast_node& node,
-                std::shared_ptr<lavi::lang::structure> cls = nullptr,
-                std::shared_ptr<lavi::lang::object> object = nullptr
-            );
             const std::shared_ptr<lavi::lang::object> node_to_object(const lavi::lang::parser::ast_node& node, std::shared_ptr<lavi::lang::structure> cls = nullptr, std::shared_ptr<lavi::lang::object> object = nullptr);
 
             void load_extension(lavi::lang::extension* extension);
@@ -147,6 +149,7 @@ namespace lavi
             void push_block_context();
             void push_context(std::shared_ptr<lavi::lang::object> object);
             void pop_context();
+            void set_current_context_object(std::shared_ptr<lavi::lang::object> object);
             void push_context_with_object(std::shared_ptr<lavi::lang::object> object);
         protected:
             /// @brief Initialize the interpreter. This method will create the global classes and objects. It also load extensions.

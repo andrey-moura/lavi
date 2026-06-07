@@ -36,6 +36,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/modules/andy-core/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/modules/binary/CMakeLists.txt)
 
 include("${CMAKE_CURRENT_LIST_DIR}/src/builtin_libs/net_extension/CMakeLists.txt")
+include("${CMAKE_CURRENT_LIST_DIR}/src/builtin_libs/yaml_extension/CMakeLists.txt")
 
 add_library(lavi-lang
     ${CMAKE_CURRENT_LIST_DIR}/src/api.cpp
@@ -50,8 +51,9 @@ add_library(lavi-lang
     ${CMAKE_CURRENT_LIST_DIR}/src/parser.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/config.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/builtin_libs.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/function_call.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/std_functions.cpp
+
+    ${CMAKE_CURRENT_LIST_DIR}/src/yaml.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/hash.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/andy_config_class.cpp
@@ -70,11 +72,11 @@ add_library(lavi-lang
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/string_class.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/system_class.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/true_class.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/classes/exception_class.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/modules/andy-tests/src/andy-tests.cpp
     
-    ${LAVI_UI_EXTENSION_SOURCES}
-    ${LAVI_DRAWING_EXTENSION_SOURCES}
+    ${LAVI_YAML_EXTENSION_SOURCES}
     ${ANDY_NET_EXTENSION_SOURCES}
 
     $<TARGET_OBJECTS:andy-file>

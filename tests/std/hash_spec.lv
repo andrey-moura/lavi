@@ -5,20 +5,26 @@ describe 'Hash' do
     context 'with literal syntax' do
       context 'using symbol keys' do
         var hash = { key: "value" }
-        it 'should allow accessing values with symbol keys' do
+        it 'allows accessing values with symbol keys' do
           expect(hash[:key]).to eq("value")
         end
-        it 'should allow accessing values with string keys' do
+        it 'allows accessing values with string keys' do
           expect(hash["key"]).to eq("value")
+        end
+        it 'allows accessing values with the operator.' do
+          expect(hash.key).to eq("value")
         end
       end
       context 'using string keys' do
         var hash = { "key": "value" }
-        it 'should allow accessing values with symbol keys' do
+        it 'allows accessing values with symbol keys' do
           expect(hash[:key]).to eq("value")
         end
-        it 'should allow accessing values with string keys' do
+        it 'allows accessing values with string keys' do
           expect(hash["key"]).to eq("value")
+        end
+        it 'allows accessing values with the operator.' do
+          expect(hash.key).to eq("value")
         end
       end
     end
