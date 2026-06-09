@@ -14,20 +14,20 @@ namespace lavi
 {
     namespace lang {
         class object;
-        class structure;
+        class klass;
         class interpreter;
         constexpr size_t max_native_size = 40;
         class object : public std::enable_shared_from_this<object>, public scope
         {
         public:
-            object(std::shared_ptr<lavi::lang::structure> c);
+            object(std::shared_ptr<lavi::lang::klass> c);
             ~object();
         public:
             const std::string& default_string_representation();
         public:
-            std::shared_ptr<structure> cls;
-            std::shared_ptr<object> base_instance = nullptr;
-            std::shared_ptr<object> derived_instance = nullptr;
+            std::shared_ptr<lavi::lang::klass> cls;
+            std::shared_ptr<lavi::lang::object> base_instance = nullptr;
+            std::shared_ptr<lavi::lang::object> derived_instance = nullptr;
             // #ifdef __ANDY_DEBUG__
             // lavi::lang::object* debug_object = this;
 
@@ -59,7 +59,7 @@ namespace lavi
             /// @brief Initialize the object with a value.
             /// @param cls The class of the object.
             /// @return Returns a shared pointer to the object.
-            static auto instantiate(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls)
+            static auto instantiate(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::klass> cls)
             {
                 auto obj = std::make_shared<lavi::lang::object>(cls);
                 obj->initialize(interpreter);
@@ -72,7 +72,7 @@ namespace lavi
             /// @param value The pointer to the value. This will be deleted when the object is destroyed.
             /// @return Returns a shared pointer to the object.
             template<typename T>
-            static std::shared_ptr<lavi::lang::object> instantiate(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls, T* value)
+            static std::shared_ptr<lavi::lang::object> instantiate(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::klass> cls, T* value)
             {
                 auto obj = std::make_shared<lavi::lang::object>(cls);
                 obj->set_native_ptr<T>(obj.get(), value);
@@ -87,7 +87,7 @@ namespace lavi
             /// @param value The value.
             /// @return Returns a shared pointer to the object.
             template<typename T>
-            static std::enable_if<!std::is_pointer<T>::value, std::shared_ptr<lavi::lang::object>>::type instantiate(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls, T value)
+            static std::enable_if<!std::is_pointer<T>::value, std::shared_ptr<lavi::lang::object>>::type instantiate(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::klass> cls, T value)
             {
                 auto obj = std::make_shared<lavi::lang::object>(cls);
 
@@ -99,7 +99,7 @@ namespace lavi
 
                 return obj;
             }
-            static std::shared_ptr<lavi::lang::object> create(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls)
+            static std::shared_ptr<lavi::lang::object> create(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::klass> cls)
             {
                 auto obj = std::make_shared<lavi::lang::object>(cls);
                 obj->initialize(interpreter);
@@ -111,7 +111,7 @@ namespace lavi
             /// @param value The value.
             /// @return Returns a shared pointer to the object.
             template<typename T>
-            static std::enable_if<!std::is_pointer<T>::value, std::shared_ptr<lavi::lang::object>>::type create(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls, T value)
+            static std::enable_if<!std::is_pointer<T>::value, std::shared_ptr<lavi::lang::object>>::type create(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::klass> cls, T value)
             {
                 auto obj = std::make_shared<lavi::lang::object>(cls);
                 obj->set_native<T>(std::move(value));
@@ -124,7 +124,7 @@ namespace lavi
             /// @param value The pointer to the value.
             /// @return Returns a shared pointer to the object.
             template<typename T>
-            static std::shared_ptr<lavi::lang::object> create(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls, T* value)
+            static std::shared_ptr<lavi::lang::object> create(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::klass> cls, T* value)
             {
                 auto obj = std::make_shared<lavi::lang::object>(cls);
                 obj->set_native_ptr(value);

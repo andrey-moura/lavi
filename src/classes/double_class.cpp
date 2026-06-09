@@ -1,30 +1,28 @@
 #include <lavi/lang/lang.hpp>
-#include <lavi/lang/interpreter.hpp>
+#include <lavi/lang/classes.hpp>
 
 #include "add_operators.hpp"
 
-std::shared_ptr<lavi::lang::structure> create_double_class(lavi::lang::interpreter* interpreter)
+void create_double_class()
 {
-    std::shared_ptr<lavi::lang::structure> DoubleClass = std::make_shared<lavi::lang::structure>("Double");
+    lavi::lang::double_class = lavi::lang::klass::create_builtin("Double");
 
-        DoubleClass->instance_functions["present?"] = std::make_shared<lavi::lang::function>("present?", [](lavi::lang::interpreter* interpreter) {
+        lavi::lang::double_class->instance_functions["present?"] = std::make_shared<lavi::lang::function>("present?", [](lavi::lang::interpreter* interpreter) {
             double i = interpreter->current_context->self->as<double>();
             
             if(i == 0) {
-                return std::make_shared<lavi::lang::object>(interpreter->FalseClass);
+                return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
             }
 
-            return std::make_shared<lavi::lang::object>(interpreter->TrueClass);
+            return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
         });
 
-        DoubleClass->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
+        lavi::lang::double_class->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
             double value = interpreter->current_context->self->as<double>();
 
-            return lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(std::to_string(value)));
+            return lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, std::move(std::to_string(value)));
         });
 
 
-    lavi::lang::add_operators<double>(DoubleClass, interpreter);
-
-    return DoubleClass;
+    lavi::lang::add_operators<double>(lavi::lang::double_class);
 }

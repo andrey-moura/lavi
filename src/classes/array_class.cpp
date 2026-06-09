@@ -3,11 +3,11 @@
 #include <lavi/lang/interpreter.hpp>
 #include <lavi/lang/error.hpp>
 
-std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interpreter* interpreter)
+std::shared_ptr<lavi::lang::klass> create_array_class()
 {
-    auto ArrayClass = std::make_shared<lavi::lang::structure>("Array");
+    lavi::lang::array_class = lavi::lang::klass::create_builtin("Array");
 
-    ArrayClass->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::array_class->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
         std::string result = "[";
 
         std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
@@ -22,10 +22,10 @@ std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interprete
 
         result += "]";
 
-        return lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(result));
+        return lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, std::move(result));
     });
 
-        ArrayClass->instance_functions["join"] = std::make_shared<lavi::lang::function>("join", std::vector<std::string>{"separator"}, [](lavi::lang::interpreter* interpreter) {
+        lavi::lang::array_class->instance_functions["join"] = std::make_shared<lavi::lang::function>("join", std::vector<std::string>{"separator"}, [](lavi::lang::interpreter* interpreter) {
             const std::string& separator = interpreter->current_context->positional_params[0]->as<std::string>();
             std::string result;
 
@@ -39,26 +39,26 @@ std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interprete
                 result += lavi::lang::api::call(interpreter, "to_string", item)->as<std::string>();
             }
 
-            return lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(result));
+            return lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, std::move(result));
         });
 
-        ArrayClass->instance_functions["front"] = std::make_shared<lavi::lang::function>("front", [](lavi::lang::interpreter* interpreter) {
+        lavi::lang::array_class->instance_functions["front"] = std::make_shared<lavi::lang::function>("front", [](lavi::lang::interpreter* interpreter) {
             std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
 
             if(items.empty()) {
-                return std::make_shared<lavi::lang::object>(interpreter->NullClass);
+                return std::make_shared<lavi::lang::object>(lavi::lang::null_class);
             }
 
             return items.front();
         });
 
-        ArrayClass->instance_functions["size"] = std::make_shared<lavi::lang::function>("size", [](lavi::lang::interpreter* interpreter) {
+        lavi::lang::array_class->instance_functions["size"] = std::make_shared<lavi::lang::function>("size", [](lavi::lang::interpreter* interpreter) {
             std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
 
-            return lavi::lang::object::instantiate(interpreter, interpreter->IntegerClass, items.size());
+            return lavi::lang::object::instantiate(interpreter, lavi::lang::integer_class, items.size());
         });
 
-    ArrayClass->instance_functions["push"] = std::make_shared<lavi::lang::function>("push", std::initializer_list<std::string>{"item"}, [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::array_class->instance_functions["push"] = std::make_shared<lavi::lang::function>("push", std::initializer_list<std::string>{"item"}, [](lavi::lang::interpreter* interpreter) {
         std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
 
         items.push_back(interpreter->current_context->positional_params[0]->native_copy());
@@ -66,11 +66,11 @@ std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interprete
         return nullptr;
     });
 
-    ArrayClass->instance_functions["pop"] = std::make_shared<lavi::lang::function>("pop", [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::array_class->instance_functions["pop"] = std::make_shared<lavi::lang::function>("pop", [](lavi::lang::interpreter* interpreter) {
         std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
 
         if(items.empty()) {
-            return std::make_shared<lavi::lang::object>(interpreter->NullClass);
+            return std::make_shared<lavi::lang::object>(lavi::lang::null_class);
         }
 
         auto item = items.back();
@@ -79,7 +79,7 @@ std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interprete
         return item;
     });
 
-    ArrayClass->instance_functions["[]"] = std::make_shared<lavi::lang::function>("[]", std::initializer_list<std::string>{"index"}, [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::array_class->instance_functions["[]"] = std::make_shared<lavi::lang::function>("[]", std::initializer_list<std::string>{"index"}, [](lavi::lang::interpreter* interpreter) {
         std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
 
         auto index = interpreter->current_context->positional_params[0]->as<int>();
@@ -87,25 +87,25 @@ std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interprete
         return items[index];
     });
 
-    ArrayClass->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::array_class->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
             std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
-            if(interpreter->current_context->positional_params[0]->cls != interpreter->ArrayClass) {
-                return std::make_shared<lavi::lang::object>(interpreter->FalseClass);
+            if(interpreter->current_context->positional_params[0]->cls != lavi::lang::array_class) {
+                return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
             }
             auto& other_items = interpreter->current_context->positional_params[0]->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
             if(items.size() != other_items.size()) {
-                return std::make_shared<lavi::lang::object>(interpreter->FalseClass);
+                return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
             }
             for(size_t i = 0; i < other_items.size(); ++i) {
                 auto result = lavi::lang::api::call(interpreter, "==", items[i], { other_items[i] });
-                if(result->cls == interpreter->FalseClass) {
+                if(result->cls == lavi::lang::false_class) {
                     return result;
                 }
             }
-            return std::make_shared<lavi::lang::object>(interpreter->TrueClass);
+            return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
         });
 
-    ArrayClass->instance_functions["each"] = std::make_shared<lavi::lang::function>("each", [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::array_class->instance_functions["each"] = std::make_shared<lavi::lang::function>("each", [](lavi::lang::interpreter* interpreter) {
         std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
 
         for(auto& item : items) {
@@ -115,7 +115,7 @@ std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interprete
         return nullptr;
     });
 
-    ArrayClass->instance_functions["map"] = std::make_shared<lavi::lang::function>("map", [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::array_class->instance_functions["map"] = std::make_shared<lavi::lang::function>("map", [](lavi::lang::interpreter* interpreter) {
         std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
 
         std::vector<std::shared_ptr<lavi::lang::object>> new_items;
@@ -127,10 +127,10 @@ std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interprete
             new_items.push_back(result);
         }
 
-        return lavi::lang::object::instantiate(interpreter, interpreter->ArrayClass, std::move(new_items));
+        return lavi::lang::object::instantiate(interpreter, lavi::lang::array_class, std::move(new_items));
     });
 
-    ArrayClass->instance_functions["map!"] = std::make_shared<lavi::lang::function>("map!", [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::array_class->instance_functions["map!"] = std::make_shared<lavi::lang::function>("map!", [](lavi::lang::interpreter* interpreter) {
         std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
 
         for(size_t i = 0; i < items.size(); ++i) {
@@ -144,5 +144,5 @@ std::shared_ptr<lavi::lang::structure> create_array_class(lavi::lang::interprete
         return interpreter->current_context->self->shared_from_this();
     });
 
-    return ArrayClass;
+    return lavi::lang::array_class;
 }

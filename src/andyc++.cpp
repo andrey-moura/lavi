@@ -19,7 +19,7 @@ std::string_view folder_arg;
 
 std::map<std::string, std::string> results;
 std::vector<std::string> all_classes;
-std::vector<lavi::lang::structure> classes;
+std::vector<lavi::lang::klass> classes;
 
 std::string to_string(CXString str)
 {
@@ -74,7 +74,7 @@ int create_extension() {
                 snake_case_name.push_back(c);
             }
         }
-        output_file << "extern void create_" << snake_case_name << "_class(lavi::lang::interpreter* interpreter);" << std::endl;
+        output_file << "extern void create_" << snake_case_name << "_class();" << std::endl;
     }
     output_file << std::endl;
     output_file << "class AndyLangExtension : public lavi::lang::extension {" << std::endl;
@@ -236,7 +236,7 @@ int main(int argc, char* argv[]) {
                 std::string name = to_string(clang_getCursorSpelling(c));        
                 if(clang_isCursorDefinition(c)) {
                     name[0] = std::toupper(name[0]);
-                    lavi::lang::structure cls(std::move(name));
+                    lavi::lang::klass cls(std::move(name));
                     all_classes.push_back(cls.name);
 
                     if(debug) {
@@ -247,7 +247,7 @@ int main(int argc, char* argv[]) {
                         //std::cout << class_c.kind << clang_getCursorKindSpelling(class_c.kind) << "\n";
 
                         if(class_c.kind == CXCursorKind::CXCursor_CXXMethod || class_c.kind == CXCursorKind::CXCursor_Constructor) {
-                            lavi::lang::structure* cls = (lavi::lang::structure*)calient_data;
+                            lavi::lang::klass* cls = (lavi::lang::klass*)calient_data;
 
                             std::string name;
                             std::string return_type;
@@ -374,9 +374,9 @@ int main(int argc, char* argv[]) {
             std::string snake_case_name = cls.name;
             std::transform(snake_case_name.begin(), snake_case_name.end(), snake_case_name.begin(), [](unsigned char c) { return std::tolower(c); });
 
-            output_file << "void create_" << snake_case_name << "_class(lavi::lang::interpreter* interpreter)" << std::endl;
+            output_file << "void create_" << snake_case_name << "_class()" << std::endl;
             output_file << "{" << std::endl;
-            output_file << "\tauto " << snake_case_name << "_class = std::make_shared<lavi::lang::structure>(" << "\"" << cls.name << "\"" << "); " << std::endl;
+            output_file << "\tauto " << snake_case_name << "_class = lavi::lang::klass::create_builtin(" << "\"" << cls.name << "\"" << "); " << std::endl;
 
             if(cls.instance_functions.size() > 0) {
                 output_file  << std::endl;

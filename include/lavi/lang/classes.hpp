@@ -8,57 +8,61 @@ namespace lavi
 {
   namespace lang
   {
+    /// @brief This variable is used to check if the classes have been created.
+    extern bool classes_created;
+    /// @brief All the built in classes.
+    extern std::vector<std::shared_ptr<lavi::lang::klass>> builtin_classes;
     /// @brief The global false class.
-    std::shared_ptr<lavi::lang::structure> FalseClass;
+    extern std::shared_ptr<lavi::lang::klass> false_class;
     /// @brief The global true class.
-    std::shared_ptr<lavi::lang::structure> TrueClass;
+    extern std::shared_ptr<lavi::lang::klass> true_class;
 
     /// @brief The global string class.
-    std::shared_ptr<lavi::lang::structure> StringClass;
+    extern std::shared_ptr<lavi::lang::klass> string_class;
 
     /// @brief The global integer class.
-    std::shared_ptr<lavi::lang::structure> IntegerClass;
+    extern std::shared_ptr<lavi::lang::klass> integer_class;
 
     /// @brief The global double class.
-    std::shared_ptr<lavi::lang::structure> DoubleClass;
+    extern std::shared_ptr<lavi::lang::klass> double_class;
 
     /// @brief The global float class.
-    std::shared_ptr<lavi::lang::structure> FloatClass;
+    extern std::shared_ptr<lavi::lang::klass> float_class;
 
     /// @brief The global file class.
-    std::shared_ptr<lavi::lang::structure> FileClass;
+    extern std::shared_ptr<lavi::lang::klass> file_class;
 
     /// @brief The global array class.
-    std::shared_ptr<lavi::lang::structure> ArrayClass;
+    extern std::shared_ptr<lavi::lang::klass> array_class;
 
     /// @brief The global null class.
-    std::shared_ptr<lavi::lang::structure> NullClass;
+    extern std::shared_ptr<lavi::lang::klass> null_class;
 
     /// @brief The global hash class.
-    std::shared_ptr<lavi::lang::structure> HashClass;
+    extern std::shared_ptr<lavi::lang::klass> hash_class;
 
     /// @brief The global system class.
-    std::shared_ptr<lavi::lang::structure> SystemClass;
+    extern std::shared_ptr<lavi::lang::klass> system_class;
 
     /// @brief The global path class.
-    std::shared_ptr<lavi::lang::structure> PathClass;
+    extern std::shared_ptr<lavi::lang::klass> path_class;
 
     /// @brief The global andy config class.
-    std::shared_ptr<lavi::lang::structure> AndyConfigClass;
+    extern std::shared_ptr<lavi::lang::klass> andy_config_class;
 
     /// @brief The global class class.
-    std::shared_ptr<lavi::lang::structure> ClassClass;
+    extern std::shared_ptr<lavi::lang::klass> class_class;
 
     /// @brief The global function class.
-    std::shared_ptr<lavi::lang::structure> FunctionClass;
+    extern std::shared_ptr<lavi::lang::klass> function_class;
 
     /// @brief The global exception class.
-    std::shared_ptr<lavi::lang::structure> ExceptionClass;
+    extern std::shared_ptr<lavi::lang::klass> exception_class;
 
     /// @brief The global no function error class.
-    std::shared_ptr<lavi::lang::structure> NoFunctionErrorClass;
+    extern std::shared_ptr<lavi::lang::klass> no_function_error_class;
 
     /// @brief The global runtime error class.
-    std::shared_ptr<lavi::lang::structure> RuntimeErrorClass;
+    extern std::shared_ptr<lavi::lang::klass> runtime_error_class;
   };
 }

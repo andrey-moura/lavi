@@ -7,7 +7,7 @@
 
 #include <andy/console.hpp>
 
-lavi::lang::object::object(std::shared_ptr<lavi::lang::structure> c)
+lavi::lang::object::object(std::shared_ptr<lavi::lang::klass> c)
 {
     cls = c;
     lavi::console::log_debug(default_string_representation() + " created");

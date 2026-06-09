@@ -72,9 +72,11 @@ namespace lavi
                 return ret;
             }
 
-            void contained_class(lavi::lang::interpreter *interpreter, std::shared_ptr<lavi::lang::structure> cls, std::shared_ptr<lavi::lang::structure> contained) {
-                auto cls_obj = to_object(interpreter, contained);
-                cls->variables[contained->name] = cls_obj;
+            void contained_class(std::shared_ptr<lavi::lang::klass> cls, std::shared_ptr<lavi::lang::klass> contained) {
+                cls->functions[contained->name] = std::make_shared<lavi::lang::function>(contained->name, [contained](lavi::lang::interpreter* interpreter) {
+                    auto cls_object = lavi::lang::api::to_object(interpreter, contained);
+                    return cls_object;
+                });
             }
 
             std::shared_ptr<lavi::lang::object> call(
@@ -232,7 +234,7 @@ namespace lavi
 
             std::shared_ptr<lavi::lang::object> new_object(
                 lavi::lang::interpreter* interpreter,
-                std::shared_ptr<lavi::lang::structure> cls,
+                std::shared_ptr<lavi::lang::klass> cls,
                 std::vector<std::shared_ptr<lavi::lang::object>> positional_params,
                 std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params
             )
@@ -269,10 +271,10 @@ namespace lavi
                     return false;
                 }
 
-                return obj->cls != interpreter->FalseClass && obj->cls != interpreter->NullClass;
+                return obj->cls != lavi::lang::false_class && obj->cls != lavi::lang::null_class;
             }
 
-            bool is_a(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj, std::shared_ptr<lavi::lang::structure> cls)
+            bool is_a(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj, std::shared_ptr<lavi::lang::klass> cls)
             {
                 auto current_cls = obj->cls;
 

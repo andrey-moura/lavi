@@ -1,26 +1,26 @@
 #include <lavi/lang/lang.hpp>
 #include <lavi/lang/interpreter.hpp>
 
-std::shared_ptr<lavi::lang::structure> create_null_class(lavi::lang::interpreter* interpreter)
+std::shared_ptr<lavi::lang::klass> create_null_class()
 {
-    auto NullClass = std::make_shared<lavi::lang::structure>("Null");
+    lavi::lang::null_class = lavi::lang::klass::create_builtin("Null");
 
-    NullClass->instance_functions["present?"] = std::make_shared<lavi::lang::function>("present?", [NullClass](lavi::lang::interpreter* interpreter) {
-        return std::make_shared<lavi::lang::object>( interpreter->FalseClass );
+    lavi::lang::null_class->instance_functions["present?"] = std::make_shared<lavi::lang::function>("present?", [](lavi::lang::interpreter* interpreter) {
+        return std::make_shared<lavi::lang::object>( lavi::lang::false_class );
     });
     
-    NullClass->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::null_class->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
         std::string str = "null";
-        return lavi::lang::object::instantiate( interpreter, interpreter->StringClass, std::move(str) );
+        return lavi::lang::object::instantiate( interpreter, lavi::lang::string_class, std::move(str) );
     });
     
-    NullClass->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
-        if(interpreter->current_context->positional_params[0]->cls == interpreter->NullClass) {
-            return std::make_shared<lavi::lang::object>( interpreter->TrueClass );
+    lavi::lang::null_class->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
+        if(interpreter->current_context->positional_params[0]->cls == lavi::lang::null_class) {
+            return std::make_shared<lavi::lang::object>( lavi::lang::true_class );
         } else {
-            return std::make_shared<lavi::lang::object>( interpreter->FalseClass );
+            return std::make_shared<lavi::lang::object>( lavi::lang::false_class );
         }
     });
     
-    return NullClass;
+    return lavi::lang::null_class;
 }

@@ -3,21 +3,21 @@
 #include <lavi/lang/interpreter.hpp>
 #include <lavi/lang/error.hpp>
 
-std::shared_ptr<lavi::lang::structure> create_hash_class(lavi::lang::interpreter* interpreter)
+std::shared_ptr<lavi::lang::klass> create_hash_class()
 {
-    auto HashClass = std::make_shared<lavi::lang::structure>("Hash");
+    lavi::lang::hash_class = lavi::lang::klass::create_builtin("Hash");
 
-        HashClass->instance_functions["present?"] = std::make_shared<lavi::lang::function>("present?", [](lavi::lang::interpreter* interpreter) {
+        lavi::lang::hash_class->instance_functions["present?"] = std::make_shared<lavi::lang::function>("present?", [](lavi::lang::interpreter* interpreter) {
             const auto& value = interpreter->current_context->self->as<lavi::lang::hash>();
 
             if(value.empty()) {
-                return std::make_shared<lavi::lang::object>(interpreter->FalseClass);
+                return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
             }
 
-            return std::make_shared<lavi::lang::object>(interpreter->TrueClass);
+            return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
         });
 
-        HashClass->instance_functions["[]"] = std::make_shared<lavi::lang::function>("[]", std::initializer_list<std::string>{"key"}, [](lavi::lang::interpreter* interpreter) {
+        lavi::lang::hash_class->instance_functions["[]"] = std::make_shared<lavi::lang::function>("[]", std::initializer_list<std::string>{"key"}, [](lavi::lang::interpreter* interpreter) {
             std::shared_ptr<lavi::lang::object> key = interpreter->current_context->positional_params[0];
 
             auto& hash = interpreter->current_context->self->as<lavi::lang::hash>();
@@ -27,7 +27,7 @@ std::shared_ptr<lavi::lang::structure> create_hash_class(lavi::lang::interpreter
             return obj;
         });
 
-        HashClass->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
+        lavi::lang::hash_class->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
             std::string result = "{";
             auto& hash = interpreter->current_context->self->as<lavi::lang::hash>();
             result.reserve(hash.keys.size() * 25);
@@ -41,13 +41,13 @@ std::shared_ptr<lavi::lang::structure> create_hash_class(lavi::lang::interpreter
                 result += lavi::lang::api::call(interpreter, "inspect", value)->as<std::string>();
             }
             result += "}";
-            return lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(result));
+            return lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, std::move(result));
         });
 
-    HashClass->instance_functions["missing"] = std::make_shared<lavi::lang::function>("missing", std::initializer_list<std::string>{"name", "aargs", "kwargs"}, [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::hash_class->instance_functions["missing"] = std::make_shared<lavi::lang::function>("missing", std::initializer_list<std::string>{"name", "aargs", "kwargs"}, [](lavi::lang::interpreter* interpreter) {
         auto it = interpreter->current_context->self->as<lavi::lang::hash>().get(interpreter->current_context->positional_params[0]);
         return it;
     });
 
-    return HashClass;
+    return lavi::lang::hash_class;
 }

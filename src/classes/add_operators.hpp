@@ -104,11 +104,11 @@
         const auto& params = interpreter->current_context->positional_params; \
         T& value = interpreter->current_context->self->as<T>(); \
         auto& param = params[0]; \
-        if (params[0]->cls == interpreter->IntegerClass) { \
+        if (params[0]->cls == lavi::lang::integer_class) { \
             value op params[0]->as<int>(); \
-        } else if (params[0]->cls == interpreter->FloatClass) { \
+        } else if (params[0]->cls == lavi::lang::float_class) { \
             value op params[0]->as<float>(); \
-        } else if (params[0]->cls == interpreter->DoubleClass) { \
+        } else if (params[0]->cls == lavi::lang::double_class) { \
             value op params[0]->as<double>(); \
         } else { \
             throw std::runtime_error("undefined operator " #op " (" + std::string(interpreter->current_context->self->cls->name) + ", " + std::string(params[0]->cls->name) + ")"); \
@@ -122,11 +122,11 @@
         std::shared_ptr<lavi::lang::object> other = params[0]; \
         T& value = interpreter->current_context->self->as<T>(); \
         bool comparison_result = false; \
-        if (params[0]->cls == interpreter->IntegerClass) { \
+        if (params[0]->cls == lavi::lang::integer_class) { \
             comparison_result = value op params[0]->as<int>(); \
-        } else if (params[0]->cls == interpreter->FloatClass) { \
+        } else if (params[0]->cls == lavi::lang::float_class) { \
             comparison_result = value op params[0]->as<float>(); \
-        } else if (params[0]->cls == interpreter->DoubleClass) { \
+        } else if (params[0]->cls == lavi::lang::double_class) { \
             comparison_result = value op params[0]->as<double>(); \
         } else { \
             throw std::runtime_error("undefined operator " #op " (" + std::string(interpreter->current_context->self->cls->name) + ", " + std::string(params[0]->cls->name) + ")"); \
@@ -140,11 +140,11 @@
         auto other = interpreter->current_context->positional_params[0]; \
         const auto& params = interpreter->current_context->positional_params; \
         T value = interpreter->current_context->self->as<T>(); \
-        if (other->cls == interpreter->IntegerClass) { \
+        if (other->cls == lavi::lang::integer_class) { \
             value = value op other->as<int>(); \
-        } else if (other->cls == interpreter->FloatClass) { \
+        } else if (other->cls == lavi::lang::float_class) { \
             value = value op other->as<float>(); \
-        } else if (other->cls == interpreter->DoubleClass) { \
+        } else if (other->cls == lavi::lang::double_class) { \
             value = value op other->as<double>(); \
         } else { \
             throw std::runtime_error("undefined operator " #op " (" + std::string(interpreter->current_context->self->cls->name) + ", " + std::string(params[0]->cls->name) + ")"); \
@@ -157,7 +157,7 @@ namespace lavi
     namespace lang  
     {
         template<typename T>
-        void add_operators(std::shared_ptr<lavi::lang::structure> cls, interpreter* interpreter)
+        void add_operators(std::shared_ptr<lavi::lang::klass> cls)
         {
             std::map<std::string_view, lavi::lang::inline_function> inline_functions = {
                 { "++", UNARY_OPERATOR_INLINE(++, T) },
@@ -199,7 +199,7 @@ namespace lavi
                 cls->instance_functions["%"] = std::make_shared<lavi::lang::function>("%", std::initializer_list<std::string>{ "other" }, [](lavi::lang::interpreter* interpreter) {
                     auto object = interpreter->current_context->self->shared_from_this();
                     auto other = interpreter->current_context->positional_params[0];
-                    if(other->cls != interpreter->IntegerClass) {
+                    if(other->cls != lavi::lang::integer_class) {
                         throw std::runtime_error("undefined operator % (" + std::string(object->cls->name) + ", " + std::string(other->cls->name) + ")");
                     }
                     int value = object->as<int>();
