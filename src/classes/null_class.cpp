@@ -15,7 +15,7 @@ std::shared_ptr<lavi::lang::klass> create_null_class()
     });
     
     lavi::lang::null_class->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
-        if(interpreter->current_context->positional_params[0]->cls == lavi::lang::null_class) {
+        if(interpreter->current_context->positional_params[0]->klass == lavi::lang::null_class) {
             return std::make_shared<lavi::lang::object>( lavi::lang::true_class );
         } else {
             return std::make_shared<lavi::lang::object>( lavi::lang::false_class );

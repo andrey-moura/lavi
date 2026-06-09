@@ -12,14 +12,14 @@ void create_class_class()
         if(params.size() == 1) {
             const std::string& class_name = params[0]->as<std::string>();
 
-            auto cls = interpreter->find_class(class_name);
+            auto klass = interpreter->find_class(class_name);
 
-            if(!cls) {
+            if(!klass) {
                 throw std::runtime_error("class " + class_name + " not found");
             }
 
             object->variables["name"] = params[0];
-            object->set_native<std::shared_ptr<lavi::lang::klass>>(cls);
+            object->set_native<std::shared_ptr<lavi::lang::klass>>(klass);
         } else {
             // Called from interpreter
             object->variables["name"] = lavi::lang::api::to_object(interpreter, object->as<std::shared_ptr<lavi::lang::klass>>()->name);

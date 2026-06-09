@@ -60,9 +60,9 @@ void create_path_class()
         std::filesystem::path path;
         std::shared_ptr<lavi::lang::object> path_object = interpreter->current_context->positional_params[0];
 
-        if(path_object->cls == lavi::lang::string_class) {
+        if(path_object->klass == lavi::lang::string_class) {
             path = path_object->as<std::string>();
-        } else if(path_object->cls == lavi::lang::path_class) {
+        } else if(path_object->klass == lavi::lang::path_class) {
             path = path_object->as<std::filesystem::path>();
         } else {
             throw std::runtime_error("invalid path");

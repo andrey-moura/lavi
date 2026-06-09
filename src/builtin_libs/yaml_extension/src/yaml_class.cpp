@@ -12,9 +12,9 @@ std::shared_ptr<lavi::lang::klass> create_yaml_class()
 
         auto& what_object = interpreter->current_context->positional_params[0];
 
-        if(what_object->cls == lavi::lang::path_class) {
+        if(what_object->klass == lavi::lang::path_class) {
             content = lavi::lang::api::call(interpreter, "File.read", { what_object })->as<std::string>();
-        } else if(what_object->cls == lavi::lang::string_class) {
+        } else if(what_object->klass == lavi::lang::string_class) {
             content = what_object->as<std::string>();
         } else {
             content = lavi::lang::api::call(interpreter, "to_string", what_object)->as<std::string>();

@@ -72,8 +72,8 @@ namespace lavi
                 return ret;
             }
 
-            void contained_class(std::shared_ptr<lavi::lang::klass> cls, std::shared_ptr<lavi::lang::klass> contained) {
-                cls->functions[contained->name] = std::make_shared<lavi::lang::function>(contained->name, [contained](lavi::lang::interpreter* interpreter) {
+            void contained_class(std::shared_ptr<lavi::lang::klass> klass, std::shared_ptr<lavi::lang::klass> contained) {
+                klass->functions[contained->name] = std::make_shared<lavi::lang::function>(contained->name, [contained](lavi::lang::interpreter* interpreter) {
                     auto cls_object = lavi::lang::api::to_object(interpreter, contained);
                     return cls_object;
                 });
@@ -113,11 +113,11 @@ namespace lavi
                 if(run_it != interpreter->current_context->functions.end())
                 {
                     function = run_it->second;
-                } else if(interpreter->current_context->cls)
+                } else if(interpreter->current_context->klass)
                 {
-                    auto run_it = interpreter->current_context->cls->functions.find(function_name);
+                    auto run_it = interpreter->current_context->klass->functions.find(function_name);
 
-                    if(run_it != interpreter->current_context->cls->functions.end()) {
+                    if(run_it != interpreter->current_context->klass->functions.end()) {
                         function = run_it->second;
                     }
                 }
@@ -132,9 +132,9 @@ namespace lavi
 
                 if(!function) {
                     if(interpreter->current_context->self) {
-                        throw std::runtime_error("function '" + std::string(function_name) + "' is not defined in object of type " + std::string(interpreter->current_context->self->cls->name));
-                    } else if(interpreter->current_context->cls) {
-                        throw std::runtime_error("function '" + std::string(function_name) + "' is not defined in class " + std::string(interpreter->current_context->cls->name));
+                        throw std::runtime_error("function '" + std::string(function_name) + "' is not defined in object of type " + std::string(interpreter->current_context->self->klass->name));
+                    } else if(interpreter->current_context->klass) {
+                        throw std::runtime_error("function '" + std::string(function_name) + "' is not defined in class " + std::string(interpreter->current_context->klass->name));
                     } else {
                         throw std::runtime_error("function '" + std::string(function_name) + "' is not defined in current context");
                     }
@@ -234,30 +234,30 @@ namespace lavi
 
             std::shared_ptr<lavi::lang::object> new_object(
                 lavi::lang::interpreter* interpreter,
-                std::shared_ptr<lavi::lang::klass> cls,
+                std::shared_ptr<lavi::lang::klass> klass,
                 std::vector<std::shared_ptr<lavi::lang::object>> positional_params,
                 std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params
             )
             {
-                auto obj = object::instantiate(interpreter, cls);
+                auto obj = object::instantiate(interpreter, klass);
 
                 auto current_initialization = obj;
 
-                while(current_initialization->cls->base) {
-                    auto base = object::instantiate(interpreter, current_initialization->cls->base);
+                while(current_initialization->klass->base) {
+                    auto base = object::instantiate(interpreter, current_initialization->klass->base);
 
                     current_initialization->base_instance = base;
                     current_initialization = base;
                 }
 
-                auto init_it = cls->instance_functions.find("init");
+                auto init_it = klass->instance_functions.find("init");
 
-                if(init_it != cls->instance_functions.end()) {
+                if(init_it != klass->instance_functions.end()) {
                     call(interpreter, "init", obj, std::move(positional_params), std::move(named_params));
                 } else {
                     // Default constructor
 
-                    if(obj->cls->base) {
+                    if(obj->klass->base) {
                         call(interpreter, "init", obj->base_instance, std::move(positional_params), std::move(named_params));
                     }
                 }
@@ -271,15 +271,15 @@ namespace lavi
                     return false;
                 }
 
-                return obj->cls != lavi::lang::false_class && obj->cls != lavi::lang::null_class;
+                return obj->klass != lavi::lang::false_class && obj->klass != lavi::lang::null_class;
             }
 
-            bool is_a(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj, std::shared_ptr<lavi::lang::klass> cls)
+            bool is_a(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj, std::shared_ptr<lavi::lang::klass> klass)
             {
-                auto current_cls = obj->cls;
+                auto current_cls = obj->klass;
 
                 while(current_cls) {
-                    if(current_cls == cls) {
+                    if(current_cls == klass) {
                         return true;
                     }
                     current_cls = current_cls->base;

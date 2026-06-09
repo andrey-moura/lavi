@@ -26,17 +26,17 @@ namespace lavi
             T cast_object_to(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object>&& object)
             {
                 if constexpr(std::is_same_v<T, std::string>) {
-                    if(object->cls == lavi::lang::string_class) {
+                    if(object->klass == lavi::lang::string_class) {
                         return object->as<std::string>();
                     }
-                    throw std::runtime_error("Cannot cast " + std::string(object->cls->name) + " to string");
+                    throw std::runtime_error("Cannot cast " + std::string(object->klass->name) + " to string");
                 } else if constexpr(std::is_same_v<T, bool>) {
-                    if(object->cls == lavi::lang::true_class) {
+                    if(object->klass == lavi::lang::true_class) {
                         return true;
-                    } else if(object->cls == lavi::lang::false_class) {
+                    } else if(object->klass == lavi::lang::false_class) {
                         return false;
                     }
-                    throw std::runtime_error("Cannot cast " + std::string(object->cls->name) + " to bool");
+                    throw std::runtime_error("Cannot cast " + std::string(object->klass->name) + " to bool");
                 } else {
                     throw std::runtime_error("Unsupported type for to_object: " + std::string(typeid(T).name()));
                 }
@@ -143,12 +143,12 @@ namespace lavi
             }
             /// @brief Creates a new object of a class with the given parameters.
             /// @param interpreter The interpreter.
-            /// @param cls The class of the object.
+            /// @param klass The class of the object.
             /// @param positional_params The positional parameters to pass to the constructor.
             /// @return Returns a shared pointer to the object.
             std::shared_ptr<lavi::lang::object> new_object(
                 lavi::lang::interpreter* interpreter,
-                std::shared_ptr<lavi::lang::klass> cls,
+                std::shared_ptr<lavi::lang::klass> klass,
                 std::vector<std::shared_ptr<lavi::lang::object>> positional_params = {},
                 std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params = {}
             );
@@ -160,14 +160,14 @@ namespace lavi
             /// @brief Determinates if the object is an instance of the class or one of its subclasses.
             /// @param interpreter The interpreter
             /// @param obj The object to check.
-            /// @param cls The class to check.
+            /// @param klass The class to check.
             /// @return Returns true if the object is an instance of the class or one of its subclasses, false otherwise.
-            bool is_a(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj, std::shared_ptr<lavi::lang::klass> cls);
+            bool is_a(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj, std::shared_ptr<lavi::lang::klass> klass);
             /// @brief Adds a class to another class.
             /// @param interpreter The interpreter.
-            /// @param cls The class.
+            /// @param klass The class.
             /// @param contained The contained class.
-            void contained_class(std::shared_ptr<lavi::lang::klass> cls, std::shared_ptr<lavi::lang::klass> contained);
+            void contained_class(std::shared_ptr<lavi::lang::klass> klass, std::shared_ptr<lavi::lang::klass> contained);
         };
     };
 };

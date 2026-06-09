@@ -35,8 +35,8 @@ std::shared_ptr<lavi::lang::klass> create_string_class()
         const auto& params = interpreter->current_context->positional_params;
         std::string result;
 
-        if(params[0]->cls != lavi::lang::integer_class) {
-            throw std::runtime_error("undefined operator * (" + std::string(interpreter->current_context->self->cls->name) + ", " + std::string(params[0]->cls->name) + ")");
+        if(params[0]->klass != lavi::lang::integer_class) {
+            throw std::runtime_error("undefined operator * (" + std::string(interpreter->current_context->self->klass->name) + ", " + std::string(params[0]->klass->name) + ")");
         }
    
         int times = params[0]->as<int>();
@@ -52,8 +52,8 @@ std::shared_ptr<lavi::lang::klass> create_string_class()
         const std::string& value = interpreter->current_context->self->as<std::string>();
         const auto& params = interpreter->current_context->positional_params;
 
-        if(params[0]->cls != lavi::lang::integer_class) {
-            throw std::runtime_error("undefined operator [] (" + std::string(interpreter->current_context->self->cls->name) + ", " + std::string(params[0]->cls->name) + ")");
+        if(params[0]->klass != lavi::lang::integer_class) {
+            throw std::runtime_error("undefined operator [] (" + std::string(interpreter->current_context->self->klass->name) + ", " + std::string(params[0]->klass->name) + ")");
         }
 
         int index = params[0]->as<int>();
@@ -120,14 +120,14 @@ std::shared_ptr<lavi::lang::klass> create_string_class()
             std::string& value = object->as<std::string>();
 
             if(value.empty()) {
-                object->cls = lavi::lang::null_class;
+                object->klass = lavi::lang::null_class;
                 object->set_native(0);
 
                 return object->shared_from_this();
             }
 
             if(!isdigit(value[0])) {
-                object->cls = lavi::lang::null_class;
+                object->klass = lavi::lang::null_class;
                 object->set_native(0);
 
                 return object->shared_from_this();
@@ -137,13 +137,13 @@ std::shared_ptr<lavi::lang::klass> create_string_class()
             int result = std::stoi(value, &pos);
 
             if(pos != value.size()) {
-                object->cls = lavi::lang::null_class;
+                object->klass = lavi::lang::null_class;
                 object->set_native(0);
 
                 return object->shared_from_this();
             }
 
-            object->cls = lavi::lang::integer_class;
+            object->klass = lavi::lang::integer_class;
             object->set_native(result);
 
                 return object->shared_from_this();

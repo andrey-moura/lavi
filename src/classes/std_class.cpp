@@ -31,10 +31,10 @@ void create_std_class()
 
     lavi::lang::std_class->functions["print"] = std::make_shared<lavi::lang::function>("print",std::initializer_list<std::string>{"message"}, [](lavi::lang::interpreter* interpreter) {
         std::shared_ptr<lavi::lang::object> obj = interpreter->current_context->positional_params[0];
-        if(obj->cls == lavi::lang::string_class) {
+        if(obj->klass == lavi::lang::string_class) {
             std::cout << obj->as<std::string>();
         } else {
-            //std::string s = obj->cls->instance_functions["to_string"]->call(obj)->as<std::string>();
+            //std::string s = obj->klass->instance_functions["to_string"]->call(obj)->as<std::string>();
             //std::cout << s;
             lavi::lang::error::internal("Disabled code reached");
         }
@@ -51,7 +51,7 @@ void create_std_class()
             have_console_have_been_set = true;
         }
 #endif
-        if(obj->cls == lavi::lang::string_class) {
+        if(obj->klass == lavi::lang::string_class) {
             std::cout << obj->as<std::string>() << std::endl;
         } else {
             auto string_object = lavi::lang::api::call(interpreter, "to_string", obj);
@@ -70,7 +70,7 @@ void create_std_class()
 
     lavi::lang::std_class->functions["system"] = std::make_shared<lavi::lang::function>("system",std::initializer_list<std::string>{"command"}, [](lavi::lang::interpreter* interpreter) {
         auto argument = interpreter->current_context->positional_params[0];
-//        std::shared_ptr<lavi::lang::object> command = argument->cls->instance_functions["to_string"]->call(argument);
+//        std::shared_ptr<lavi::lang::object> command = argument->klass->instance_functions["to_string"]->call(argument);
         lavi::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
         auto command = std::make_shared<lavi::lang::object>(lavi::lang::string_class);
         int code = std::system(command->as<std::string>().c_str());

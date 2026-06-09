@@ -15,7 +15,7 @@ namespace lavi
         struct interpreter_context : public lavi::lang::scope
         {
             std::shared_ptr<lavi::lang::object> self;
-            std::shared_ptr<lavi::lang::klass> cls;
+            std::shared_ptr<lavi::lang::klass> klass;
 
             std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params;
             std::vector<std::shared_ptr<lavi::lang::object>> positional_params;
