@@ -1,7 +1,7 @@
 #include <lavi/lang/lang.hpp>
 #include <lavi/lang/interpreter.hpp>
 
-std::shared_ptr<lavi::lang::klass> create_null_class()
+void create_null_class()
 {
     lavi::lang::null_class = lavi::lang::klass::create_builtin("Null");
 
@@ -21,6 +21,4 @@ std::shared_ptr<lavi::lang::klass> create_null_class()
             return std::make_shared<lavi::lang::object>( lavi::lang::false_class );
         }
     });
-    
-    return lavi::lang::null_class;
 }
