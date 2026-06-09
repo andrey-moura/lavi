@@ -1,6 +1,6 @@
 #include 'std/tests'
 
-describe 'type' do
+describe 'class' do
   context 'when creating instances' do
     it 'initializes instance variables with default values' do
       class Foo
