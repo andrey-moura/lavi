@@ -106,135 +106,6 @@ lavi::lang::interpreter::interpreter()
 
 void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::klass> cls)
 {
-    cls->functions["subclasses"] = std::make_shared<lavi::lang::function>("subclasses", [cls, this](lavi::lang::interpreter* interpreter) {
-        std::vector<std::shared_ptr<lavi::lang::object>> subclasses;
-        subclasses.reserve(cls->deriveds.size());
-
-        for(auto& cls : cls->deriveds) {
-            subclasses.push_back(lavi::lang::api::to_object(interpreter, cls));
-        }
-
-        return lavi::lang::api::to_object(interpreter, std::move(subclasses));
-    });
-
-    auto type_instance_function = cls->instance_functions.find("class");
-
-    if(type_instance_function == cls->instance_functions.end()) {
-        cls->instance_functions["class"] = std::make_shared<lavi::lang::function>("class", [cls, this](lavi::lang::interpreter* interpreter) {
-            return lavi::lang::api::to_object(interpreter, cls);
-        });
-    }
-
-    auto is_a_instance_function = cls->instance_functions.find("is_a?");
-
-    if(is_a_instance_function == cls->instance_functions.end()) {
-        cls->instance_functions["is_a?"] = std::make_shared<lavi::lang::function>("is_a?", std::initializer_list<std::string>{ "other" }, [cls, this](lavi::lang::interpreter* interpreter) {
-            auto other_object = interpreter->current_context->positional_params[0];
-            auto other_class = other_object->as<std::shared_ptr<lavi::lang::klass>>();
-
-            return lavi::lang::api::to_object(interpreter, lavi::lang::api::is_a(interpreter, interpreter->current_context->self, cls));
-        });
-    }
-
-    auto init_instance_function = cls->instance_functions.find("init");
-
-    if(init_instance_function == cls->instance_functions.end()) {
-        cls->instance_functions["init"] = std::make_shared<lavi::lang::function>("init", [](lavi::lang::interpreter* interpreter) {
-            auto base_instance = interpreter->current_context->self->base_instance;
-            if(base_instance) {
-                lavi::lang::api::call(
-                    interpreter,
-                    "init",
-                    base_instance,
-                    interpreter->current_context->positional_params,
-                    interpreter->current_context->named_params
-                );
-            }
-            return nullptr;
-        });
-    }
-
-    auto to_string_instance_function = cls->instance_functions.find("to_string");
-
-    if(to_string_instance_function == cls->instance_functions.end()) {
-        cls->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [cls, this](lavi::lang::interpreter* interpreter) {
-            return lavi::lang::api::to_object(interpreter, interpreter->current_context->self->default_string_representation());
-        });
-    }
-
-    auto hash_instance_function = cls->instance_functions.find("hash");
-
-    if(hash_instance_function == cls->instance_functions.end()) {
-        cls->instance_functions["hash"] = std::make_shared<lavi::lang::function>("hash", [cls, this](lavi::lang::interpreter* interpreter) {
-            // Default hash: the pointer of the object
-            auto object = interpreter->current_context->self;
-            void* ptr = object.get();
-            std::hash<void*> hasher;
-            size_t hash_value = hasher(ptr);
-            return lavi::lang::api::to_object(interpreter, (int)hash_value);
-        });
-    }
-
-    auto eq_instance_function = cls->instance_functions.find("==");
-
-    if(eq_instance_function == cls->instance_functions.end()) {
-        cls->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", [cls, this](lavi::lang::interpreter* interpreter) {
-            auto object = interpreter->current_context->self.get();
-            auto other_object = interpreter->current_context->positional_params[0].get();
-
-            // Default equality: compare the pointers of the objects
-            return lavi::lang::api::to_object(interpreter, object == other_object);
-        });
-    }
-
-    auto inspect_instance_function = cls->instance_functions.find("inspect");
-
-    if(inspect_instance_function == cls->instance_functions.end()) {
-        cls->instance_functions["inspect"] = std::make_shared<lavi::lang::function>("inspect", [cls, this](lavi::lang::interpreter* interpreter) {
-            auto object = interpreter->current_context->self;
-            return lavi::lang::api::call(interpreter, "to_string", object);
-        });
-    }
-
-    auto class_instance_function = cls->instance_functions.find("class");
-
-    if(class_instance_function == cls->instance_functions.end()) {
-        cls->instance_functions["class"] = std::make_shared<lavi::lang::function>("class", [](lavi::lang::interpreter* interpreter) {
-            return lavi::lang::api::to_object(interpreter, interpreter->current_context->self->cls);
-        });
-    }
-
-    auto to_string_function = cls->functions.find("to_string");
-
-    if(to_string_function == cls->functions.end()) {
-        cls->functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [cls, this](lavi::lang::interpreter* interpreter) {
-            return lavi::lang::api::to_object(interpreter, cls->name);
-        });
-    }
-
-    auto name_function = cls->functions.find("name");
-
-    if(name_function == cls->functions.end()) {
-        cls->functions["name"] = std::make_shared<lavi::lang::function>("name", [cls, this](lavi::lang::interpreter* interpreter) {
-            return lavi::lang::api::to_object(interpreter, cls->name);
-        });
-    }
-
-    auto eq_function = cls->functions.find("==");
-
-    if(eq_function == cls->functions.end()) {
-        cls->functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{ "other" }, [cls, this](lavi::lang::interpreter* interpreter) {
-            if(interpreter->current_context->positional_params[0]->cls != lavi::lang::class_class) {
-                return lavi::lang::api::to_object(interpreter, false);
-            }
-
-            return lavi::lang::api::to_object(
-                interpreter,
-                interpreter->current_context->positional_params[0]->as<std::shared_ptr<lavi::lang::klass>>() == interpreter->current_context->cls
-            );
-        });
-    }
-
     current_context->variables[cls->name] = lavi::lang::api::to_object(this, cls);
 }
 
@@ -1267,7 +1138,24 @@ void lavi::lang::interpreter::init()
 {
     // The global context. It will not be popped until the end of the program.
     push_context();
-    lavi::lang::klass::create_structures();
+
+    if(!lavi::lang::classes_created) {
+        // The first initialization of an interpreter creates all classes
+        lavi::lang::klass::create_builtin_classes();
+        lavi::lang::classes_created = true;
+    }
+
+    for(const auto& cls : lavi::lang::builtin_classes) {
+        load(cls);
+    }
+
+    for(const auto& variable : lavi::lang::std_class->variables) {
+        global_context->variables[variable.first] = variable.second;
+    }
+
+    for(const auto& function : lavi::lang::std_class->functions) {
+        global_context->functions[function.first] = function.second;
+    }
 }
 
 const std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::node_to_object(const lavi::lang::parser::ast_node& node, std::shared_ptr<lavi::lang::klass> cls, std::shared_ptr<lavi::lang::object> object)

@@ -6,7 +6,7 @@
 #include <lavi/lang/extension.hpp>
 #include <lavi/lang/api.hpp>
 
-std::shared_ptr<lavi::lang::klass> create_path_class()
+void create_path_class()
 {
     lavi::lang::path_class = lavi::lang::klass::create_builtin("Path");
 
@@ -72,6 +72,4 @@ std::shared_ptr<lavi::lang::klass> create_path_class()
 
         return nullptr;
     });
-
-    return lavi::lang::path_class;
 }

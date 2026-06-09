@@ -29,7 +29,7 @@ namespace lavi {
         public:
             static std::shared_ptr<lavi::lang::klass> create(std::string_view name);
             static std::shared_ptr<lavi::lang::klass> create_builtin(std::string_view name);
-            static void create_structures();
+            static void create_builtin_classes();
         };
     };
 };

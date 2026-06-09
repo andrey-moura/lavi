@@ -12,6 +12,10 @@ namespace lavi
     extern bool classes_created;
     /// @brief All the built in classes.
     extern std::vector<std::shared_ptr<lavi::lang::klass>> builtin_classes;
+
+    /// @brief The global false class.
+    extern std::shared_ptr<lavi::lang::klass> std_class;
+
     /// @brief The global false class.
     extern std::shared_ptr<lavi::lang::klass> false_class;
     /// @brief The global true class.
