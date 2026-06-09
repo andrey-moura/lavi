@@ -245,6 +245,14 @@ describe 'class' do
       var d = Dog.new
       expect(d.bark).to eq('woof')
     end
+    context 'undefined' do
+      context 'not instiated' do
+        it 'does not throw error' do
+          class Person extends Animal
+          end
+        end
+      end
+    end
   end
   context 'when declaring variable inside instance function' do
     it 'should not be accessible outside the function' do

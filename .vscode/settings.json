@@ -113,10 +113,10 @@
     ],
     "cmake.debugConfig": {
         "args": [
-            "cerri",
-            "run"
+            "tests",
+            "tests/high-level/class_spec.lv"
         ],
-        "cwd": "${workspaceFolder}/examples/project",
+        "cwd": "${workspaceFolder}",
         "visualizerFile": "${workspaceFolder}/natvis.xml",
         "showDisplayString": true,
         "type": "lldb",

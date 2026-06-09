@@ -329,24 +329,12 @@ static std::shared_ptr<lavi::lang::structure> do_execute_classdecl(lavi::lang::i
 
     if (baseclass_node)
     {
-        auto object = lavi::lang::api::to_object(interpreter, cls);
-
-        // interpreter->push_context_with_object(object);
-
         auto declname_node = baseclass_node->child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
-        auto base_class_object = interpreter->execute(*declname_node);
+        auto base_class = interpreter->find_class(declname_node->token().content);
 
-        // interpreter->pop_context();
-        
-        if(!base_class_object) {
-            throw std::runtime_error("base class " + std::string(baseclass_node->decname()) + " not found");
+        if(!base_class) {
+            base_class = std::make_shared<lavi::lang::structure>(declname_node->token().content);
         }
-
-        if(base_class_object->cls->name != "Class") {
-            throw std::runtime_error("base class " + std::string(baseclass_node->decname()) + " is not a class");
-        }
-
-        std::shared_ptr<lavi::lang::structure> base_class = base_class_object->as<std::shared_ptr<lavi::lang::structure>>();
 
         cls->base = base_class;
         base_class->deriveds.push_back(cls);
