@@ -1,9 +1,8 @@
 #include <filesystem>
+#include <fstream>
 #include <chrono>
 
 #include "andy/console.hpp"
-#include "andy/file.hpp"
-#include "andy/binary.hpp"
 
 #include "lavi/lang/parser.hpp"
 #include "lavi/lang/lexer.hpp"
@@ -125,6 +124,20 @@ struct log_output {
     }
 };
 
+std::string read_all_text(std::filesystem::path path)
+{
+    std::ifstream file(path);
+    std::string content;
+    file.seekg(0, std::ios::end);
+    content.resize(file.tellg());
+    file.seekg(0, std::ios::beg);
+
+    file.read(&content[0], content.size());
+    file.close();
+
+    return content;
+}
+
 int main(int argc, char** argv) {
     struct switch_option {
         bool enabled;
@@ -222,7 +235,7 @@ int main(int argc, char** argv) {
             std::getline(std::cin, temp);
             file_path = std::filesystem::absolute(temp);
             std::getline(std::cin, temp);
-            source = lavi::file::read_all_text<char>(temp);
+            source = read_all_text(temp);
         } else {
             run = false;
             file_path = std::filesystem::absolute(argv[1]);
@@ -237,9 +250,9 @@ int main(int argc, char** argv) {
                 }
             } else if(read_from_temp) {
                 std::filesystem::path temp_file_path = std::filesystem::absolute(read_from_temp.argument);
-                source = lavi::file::read_all_text<char>(temp_file_path);
+                source = read_all_text(temp_file_path);
             } else {
-                source = lavi::file::read_all_text<char>(file_path);
+                source = read_all_text(file_path);
             }
         }
 

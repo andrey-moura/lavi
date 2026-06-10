@@ -1,8 +1,8 @@
 #include <filesystem>
-
-#include <andy/file.hpp>
+#include <fstream>
 
 #include <lavi/lang/lang.hpp>
+#include <lavi/lang/api.hpp>
 #include <lavi/lang/interpreter.hpp>
 
 std::shared_ptr<lavi::lang::klass> create_file_class()
@@ -36,7 +36,16 @@ std::shared_ptr<lavi::lang::klass> create_file_class()
             } else {
                 throw std::runtime_error("invalid path");
             }
-            return lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, std::move(lavi::file::read_all_text<char>(path)));
+
+            std::string content;
+            std::ifstream stream(path, std::ios::in);
+
+            stream.seekg(0, std::ios::end);
+            content.resize(stream.tellg());
+            stream.seekg(0, std::ios::beg);
+            stream.read(&content[0], content.size());
+
+            return lavi::lang::api::to_object(interpreter, content);
         });
 
         lavi::lang::file_class->functions["read_all_lines"] = std::make_shared<lavi::lang::function>("read_all_lines", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {
@@ -47,15 +56,19 @@ std::shared_ptr<lavi::lang::klass> create_file_class()
                 throw std::runtime_error("file '" + path.string() + "' does not exist");
             }
 
-            std::vector<std::string> file = lavi::file::read_all_lines<char>(path);
-
             std::vector<std::shared_ptr<lavi::lang::object>> lines;
 
-            for(auto& line : file) {
-                lines.push_back(lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, std::move(line)));
+            std::ifstream stream(path, std::ios::in);
+
+            std::string text;
+
+            if(stream.is_open()) {
+                while(std::getline(stream, text)) {
+                    lines.push_back(lavi::lang::api::to_object(interpreter, text));
+                }
             }
 
-            return lavi::lang::object::instantiate(interpreter, lavi::lang::array_class, std::move(lines));
+            return lavi::lang::api::to_object(interpreter, lines);
         });
 
     

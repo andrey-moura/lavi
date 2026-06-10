@@ -31,9 +31,6 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
 include(${CMAKE_CURRENT_LIST_DIR}/modules/andy-tests/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/modules/andy/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/modules/andy-console/CMakeLists.txt)
-include(${CMAKE_CURRENT_LIST_DIR}/modules/andy-file/CMakeLists.txt)
-include(${CMAKE_CURRENT_LIST_DIR}/modules/andy-core/CMakeLists.txt)
-include(${CMAKE_CURRENT_LIST_DIR}/modules/binary/CMakeLists.txt)
 
 include("${CMAKE_CURRENT_LIST_DIR}/src/builtin_libs/net_extension/CMakeLists.txt")
 include("${CMAKE_CURRENT_LIST_DIR}/src/builtin_libs/yaml_extension/CMakeLists.txt")
@@ -79,10 +76,7 @@ add_library(lavi-lang
     ${LAVI_YAML_EXTENSION_SOURCES}
     ${ANDY_NET_EXTENSION_SOURCES}
 
-    $<TARGET_OBJECTS:andy-file>
-    $<TARGET_OBJECTS:andy-core>
     $<TARGET_OBJECTS:andy-console>
-    $<TARGET_OBJECTS:andy-binary>
 )
 
 target_link_libraries(lavi-lang PRIVATE ${ANDY_NET_LIBRARIES} ${LAVI_DRAWING_BACKEND_LIBRARIES})
