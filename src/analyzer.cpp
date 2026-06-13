@@ -415,8 +415,8 @@ int main(int argc, char** argv) {
                     current_context->functions.push_back(func);
                 }
 
-                for(const auto& cls : previous_context->classes) {
-                    current_context->classes.push_back(cls);
+                for(const auto& klass : previous_context->classes) {
+                    current_context->classes.push_back(klass);
                 }
             }
         };
@@ -446,12 +446,12 @@ int main(int argc, char** argv) {
             decl.type = "function";
             current_context->functions.push_back(std::move(decl));
         }
-        // for(const auto& cls : interpreter.stack[0]->classes) {
+        // for(const auto& klass : interpreter.stack[0]->classes) {
         //     analyzer_declaration cls_decl;
-        //     cls_decl.name = cls.first;
+        //     cls_decl.name = klass.first;
         //     cls_decl.type = "class";
 
-        //     for(const auto& var : cls.second->variables) {
+        //     for(const auto& var : klass.second->variables) {
         //         if(var.first.ends_with("?")) {
         //             analyzer_declaration decl;
         //             decl.name = var.first;
@@ -475,12 +475,12 @@ int main(int argc, char** argv) {
                 push_context();
                 auto& child = object_node->childrens().front();
                 std::string_view object_name = child.token().content;
-                for(const auto& cls : global_context->classes) {
-                    if(cls.name == object_name) {
-                        for(const auto& func : cls.functions) {
+                for(const auto& klass : global_context->classes) {
+                    if(klass.name == object_name) {
+                        for(const auto& func : klass.functions) {
                             current_context->functions.push_back(func);
                         }
-                        for(const auto& var : cls.variables) {
+                        for(const auto& var : klass.variables) {
                             if(var.name.ends_with("?")) {
                                 current_context->functions.push_back(var);
                             } else {
@@ -514,10 +514,10 @@ int main(int argc, char** argv) {
                     std::string_view class_name = declname_node->token().content;
                     tokens_to_write.push_back({ "class", declname_node->token() });
 
-                    analyzer_declaration cls;
-                    cls.name = class_name;
-                    cls.type = "class";
-                    current_context->classes.push_back(cls);
+                    analyzer_declaration klass;
+                    klass.name = class_name;
+                    klass.type = "class";
+                    current_context->classes.push_back(klass);
 
                     auto* base = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_classdecl_base);
 
@@ -641,7 +641,7 @@ int main(int argc, char** argv) {
 
                     push_context_from_node_object_if_any(node);
                     auto search_for_name_in_context = [&](analyzer_context* context) {
-                        auto cls_it = std::find_if(context->classes.begin(), context->classes.end(), [&](const analyzer_declaration& cls) { return cls.name == name; });
+                        auto cls_it = std::find_if(context->classes.begin(), context->classes.end(), [&](const analyzer_declaration& klass) { return klass.name == name; });
                         if (cls_it != context->classes.end()) {
                             return &*cls_it;
                         }

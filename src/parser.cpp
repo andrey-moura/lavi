@@ -1005,11 +1005,11 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_try(lavi::lang::l
     /*
     try
         [try block]
-    catch [*ExceptionClass variable name]
+    catch [*lavi::lang::exception_class variable name]
         [catch block]
     end
     */
-   // * ExceptionClass is optional, if not provided, it will catch all exceptions
+   // * lavi::lang::exception_class is optional, if not provided, it will catch all exceptions
 
     lavi::lang::parser::ast_node try_node(std::move(lexer.next_token()), ast_node_type::ast_node_try);
 
@@ -1030,14 +1030,14 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_try(lavi::lang::l
 
         if(possible_parenthesis_token.type == lavi::lang::lexer::token_type::token_delimiter && possible_parenthesis_token.content == "(") {
             /*
-                catch(ExceptionClass variable_name)
+                catch(lavi::lang::exception_class variable_name)
                      ^ '(' token
             */
             lexer.consume_token(); // Consume the '(' token
 
             const auto& possible_or_variable_name_class = lexer.see_next();
             /*
-                catch(ExceptionClass variable_name)
+                catch(lavi::lang::exception_class variable_name)
                       ^^^^^^^^^^^^^^ Exception class
             */
             /*
@@ -1055,13 +1055,13 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_try(lavi::lang::l
                       ^^^^^^^^^^^^^ Variable name
             */
             /*
-                catch(ExceptionClass variable_name)
+                catch(lavi::lang::exception_class variable_name)
                                      ^^^^^^^^^^^^^ Variable name
             */
             if(possible_variable_name_token.type == lavi::lang::lexer::token_type::token_identifier)
             {
                 /*
-                  catch(ExceptionClass variable_name)
+                  catch(lavi::lang::exception_class variable_name)
                                        ^^^^^^^^^^^^^ Variable name
                 */
                 catch_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
@@ -1076,7 +1076,7 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_try(lavi::lang::l
 
             const auto& possible_closing_parenthesis = lexer.see_next();
             /*
-                catch(ExceptionClass variable_name)
+                catch(lavi::lang::exception_class variable_name)
                                                   ^ ')' token
             */
             if(possible_closing_parenthesis.type != lavi::lang::lexer::token_type::token_delimiter || possible_closing_parenthesis.content != ")") {

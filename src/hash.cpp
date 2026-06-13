@@ -57,7 +57,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::hash::get(const std::shared_ptr<
     if(it != values.end()) {
         return it->second;
     } else {
-        return lavi::lang::object::instantiate(interpreter, interpreter->NullClass);
+        return lavi::lang::object::instantiate(interpreter, lavi::lang::null_class);
     }
 }
 

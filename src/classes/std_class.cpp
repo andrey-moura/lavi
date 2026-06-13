@@ -13,25 +13,28 @@
 #include <lavi/lang/preprocessor.hpp>
 #include <lavi/lang/interpreter.hpp>
 #include <lavi/lang/extension.hpp>
+#include "lavi/lang/classes.hpp"
 
-void create_std_functions(lavi::lang::interpreter* interpreter)
+void create_std_class()
 {
-    auto RandomClass = std::make_shared<lavi::lang::structure>("Random");
-    RandomClass->functions["integer"] = std::make_shared<lavi::lang::function>("integer", [](lavi::lang::interpreter* interpreter) {
+    auto random_class = lavi::lang::klass::create_builtin("Random");
+    random_class->functions["integer"] = std::make_shared<lavi::lang::function>("integer", [](lavi::lang::interpreter* interpreter) {
         static std::random_device rd;
         static std::mt19937 gen(rd());
         std::uniform_int_distribution<int> dis(INT_MIN, INT_MAX);
-        return lavi::lang::object::instantiate(interpreter, interpreter->IntegerClass, dis(gen));
+        return lavi::lang::object::instantiate(interpreter, lavi::lang::integer_class, dis(gen));
     });
 
-    interpreter->load(RandomClass);
+    // This is not on builtin list!!
+    lavi::lang::std_class = std::make_shared<lavi::lang::klass>("std");
+    lavi::lang::api::contained_class(lavi::lang::std_class, random_class);
 
-    interpreter->global_context->functions["print"] = std::make_shared<lavi::lang::function>("print",std::initializer_list<std::string>{"message"}, [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::std_class->functions["print"] = std::make_shared<lavi::lang::function>("print",std::initializer_list<std::string>{"message"}, [](lavi::lang::interpreter* interpreter) {
         std::shared_ptr<lavi::lang::object> obj = interpreter->current_context->positional_params[0];
-        if(obj->cls == interpreter->StringClass) {
+        if(obj->klass == lavi::lang::string_class) {
             std::cout << obj->as<std::string>();
         } else {
-            //std::string s = obj->cls->instance_functions["to_string"]->call(obj)->as<std::string>();
+            //std::string s = obj->klass->instance_functions["to_string"]->call(obj)->as<std::string>();
             //std::cout << s;
             lavi::lang::error::internal("Disabled code reached");
         }
@@ -39,7 +42,7 @@ void create_std_functions(lavi::lang::interpreter* interpreter)
         return nullptr;
     });
 
-    interpreter->global_context->functions["out"] = std::make_shared<lavi::lang::function>("out",std::initializer_list<std::string>{"message"}, [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::std_class->functions["out"] = std::make_shared<lavi::lang::function>("out",std::initializer_list<std::string>{"message"}, [](lavi::lang::interpreter* interpreter) {
         std::shared_ptr<lavi::lang::object> obj = interpreter->current_context->positional_params[0];
 #ifdef _WIN32
         static bool have_console_have_been_set = false;
@@ -48,7 +51,7 @@ void create_std_functions(lavi::lang::interpreter* interpreter)
             have_console_have_been_set = true;
         }
 #endif
-        if(obj->cls == interpreter->StringClass) {
+        if(obj->klass == lavi::lang::string_class) {
             std::cout << obj->as<std::string>() << std::endl;
         } else {
             auto string_object = lavi::lang::api::call(interpreter, "to_string", obj);
@@ -58,36 +61,38 @@ void create_std_functions(lavi::lang::interpreter* interpreter)
         return nullptr;
     });
 
-    interpreter->global_context->functions["gets"] = std::make_shared<lavi::lang::function>("gets", [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::std_class->functions["gets"] = std::make_shared<lavi::lang::function>("gets", [](lavi::lang::interpreter* interpreter) {
         std::string line;
         std::getline(std::cin, line);
 
-        return lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(line));
+        return lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, std::move(line));
     });
 
-    interpreter->global_context->functions["system"] = std::make_shared<lavi::lang::function>("system",std::initializer_list<std::string>{"command"}, [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::std_class->functions["system"] = std::make_shared<lavi::lang::function>("system",std::initializer_list<std::string>{"command"}, [](lavi::lang::interpreter* interpreter) {
         auto argument = interpreter->current_context->positional_params[0];
-//        std::shared_ptr<lavi::lang::object> command = argument->cls->instance_functions["to_string"]->call(argument);
+//        std::shared_ptr<lavi::lang::object> command = argument->klass->instance_functions["to_string"]->call(argument);
         lavi::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
-        auto command = std::make_shared<lavi::lang::object>(interpreter->StringClass);
+        auto command = std::make_shared<lavi::lang::object>(lavi::lang::string_class);
         int code = std::system(command->as<std::string>().c_str());
 #ifdef __linux__
         code = WEXITSTATUS(code);
 #endif
-        return lavi::lang::object::instantiate(interpreter, interpreter->IntegerClass, code);
+        return lavi::lang::object::instantiate(interpreter, lavi::lang::integer_class, code);
     });
 
-    interpreter->global_context->functions["import"] = std::make_shared<lavi::lang::function>("import",std::initializer_list<std::string>{"module"}, [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::std_class->functions["import"] = std::make_shared<lavi::lang::function>("import",std::initializer_list<std::string>{"module"}, [](lavi::lang::interpreter* interpreter) {
         std::string module = interpreter->current_context->positional_params[0]->as<std::string>();
 
         interpreter->stack.push_back(interpreter->global_context);
+        interpreter->update_current_context();
+
         lavi::lang::extension::import(interpreter, module);
         interpreter->stack.pop_back();
 
         return nullptr;
     });
 
-    interpreter->global_context->functions["require"] = std::make_shared<lavi::lang::function>("require",std::initializer_list<std::string>{"module"}, [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::std_class->functions["require"] = std::make_shared<lavi::lang::function>("require",std::initializer_list<std::string>{"module"}, [](lavi::lang::interpreter* interpreter) {
         // yep, the code is kept in memory until the program ends
 
         const std::filesystem::path& file_path = interpreter->current_context->positional_params[0]->as<std::filesystem::path>();
@@ -134,7 +139,7 @@ void create_std_functions(lavi::lang::interpreter* interpreter)
         return ret;
     });
 
-    interpreter->global_context->functions["__file__"] = std::make_shared<lavi::lang::function>("__file__", [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::std_class->functions["__file__"] = std::make_shared<lavi::lang::function>("__file__", [](lavi::lang::interpreter* interpreter) {
         auto current_context = interpreter->current_context;
         auto caller_node = current_context->caller_node;
         if(caller_node == nullptr) {
@@ -156,7 +161,7 @@ void create_std_functions(lavi::lang::interpreter* interpreter)
         return lavi::lang::api::to_object(interpreter, *file_name);
     });
 
-    interpreter->global_context->functions["__dir__"] = std::make_shared<lavi::lang::function>("__dir__", [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::std_class->functions["__dir__"] = std::make_shared<lavi::lang::function>("__dir__", [](lavi::lang::interpreter* interpreter) {
         auto current_context = interpreter->current_context;
         auto caller_node = current_context->caller_node;
         if(caller_node == nullptr) {
@@ -182,7 +187,7 @@ void create_std_functions(lavi::lang::interpreter* interpreter)
         return lavi::lang::api::to_object(interpreter, ".");
     });
 
-    interpreter->global_context->functions["__args__"] = std::make_shared<lavi::lang::function>("__args__", [](lavi::lang::interpreter* interpreter) {
+    lavi::lang::std_class->functions["__args__"] = std::make_shared<lavi::lang::function>("__args__", [](lavi::lang::interpreter* interpreter) {
         return lavi::lang::api::to_object(interpreter, interpreter->args);
     });
 }
