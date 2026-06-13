@@ -17,7 +17,7 @@ std::shared_ptr<lavi::lang::structure> create_http_class(lavi::lang::interpreter
     });
     response_class->instance_functions["json"] = std::make_shared<lavi::lang::function>("json", [](lavi::lang::interpreter* interpreter) {
         auto& response = interpreter->current_context->self->as<lavi::net::http::response>();
-        std::string_view content_type = response.headers["Content-Type"];
+        std::string_view content_type = response.headers["content-type"];
         if (!content_type.starts_with("application/json")) {
             throw std::runtime_error("Trying to access response body as JSON, but Content-Type is not application/json");
         }
@@ -34,7 +34,7 @@ std::shared_ptr<lavi::lang::structure> create_http_class(lavi::lang::interpreter
     });
     response_class->instance_functions["json?"] = std::make_shared<lavi::lang::function>("json?", [](lavi::lang::interpreter* interpreter) {
         auto& response = interpreter->current_context->self->as<lavi::net::http::response>();
-        return lavi::lang::api::to_object(interpreter, response.headers["Content-Type"].starts_with("application/json"));
+        return lavi::lang::api::to_object(interpreter, response.headers["content-type"].starts_with("application/json"));
     });
     auto http_class = std::make_shared<lavi::lang::structure>("HTTP");
     http_class->functions["get"] = std::make_shared<lavi::lang::function>("get", std::initializer_list<std::string>{ "url" }, [response_class](lavi::lang::interpreter* interpreter) {
