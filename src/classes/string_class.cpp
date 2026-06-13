@@ -115,40 +115,6 @@ std::shared_ptr<lavi::lang::structure> create_string_class(lavi::lang::interpret
             return lavi::lang::object::instantiate(interpreter, StringClass, value);
         });
 
-        StringClass->instance_functions["to_integer!"] = std::make_shared<lavi::lang::function>("to_integer!", [](lavi::lang::interpreter* interpreter) {
-            auto object = interpreter->current_context->self;
-            std::string& value = object->as<std::string>();
-
-            if(value.empty()) {
-                object->cls = interpreter->NullClass;
-                object->set_native(0);
-
-                return object->shared_from_this();
-            }
-
-            if(!isdigit(value[0])) {
-                object->cls = interpreter->NullClass;
-                object->set_native(0);
-
-                return object->shared_from_this();
-            }
-
-            size_t pos = 0;
-            int result = std::stoi(value, &pos);
-
-            if(pos != value.size()) {
-                object->cls = interpreter->NullClass;
-                object->set_native(0);
-
-                return object->shared_from_this();
-            }
-
-            object->cls = interpreter->IntegerClass;
-            object->set_native(result);
-
-                return object->shared_from_this();
-        });
-
             StringClass->instance_functions["to_integer"] = std::make_shared<lavi::lang::function>("to_integer", [](lavi::lang::interpreter* interpreter) {
                 std::string value = interpreter->current_context->self->as<std::string>();
 
