@@ -2,17 +2,31 @@
 #include <lavi/lang/interpreter.hpp>
 #include <lavi/lang/extension.hpp>
 #include <lavi/lang/config.hpp>
+#include <lavi/lang/api.hpp>
 
 #include <filesystem>
 
-std::shared_ptr<lavi::lang::structure> create_andy_config_class(lavi::lang::interpreter* interpreter)
+void create_andy_config_class()
 {
-    auto AndyConfigClass = std::make_shared<lavi::lang::structure>("AndyConfig");
+    lavi::lang::andy_config_class = lavi::lang::klass::create_builtin("AndyConfig");
 
-    AndyConfigClass->variables["src_dir"]  = lavi::lang::object::create(interpreter, interpreter->PathClass, std::move(lavi::lang::config::src_dir()));
-    AndyConfigClass->variables["version"]  = lavi::lang::object::create(interpreter, interpreter->StringClass, std::string(lavi::lang::config::version));
-    AndyConfigClass->variables["build"]    = lavi::lang::object::create(interpreter, interpreter->StringClass, std::string(lavi::lang::config::build));
-    AndyConfigClass->variables["cpp"]      = lavi::lang::object::create(interpreter, interpreter->StringClass, std::string(lavi::lang::config::cpp));
-    AndyConfigClass->variables["compiler"] = lavi::lang::object::create(interpreter, interpreter->StringClass, std::string(lavi::lang::config::compiler));
-    return AndyConfigClass;
+    lavi::lang::andy_config_class->functions["src_dir"]  = std::make_shared<lavi::lang::function>("src_dir", [](lavi::lang::interpreter* interpreter) {
+        return lavi::lang::api::to_object(interpreter, std::move(lavi::lang::config::src_dir()));
+    });
+
+    lavi::lang::andy_config_class->functions["version"]  = std::make_shared<lavi::lang::function>("version", [](lavi::lang::interpreter* interpreter) {
+        return lavi::lang::api::to_object(interpreter, std::string(lavi::lang::config::version));
+    });
+
+    lavi::lang::andy_config_class->functions["build"]    = std::make_shared<lavi::lang::function>("build", [](lavi::lang::interpreter* interpreter) {
+        return lavi::lang::api::to_object(interpreter, std::string(lavi::lang::config::build));
+    });
+
+    lavi::lang::andy_config_class->functions["cpp"]      = std::make_shared<lavi::lang::function>("cpp", [](lavi::lang::interpreter* interpreter) {
+        return lavi::lang::api::to_object(interpreter, std::string(lavi::lang::config::cpp));
+    });
+
+    lavi::lang::andy_config_class->functions["compiler"] = std::make_shared<lavi::lang::function>("compiler", [](lavi::lang::interpreter* interpreter) {
+        return lavi::lang::api::to_object(interpreter, std::string(lavi::lang::config::compiler));
+    });
 }

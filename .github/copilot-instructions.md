@@ -1,10 +1,10 @@
-# Copilot Instructions for Andy Language
+# Copilot Instructions for Lavi Language
 
 ## Project Overview
 
-Andy is an interpreted object-oriented multi-purpose programming language written in C++. The project includes:
+Lavi is an interpreted object-oriented multi-purpose programming language written in C++. The project includes:
 
-- An interpreter for the Andy language
+- An interpreter for the Lavi language
 - A standard library with built-in classes and functions
 - UI support via built-in extensions
 - Cross-platform support (Linux, Windows, WebAssembly)
@@ -13,7 +13,7 @@ Andy is an interpreted object-oriented multi-purpose programming language writte
 ## Project Structure
 
 ```
-andy-lang/
+lavi-lang/
 ├── src/              # Core interpreter implementation
 │   ├── api.cpp       # Public API for the interpreter
 │   ├── interpreter.cpp
@@ -23,15 +23,12 @@ andy-lang/
 │   └── builtin_libs/ # Built-in extensions (drawing, UI)
 ├── include/          # Public header files
 │   └── lavi/lang/    # Core language headers
-├── modules/          # Modular components
-│   ├── andy/         # Main interpreter module
-│   ├── andy-core/    # Core utilities
-│   ├── andy-console/ # Console I/O
-│   └── andy-widgets/ # UI widgets
+├── modules/          # Modular components. Does not read or modify files in this folder.
 ├── tests/            # Test suite
-│   ├── andy-lang/    # C++ unit tests
-│   └── high-level/   # Andy language test specs
-└── examples/         # Example Andy programs
+│   ├── lavi-lang/    # C++ unit tests
+│   └── high-level/   # Lavi language specs
+|   └── std/          # Lavi standard's specs
+└── examples/         # Example Lavi programs
 ```
 
 ## Build System
@@ -53,10 +50,10 @@ sudo cmake --install build --config Release  # Linux
 ```
 
 ### Running Tests
-  - To run the tests for the full project, use the command `build/andy tests`
-  - To run a specific test file, use `build/andy tests tests/high-level/your_test.lv`
+  - To run the tests for the full project, use the command `build/lavi tests`
+  - To run a specific test file, use `build/lavi tests tests/high-level/your_test.lv`
 
-Tests are written in C++ (using a custom testing framework) and in Andy language itself.
+Tests are written in C++ (using a custom testing framework) and in Lavi language itself.
 
 ## Coding Standards
 
@@ -96,7 +93,7 @@ namespace lavi
 ## Key Components
 
 ### Lexer (`src/lexer.cpp`)
-Tokenizes Andy source code. Handles:
+Tokenizes Lavi source code. Handles:
 - String/number literals
 - Operators and delimiters
 - Comments (single-line with `//`)
@@ -120,7 +117,7 @@ Implements the object-oriented features:
 - Instance and class variables
 - Method dispatch
 
-## Andy Language Features
+## Lavi Language Features
 
 - Object-oriented with classes
 - Dynamic typing
@@ -144,7 +141,7 @@ Implements the object-oriented features:
 ### When Adding Features
 - Update `SPECIFICATION.md` if adding language features
 - Add tests in `tests/high-level/` for language features
-- Add C++ tests in `tests/andy-lang/` for interpreter internals
+- Add C++ tests in `tests/lavi-lang/` for interpreter internals
 - Ensure cross-platform compatibility (Linux, Windows, WASM)
 
 ## Continuous Integration
@@ -173,7 +170,7 @@ All CI workflows:
 ### Modifying the Lexer
 1. Update token recognition in `src/lexer.cpp`
 2. Update `SPECIFICATION.md` if needed
-3. Add lexer tests in `tests/andy-lang/lexer_spec.cpp`
+3. Add lexer tests in `tests/lavi-lang/lexer_spec.cpp`
 
 ### Adding a Module
 1. Create directory in `modules/`
@@ -185,7 +182,7 @@ All CI workflows:
 The project uses Git submodules for dependencies. Always use `--recursive` when cloning:
 
 ```bash
-git clone https://github.com/andrey-moura/andy-lang --recursive
+git clone https://github.com/andrey-moura/lavi-lang --recursive
 ```
 
 ## Version Management

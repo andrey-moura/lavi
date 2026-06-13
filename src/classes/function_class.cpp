@@ -1,15 +1,11 @@
 #include <lavi/lang/lang.hpp>
-#include <lavi/lang/interpreter.hpp>
+#include <lavi/lang/classes.hpp>
 
 #include "add_operators.hpp"
 
-std::shared_ptr<lavi::lang::structure> create_function_class(lavi::lang::interpreter* interpreter)
+void create_function_class()
 {
-    std::shared_ptr<lavi::lang::structure> functionClass = std::make_shared<lavi::lang::structure>("Function");
+    lavi::lang::function_class = lavi::lang::klass::create_builtin("Function");
 
     // No functions to add initially
-
-    lavi::lang::add_operators<float>(functionClass, interpreter);
-
-    return functionClass;
 }

@@ -6,8 +6,8 @@
 #include <lavi/lang/api.hpp>
 #include <lavi/lang/extension.hpp>
 
-extern std::shared_ptr<lavi::lang::structure> create_net_class(lavi::lang::interpreter* interpreter);
-extern std::shared_ptr<lavi::lang::structure> create_http_class(lavi::lang::interpreter* interpreter);
+extern std::shared_ptr<lavi::lang::klass> create_net_class();
+extern std::shared_ptr<lavi::lang::klass> create_http_class();
 
 class net_extension : public lavi::lang::extension
 {
@@ -18,10 +18,10 @@ public:
 public:
     virtual void load(lavi::lang::interpreter* interpreter) override
     {
-        auto net_class = create_net_class(interpreter);
-        auto http_class = create_http_class(interpreter);
+        auto net_class = create_net_class();
+        auto http_class = create_http_class();
 
-        lavi::lang::api::contained_class(interpreter, net_class, http_class);
+        lavi::lang::api::contained_class(net_class, http_class);
 
         interpreter->load(net_class);
     }

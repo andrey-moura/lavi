@@ -26,17 +26,17 @@ namespace lavi
             T cast_object_to(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object>&& object)
             {
                 if constexpr(std::is_same_v<T, std::string>) {
-                    if(object->cls == interpreter->StringClass) {
+                    if(object->klass == lavi::lang::string_class) {
                         return object->as<std::string>();
                     }
-                    throw std::runtime_error("Cannot cast " + std::string(object->cls->name) + " to string");
+                    throw std::runtime_error("Cannot cast " + std::string(object->klass->name) + " to string");
                 } else if constexpr(std::is_same_v<T, bool>) {
-                    if(object->cls == interpreter->TrueClass) {
+                    if(object->klass == lavi::lang::true_class) {
                         return true;
-                    } else if(object->cls == interpreter->FalseClass) {
+                    } else if(object->klass == lavi::lang::false_class) {
                         return false;
                     }
-                    throw std::runtime_error("Cannot cast " + std::string(object->cls->name) + " to bool");
+                    throw std::runtime_error("Cannot cast " + std::string(object->klass->name) + " to bool");
                 } else {
                     throw std::runtime_error("Unsupported type for to_object: " + std::string(typeid(T).name()));
                 }
@@ -77,54 +77,54 @@ namespace lavi
             inline std::shared_ptr<lavi::lang::object> to_object(lavi::lang::interpreter* interpreter, T value)
             {
                 if constexpr(std::is_same_v<T, int>) {
-                    auto obj = lavi::lang::object::instantiate(interpreter, interpreter->IntegerClass, value);
+                    auto obj = lavi::lang::object::instantiate(interpreter, lavi::lang::integer_class, value);
                     return obj;
                 } else if constexpr(std::is_same_v<T, std::string>) {
-                    auto obj = lavi::lang::object::instantiate(interpreter, interpreter->StringClass, std::move(value));
+                    auto obj = lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, std::move(value));
                     return obj;
                 } else if constexpr(std::is_same_v<T, double>) {
-                    auto obj = lavi::lang::object::instantiate(interpreter, interpreter->DoubleClass, value);
+                    auto obj = lavi::lang::object::instantiate(interpreter, lavi::lang::double_class, value);
                     return obj;
                 } else if constexpr(std::is_same_v<T, float>) {
-                    auto obj = lavi::lang::object::instantiate(interpreter, interpreter->FloatClass, value);
+                    auto obj = lavi::lang::object::instantiate(interpreter, lavi::lang::float_class, value);
                     return obj;
                 } else if constexpr(std::is_same_v<T, std::vector<std::shared_ptr<lavi::lang::object>>>) {
-                    auto obj = lavi::lang::object::instantiate(interpreter, interpreter->ArrayClass, std::move(value));
+                    auto obj = lavi::lang::object::instantiate(interpreter, lavi::lang::array_class, std::move(value));
                     return obj;
                 } else if constexpr(std::is_same_v<T, lavi::lang::hash>) {
-                    auto obj = lavi::lang::object::instantiate(interpreter, interpreter->HashClass, std::move(value));
+                    auto obj = lavi::lang::object::instantiate(interpreter, lavi::lang::hash_class, std::move(value));
                     return obj;
                 } else if constexpr(std::is_same_v<T, std::map<std::string, std::shared_ptr<lavi::lang::object>>> || std::is_same_v<T, std::map<std::string_view, std::shared_ptr<lavi::lang::object>>>) {
                     lavi::lang::hash hash(interpreter);
                     for(auto& [key, val] : value) {
                         hash.set(to_object(interpreter, key), std::move(val));
                     }
-                    auto obj = lavi::lang::object::instantiate(interpreter, interpreter->HashClass, std::move(hash));
+                    auto obj = lavi::lang::object::instantiate(interpreter, lavi::lang::hash_class, std::move(hash));
                     return obj;
                 } else if constexpr(std::is_same_v<T, const char*> || std::is_same_v<T, char*> || std::is_same_v<T, std::string_view>) {
                     return to_object(interpreter, std::string(value));
                 }
-                else if constexpr(std::is_same_v<T, std::shared_ptr<lavi::lang::structure>>) {
-                    auto class_object = std::make_shared<lavi::lang::object>(interpreter->ClassClass);
-                    class_object->set_native<std::shared_ptr<lavi::lang::structure>>(std::move(value));
+                else if constexpr(std::is_same_v<T, std::shared_ptr<lavi::lang::klass>>) {
+                    auto class_object = std::make_shared<lavi::lang::object>(lavi::lang::class_class);
+                    class_object->set_native<std::shared_ptr<lavi::lang::klass>>(std::move(value));
                     class_object->initialize(interpreter);
 
                     return class_object;
                 } else if constexpr(std::is_same_v<T, bool>) {
                     if(value) {
-                        return lavi::lang::object::instantiate(interpreter, interpreter->TrueClass);
+                        return lavi::lang::object::instantiate(interpreter, lavi::lang::true_class);
                     } else {
-                        return lavi::lang::object::instantiate(interpreter, interpreter->FalseClass);
+                        return lavi::lang::object::instantiate(interpreter, lavi::lang::false_class);
                     }
                 } else if constexpr(std::is_same_v<T, std::shared_ptr<lavi::lang::function>>) {
                     auto function_object = lavi::lang::object::instantiate(
                         interpreter,
-                        interpreter->FunctionClass,
+                        lavi::lang::function_class,
                         std::move(value)
                     );
                     return function_object;
                 } else if constexpr(std::is_same_v<T, std::filesystem::path>) {
-                    auto obj = lavi::lang::object::create(interpreter, interpreter->PathClass, std::move(value));
+                    auto obj = lavi::lang::object::create(interpreter, lavi::lang::path_class, std::move(value));
                     obj->initialize(interpreter);
                     return obj;
                 } else if constexpr(std::is_same_v<T, std::vector<std::string_view>>) {
@@ -132,10 +132,10 @@ namespace lavi
                     for(auto& str : value) {
                         arr.push_back(to_object(interpreter, str));
                     }
-                    auto obj = lavi::lang::object::instantiate(interpreter, interpreter->ArrayClass, std::move(arr));
+                    auto obj = lavi::lang::object::instantiate(interpreter, lavi::lang::array_class, std::move(arr));
                     return obj;
                  } else if constexpr(std::is_same_v<T, std::nullptr_t>) {
-                    return lavi::lang::object::instantiate(interpreter, interpreter->NullClass);
+                    return lavi::lang::object::instantiate(interpreter, lavi::lang::null_class);
                  }
                 else {
                     throw std::runtime_error("Unsupported type for to_object: " + std::string(typeid(T).name()));
@@ -143,12 +143,12 @@ namespace lavi
             }
             /// @brief Creates a new object of a class with the given parameters.
             /// @param interpreter The interpreter.
-            /// @param cls The class of the object.
+            /// @param klass The class of the object.
             /// @param positional_params The positional parameters to pass to the constructor.
             /// @return Returns a shared pointer to the object.
             std::shared_ptr<lavi::lang::object> new_object(
                 lavi::lang::interpreter* interpreter,
-                std::shared_ptr<lavi::lang::structure> cls,
+                std::shared_ptr<lavi::lang::klass> klass,
                 std::vector<std::shared_ptr<lavi::lang::object>> positional_params = {},
                 std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params = {}
             );
@@ -160,14 +160,14 @@ namespace lavi
             /// @brief Determinates if the object is an instance of the class or one of its subclasses.
             /// @param interpreter The interpreter
             /// @param obj The object to check.
-            /// @param cls The class to check.
+            /// @param klass The class to check.
             /// @return Returns true if the object is an instance of the class or one of its subclasses, false otherwise.
-            bool is_a(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj, std::shared_ptr<lavi::lang::structure> cls);
+            bool is_a(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj, std::shared_ptr<lavi::lang::klass> klass);
             /// @brief Adds a class to another class.
             /// @param interpreter The interpreter.
-            /// @param cls The class.
+            /// @param klass The class.
             /// @param contained The contained class.
-            void contained_class(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls, std::shared_ptr<lavi::lang::structure> contained);
+            void contained_class(std::shared_ptr<lavi::lang::klass> klass, std::shared_ptr<lavi::lang::klass> contained);
         };
     };
 };

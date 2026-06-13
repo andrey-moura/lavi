@@ -114,7 +114,7 @@
             "--cxx",
             "/usr/include/libelf.h"
         ],
-        "cwd": "${workspaceFolder}/examples/project",
+        "cwd": "${workspaceFolder}",
         "visualizerFile": "${workspaceFolder}/natvis.xml",
         "showDisplayString": true,
         "type": "lldb",
