@@ -5,8 +5,6 @@
 #include <functional>
 #include <string>
 
-#include <andy/core.hpp>
-
 #include <lavi/lang/lexer.hpp>
 
 namespace lavi

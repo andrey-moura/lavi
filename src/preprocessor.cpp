@@ -1,10 +1,9 @@
 #include <filesystem>
+#include <fstream>
 
 #include <lavi/lang/preprocessor.hpp>
 
 #include <andy.hpp>
-
-#include <andy/file.hpp>
 
 // TODO: move to lavi::file
 std::vector<std::string> list_files_with_wildcard(const std::filesystem::path& base_path, std::string_view pattern) {
@@ -201,7 +200,17 @@ void lavi::lang::preprocessor::process_include(const std::filesystem::path &__fi
         if(__lexer.includes(file)) {
             continue;
         }
-        std::string file_content = lavi::file::read_all_text<char>(file);
+
+        std::string file_content;
+
+        std::ifstream fstream(file, std::ios::binary);
+        fstream.seekg(0, std::ios::end);
+        file_content.resize(fstream.tellg());
+        fstream.seekg(0, std::ios::beg);
+
+        fstream.read(file_content.data(), file_content.capacity());
+        fstream.close();
+
         __lexer.include(file, std::move(file_content));
     }
 }

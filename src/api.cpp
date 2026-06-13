@@ -1,10 +1,10 @@
+#include <fstream>
+
 #include <lavi/lang/api.hpp>
 #include <lavi/lang/preprocessor.hpp>
 #include <lavi/lang/lexer.hpp>
 #include <lavi/lang/parser.hpp>
 #include <lavi/lang/error.hpp>
-
-#include <andy/file.hpp>
 
 extern void create_builtin_libs();
 
@@ -43,7 +43,14 @@ namespace lavi
             {
                 lavi::lang::parser::ast_node root_node;
 
-                std::string source = lavi::file::read_all_text<char>(path);
+                std::string source;
+                std::ifstream file(path, std::ios::binary);
+                file.seekg(0, std::ios::end);
+                source.resize(file.tellg());
+                file.seekg(0, std::ios::beg);
+
+                file.read(source.data(), source.capacity());
+                file.close();
 
                 std::string path_str = path.string();
                 lavi::lang::lexer l(std::move(path_str), std::move(source));

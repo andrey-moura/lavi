@@ -1,6 +1,5 @@
 #include <lavi/lang/parser.hpp>
 
-#include <andy/file.hpp>
 #include <andy/console.hpp>
 
 #include <exception>
