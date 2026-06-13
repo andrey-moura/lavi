@@ -2,6 +2,11 @@
 #include <lavi/lang/interpreter.hpp>
 #include <lavi/lang/api.hpp>
 
+static bool utf8_is_multibyte_character_continuation(const char& c)
+{
+    return ((uint8_t)c & 0b11000000) == 0b10000000;
+}
+
 std::shared_ptr<lavi::lang::structure> create_string_class(lavi::lang::interpreter* interpreter)
 {
     auto StringClass = std::make_shared<lavi::lang::structure>("String");
@@ -115,8 +120,8 @@ std::shared_ptr<lavi::lang::structure> create_string_class(lavi::lang::interpret
             return lavi::lang::object::instantiate(interpreter, StringClass, value);
         });
 
-            StringClass->instance_functions["to_integer"] = std::make_shared<lavi::lang::function>("to_integer", [](lavi::lang::interpreter* interpreter) {
-                std::string value = interpreter->current_context->self->as<std::string>();
+        StringClass->instance_functions["to_integer"] = std::make_shared<lavi::lang::function>("to_integer", [](lavi::lang::interpreter* interpreter) {
+            std::string value = interpreter->current_context->self->as<std::string>();
 
             if(value.empty()) return std::make_shared<lavi::lang::object>(interpreter->NullClass);
 
@@ -186,7 +191,18 @@ std::shared_ptr<lavi::lang::structure> create_string_class(lavi::lang::interpret
 
         StringClass->instance_functions["size"] = std::make_shared<lavi::lang::function>("size", [](lavi::lang::interpreter* interpreter) {
             const std::string& value = interpreter->current_context->self->as<std::string>();
-            return lavi::lang::object::instantiate(interpreter, interpreter->IntegerClass, (int32_t)value.size());
+
+            int size = 0;
+
+            for(char c : value) {
+                if(utf8_is_multibyte_character_continuation(c)) {
+                    continue;
+                }
+
+                size++;
+            }
+
+            return lavi::lang::api::to_object(interpreter, size);
         });
 
         StringClass->instance_functions["empty?"] = std::make_shared<lavi::lang::function>("empty?", [](lavi::lang::interpreter* interpreter) {
@@ -218,8 +234,8 @@ std::shared_ptr<lavi::lang::structure> create_string_class(lavi::lang::interpret
             }
 
             return nullptr;
-    });
-    
+        });
+
   StringClass->instance_functions["front"] = std::make_shared<lavi::lang::function>("front", [](lavi::lang::interpreter* interpreter) {
     const std::string& value = interpreter->current_context->self->as<std::string>();
     std::string result;
