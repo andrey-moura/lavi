@@ -5,7 +5,7 @@
 #include <lavi/lang/lang.hpp>
 #include <lavi/lang/interpreter.hpp>
 
-std::shared_ptr<lavi::lang::klass> create_file_class()
+void create_file_class()
 {
     lavi::lang::file_class = lavi::lang::klass::create_builtin("File");
 
@@ -57,7 +57,4 @@ std::shared_ptr<lavi::lang::klass> create_file_class()
 
             return lavi::lang::object::instantiate(interpreter, lavi::lang::array_class, std::move(lines));
         });
-
-    
-    return lavi::lang::file_class;
 }

@@ -2,7 +2,7 @@
 #include <lavi/lang/interpreter.hpp>
 #include <lavi/lang/api.hpp>
 
-std::shared_ptr<lavi::lang::klass> create_string_class()
+void create_string_class()
 {
     lavi::lang::string_class = lavi::lang::klass::create_builtin("String");
 
@@ -273,6 +273,4 @@ std::shared_ptr<lavi::lang::klass> create_string_class()
 
     return nullptr;
   });
-
-    return lavi::lang::string_class;
 }

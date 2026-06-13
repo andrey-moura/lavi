@@ -3,7 +3,7 @@
 #include <lavi/lang/interpreter.hpp>
 #include <lavi/lang/error.hpp>
 
-std::shared_ptr<lavi::lang::klass> create_hash_class()
+void create_hash_class()
 {
     lavi::lang::hash_class = lavi::lang::klass::create_builtin("Hash");
 
@@ -48,6 +48,4 @@ std::shared_ptr<lavi::lang::klass> create_hash_class()
         auto it = interpreter->current_context->self->as<lavi::lang::hash>().get(interpreter->current_context->positional_params[0]);
         return it;
     });
-
-    return lavi::lang::hash_class;
 }
