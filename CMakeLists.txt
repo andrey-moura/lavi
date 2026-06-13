@@ -21,7 +21,6 @@ endif()
 
 project(lavi VERSION ${LAVILANG_VERSION})
 
-option(BUILD_LAVI_CPP "Build lavic++" OFF)
 option(BUILD_LAVI_ANALYZER "Build lavi-analyzer" ON)
 
 # Get the parent directory
