@@ -6,7 +6,7 @@
 
 #include <filesystem>
 
-std::shared_ptr<lavi::lang::klass> create_andy_config_class()
+void create_andy_config_class()
 {
     lavi::lang::andy_config_class = lavi::lang::klass::create_builtin("AndyConfig");
 
@@ -29,6 +29,4 @@ std::shared_ptr<lavi::lang::klass> create_andy_config_class()
     lavi::lang::andy_config_class->functions["compiler"] = std::make_shared<lavi::lang::function>("compiler", [](lavi::lang::interpreter* interpreter) {
         return lavi::lang::api::to_object(interpreter, std::string(lavi::lang::config::compiler));
     });
-
-    return lavi::lang::andy_config_class;
 }

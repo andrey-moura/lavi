@@ -2,7 +2,12 @@
 #include <lavi/lang/interpreter.hpp>
 #include <lavi/lang/api.hpp>
 
-std::shared_ptr<lavi::lang::klass> create_string_class()
+static bool utf8_is_multibyte_character_continuation(const char& c)
+{
+    return ((uint8_t)c & 0b11000000) == 0b10000000;
+}
+
+void create_string_class()
 {
     lavi::lang::string_class = lavi::lang::klass::create_builtin("String");
 
@@ -115,42 +120,8 @@ std::shared_ptr<lavi::lang::klass> create_string_class()
             return lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, value);
         });
 
-        lavi::lang::string_class->instance_functions["to_integer!"] = std::make_shared<lavi::lang::function>("to_integer!", [](lavi::lang::interpreter* interpreter) {
-            auto object = interpreter->current_context->self;
-            std::string& value = object->as<std::string>();
-
-            if(value.empty()) {
-                object->klass = lavi::lang::null_class;
-                object->set_native(0);
-
-                return object->shared_from_this();
-            }
-
-            if(!isdigit(value[0])) {
-                object->klass = lavi::lang::null_class;
-                object->set_native(0);
-
-                return object->shared_from_this();
-            }
-
-            size_t pos = 0;
-            int result = std::stoi(value, &pos);
-
-            if(pos != value.size()) {
-                object->klass = lavi::lang::null_class;
-                object->set_native(0);
-
-                return object->shared_from_this();
-            }
-
-            object->klass = lavi::lang::integer_class;
-            object->set_native(result);
-
-                return object->shared_from_this();
-        });
-
-            lavi::lang::string_class->instance_functions["to_integer"] = std::make_shared<lavi::lang::function>("to_integer", [](lavi::lang::interpreter* interpreter) {
-                std::string value = interpreter->current_context->self->as<std::string>();
+        lavi::lang::string_class->instance_functions["to_integer"] = std::make_shared<lavi::lang::function>("to_integer", [](lavi::lang::interpreter* interpreter) {
+            std::string value = interpreter->current_context->self->as<std::string>();
 
             if(value.empty()) return std::make_shared<lavi::lang::object>(lavi::lang::null_class);
 
@@ -220,7 +191,18 @@ std::shared_ptr<lavi::lang::klass> create_string_class()
 
         lavi::lang::string_class->instance_functions["size"] = std::make_shared<lavi::lang::function>("size", [](lavi::lang::interpreter* interpreter) {
             const std::string& value = interpreter->current_context->self->as<std::string>();
-            return lavi::lang::object::instantiate(interpreter, lavi::lang::integer_class, (int32_t)value.size());
+
+            int size = 0;
+
+            for(char c : value) {
+                if(utf8_is_multibyte_character_continuation(c)) {
+                    continue;
+                }
+
+                size++;
+            }
+
+            return lavi::lang::api::to_object(interpreter, size);
         });
 
         lavi::lang::string_class->instance_functions["empty?"] = std::make_shared<lavi::lang::function>("empty?", [](lavi::lang::interpreter* interpreter) {
@@ -254,11 +236,6 @@ std::shared_ptr<lavi::lang::klass> create_string_class()
             return nullptr;
         });
 
-    lavi::lang::string_class->instance_functions["size"] = std::make_shared<lavi::lang::function>("size", [](lavi::lang::interpreter* interpreter) {
-        const std::string& value = interpreter->current_context->self->as<std::string>();
-        return lavi::lang::object::instantiate(interpreter, lavi::lang::integer_class, (int)value.size());
-    });
-    
   lavi::lang::string_class->instance_functions["front"] = std::make_shared<lavi::lang::function>("front", [](lavi::lang::interpreter* interpreter) {
     const std::string& value = interpreter->current_context->self->as<std::string>();
     std::string result;
@@ -273,6 +250,4 @@ std::shared_ptr<lavi::lang::klass> create_string_class()
 
     return nullptr;
   });
-
-    return lavi::lang::string_class;
 }

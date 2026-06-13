@@ -3,7 +3,7 @@
 #include <lavi/lang/interpreter.hpp>
 #include <lavi/lang/error.hpp>
 
-std::shared_ptr<lavi::lang::klass> create_array_class()
+void create_array_class()
 {
     lavi::lang::array_class = lavi::lang::klass::create_builtin("Array");
 
@@ -143,6 +143,4 @@ std::shared_ptr<lavi::lang::klass> create_array_class()
 
         return interpreter->current_context->self->shared_from_this();
     });
-
-    return lavi::lang::array_class;
 }

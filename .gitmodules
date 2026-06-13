@@ -3,22 +3,22 @@
 	url = git@github.com:andrey-moura/andy.git
 [submodule "modules/andy-console"]
 	path = modules/andy-console
-	url = git@github.com:andrey-moura/andy-console.git
+	url = https://github.com/andrey-moura/andy-console.git
 [submodule "modules/andy-tests"]
 	path = modules/andy-tests
 	url = git@github.com:andrey-moura/andy-tests.git
 [submodule "modules/andy-ui"]
 	path = modules/andy-ui
-	url = git@github.com:andrey-moura/andy-ui.git
+	url = https://github.com/andrey-moura/andy-ui.git
 [submodule "modules/andy-drawing"]
 	path = modules/andy-drawing
-	url = git@github.com:andrey-moura/andy-drawing.git
+	url = https://github.com/andrey-moura/andy-drawing.git
 [submodule "modules/andy-widgets"]
 	path = modules/andy-widgets
 	url = git@github.com:andrey-moura/andy-widgets.git
 [submodule "modules/andy-net"]
 	path = modules/andy-net
-	url = git@github.com:andrey-moura/andy-net.git
+	url = https://github.com/andrey-moura/andy-net.git
 [submodule "modules/andy-string"]
 	path = modules/andy-string
-	url = git@github.com:andrey-moura/string.git
+	url = https://github.com/andrey-moura/string.git
