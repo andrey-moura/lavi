@@ -21,9 +21,9 @@ describe 'Net' do
       status_tester(500);
       describe 'http://httpbingo.org/encoding/utf8' do
         it 'should have correct body size' do
-          var res = Net::HTTP.get('http://httpbin.org/encoding/utf8')
+          var res = Net::HTTP.get('http://httpbingo.org/encoding/utf8')
           expect(res.status_code).to eq(200)
-          expect(res.text.size).to eq(7808)
+          expect(res.text.size).to eq(7809)
         end
         it 'should have correct body' do
           var res = Net::HTTP.get('http://httpbingo.org/encoding/utf8')
