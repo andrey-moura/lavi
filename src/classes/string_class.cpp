@@ -7,7 +7,7 @@ static bool utf8_is_multibyte_character_continuation(const char& c)
     return ((uint8_t)c & 0b11000000) == 0b10000000;
 }
 
-void create_string_class(lavi::lang::interpreter* interpreter)
+void create_string_class()
 {
     lavi::lang::string_class = lavi::lang::klass::create_builtin("String");
 
@@ -120,7 +120,7 @@ void create_string_class(lavi::lang::interpreter* interpreter)
             return lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, value);
         });
 
-        StringClass->instance_functions["to_integer"] = std::make_shared<lavi::lang::function>("to_integer", [](lavi::lang::interpreter* interpreter) {
+        lavi::lang::string_class->instance_functions["to_integer"] = std::make_shared<lavi::lang::function>("to_integer", [](lavi::lang::interpreter* interpreter) {
             std::string value = interpreter->current_context->self->as<std::string>();
 
             if(value.empty()) return std::make_shared<lavi::lang::object>(lavi::lang::null_class);
@@ -236,7 +236,7 @@ void create_string_class(lavi::lang::interpreter* interpreter)
             return nullptr;
         });
 
-  StringClass->instance_functions["front"] = std::make_shared<lavi::lang::function>("front", [](lavi::lang::interpreter* interpreter) {
+  lavi::lang::string_class->instance_functions["front"] = std::make_shared<lavi::lang::function>("front", [](lavi::lang::interpreter* interpreter) {
     const std::string& value = interpreter->current_context->self->as<std::string>();
     std::string result;
     result.push_back(value.front());
