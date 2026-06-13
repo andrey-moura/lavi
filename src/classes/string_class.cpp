@@ -218,11 +218,6 @@ std::shared_ptr<lavi::lang::structure> create_string_class(lavi::lang::interpret
             }
 
             return nullptr;
-        });
-
-    StringClass->instance_functions["size"] = std::make_shared<lavi::lang::function>("size", [](lavi::lang::interpreter* interpreter) {
-        const std::string& value = interpreter->current_context->self->as<std::string>();
-        return lavi::lang::object::instantiate(interpreter, interpreter->IntegerClass, (int)value.size());
     });
     
   StringClass->instance_functions["front"] = std::make_shared<lavi::lang::function>("front", [](lavi::lang::interpreter* interpreter) {
