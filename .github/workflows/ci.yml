@@ -61,6 +61,11 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Update APT
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+
       - name: Install dependencies (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
         run: |
