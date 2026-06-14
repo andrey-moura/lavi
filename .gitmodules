@@ -1,12 +1,12 @@
 [submodule "modules/andy"]
 	path = modules/andy
-	url = git@github.com:andrey-moura/andy.git
+	url = https://github.com/andrey-moura/andy.git
 [submodule "modules/andy-console"]
 	path = modules/andy-console
 	url = https://github.com/andrey-moura/andy-console.git
 [submodule "modules/andy-tests"]
 	path = modules/andy-tests
-	url = git@github.com:andrey-moura/andy-tests.git
+	url = https://github.com/andrey-moura/andy-tests.git
 [submodule "modules/andy-net"]
 	path = modules/andy-net
 	url = https://github.com/andrey-moura/andy-net.git
