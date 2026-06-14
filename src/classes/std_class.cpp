@@ -113,26 +113,14 @@ void create_std_class()
         f.read(code.data(), size);
         code.resize(f.gcount());
 
-        lavi::lang::lexer lexer(std::move(file_path_str), std::move(code));
-
-        for(const auto& include : interpreter->main_lexer->includes()) {
-            lexer.include_from_parent(include);
-        }
-
-        lexer.tokenize();
-
-        lavi::lang::preprocessor preprocessor;
-        preprocessor.process(lexer.path(), lexer);
-
-        lavi::lang::parser parser;
-        auto* ast = new lavi::lang::parser::ast_node(std::move(parser.parse_all(lexer)));
-
         auto global_context = interpreter->global_context;
-
+        
         interpreter->stack.push_back(global_context);
         interpreter->update_current_context();
 
-        auto ret = interpreter->execute_all(*ast);
+        const auto& ast = lavi::lang::api::load(interpreter, file_path_str, code);
+
+        auto ret = interpreter->execute_all(ast);
 
         interpreter->pop_context();
 

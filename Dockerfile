@@ -1,28 +1,27 @@
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 
 RUN apt update
-RUN apt install -y software-properties-common
-RUN add-apt-repository ppa:ubuntu-toolchain-r/test
-RUN apt update
-RUN apt install -y gcc-9 g++-9 git wget make
+RUN apt install -y build-essential cmake git wget
+# RUN apt install -y software-properties-common
+# RUN add-apt-repository ppa:ubuntu-toolchain-r/test
+# RUN apt update
+# RUN apt install -y gcc-9 g++-9 git wget make
 
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90
-RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 90
+# RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90
+# RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 90
 
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.16.3/cmake-3.16.3-linux-x86_64.sh
-RUN chmod +x cmake-3.16.3-linux-x86_64.sh
-RUN ./cmake-3.16.3-linux-x86_64.sh --skip-license --prefix=/usr/local
-RUN export PATH=/opt/cmake/bin:$PATH
-RUN rm cmake-3.16.3-linux-x86_64.sh
+# RUN wget https://github.com/Kitware/CMake/releases/download/v3.16.3/cmake-3.16.3-linux-x86_64.sh
+# RUN chmod +x cmake-3.16.3-linux-x86_64.sh
+# RUN ./cmake-3.16.3-linux-x86_64.sh --skip-license --prefix=/usr/local
+# RUN export PATH=/opt/cmake/bin:$PATH
+# RUN rm cmake-3.16.3-linux-x86_64.sh
 
-COPY . /andy-lang
+COPY . /lavi-lang
 
 ENTRYPOINT ["bash", "-c", "\
-  cd /andy-lang && \
+  cd /lavi-lang && \
   cmake -DCMAKE_BUILD_TYPE=Release -B build . && \
   cmake --build build --config Release --parallel && \
   cmake --install build && \
-  andy tests && \
-  cp -r build/andy ../andy-build && \
-  cp -r build/andy-analyzer ../andy-build && \
-  cp -r build/andy-pkgr ../andy-build"]
+  lavi tests; \
+  exec bash"]

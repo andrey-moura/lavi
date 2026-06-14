@@ -10,29 +10,6 @@ extern void create_builtin_libs();
 
 std::map<std::string_view, lavi::lang::parser::ast_node> node_cache;
 
-lavi::lang::parser::ast_node& parse_and_cache_node(
-    lavi::lang::interpreter* interpreter,
-    std::string_view source_code
-)
-{
-    if(auto it = node_cache.find(source_code); it != node_cache.end()) {
-        return it->second;
-    }
-
-    // Yes, the cache is kept alive during the execution of the program
-    lavi::lang::lexer* lexer = new lavi::lang::lexer("", std::move(std::string(source_code)));
-
-    lexer->tokenize();
-
-    lavi::lang::preprocessor preprocessor;
-    preprocessor.process(source_code, *lexer);
-
-    lavi::lang::parser p;
-    auto node = p.parse_all(*lexer);
-
-    return node_cache[source_code] = std::move(node.childrens().front());
-}
-
 namespace lavi
 {
     namespace lang
@@ -181,7 +158,8 @@ namespace lavi
             {
                 std::shared_ptr<lavi::lang::object> object = nullptr;
 
-                const auto& node = parse_and_cache_node(interpreter, function_name);
+                const auto& source_code = load(interpreter, std::string(function_name), std::string(function_name));
+                const auto& node = source_code.childrens().front();
 
                 const lavi::lang::parser::ast_node* object_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_object);
 
@@ -294,7 +272,34 @@ namespace lavi
 
                 return false;
             }
-            
+
+            lavi::lang::parser::ast_node& load(
+                lavi::lang::interpreter* interpreter,
+                std::string path_or_key,
+                std::string source_code
+            )
+            {
+                if(auto it = node_cache.find(path_or_key); it != node_cache.end()) {
+                    return it->second;
+                }
+
+                // Yes, the cache is kept alive during the execution of the program
+                lavi::lang::lexer* lexer = new lavi::lang::lexer(path_or_key, std::move(source_code));
+
+                lexer->tokenize();
+
+                for(const auto& include : interpreter->main_lexer->includes()) {
+                    lexer->include_from_parent(include);
+                }
+
+                lavi::lang::preprocessor preprocessor;
+                preprocessor.process(source_code, *lexer);
+
+                lavi::lang::parser p;
+                auto node = p.parse_all(*lexer);
+
+                return node_cache[lexer->source()] = std::move(node);
+            }
         };
     }; // namespace lang
 };
