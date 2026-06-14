@@ -84,7 +84,7 @@ describe 'functions' do
   end
 
   context "with class definition on it's body" do
-    it 'makes the function globally acessible' do
+    it 'makes the class globally acessible' do
       fn declare_class
         class Foo
           var x = 42
