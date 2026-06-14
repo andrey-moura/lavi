@@ -168,6 +168,15 @@ namespace lavi
             /// @param cls The class.
             /// @param contained The contained class.
             void contained_class(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::structure> cls, std::shared_ptr<lavi::lang::structure> contained);
+            /// @brief Load the source code without executing it.
+            /// @param interpreter The interpreter.
+            /// @param path_or_key The path or unique key to the source code.
+            /// @param source_code The code to be executed.
+            lavi::lang::parser::ast_node& load(
+                lavi::lang::interpreter* interpreter,
+                std::string path_or_key,
+                std::string source_code
+            );
         };
     };
 };

@@ -141,6 +141,7 @@ namespace lavi
             void include_from_parent(std::string_view file_name);
             /// @brief Discard the first character from the m_current and update the start position.
             const char& discard();
+            const std::string& source() { return m_source; }
         protected:
             /// @brief Update the start position (line, column, offset).
             /// @param token The token which should update the position.
