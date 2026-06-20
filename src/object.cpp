@@ -39,7 +39,7 @@ const std::string& lavi::lang::object::default_string_representation()
 void lavi::lang::object::initialize(lavi::lang::interpreter* interpreter)
 {
     for(auto& instance_variable : klass->instance_variables) {
-        if(instance_variable.second == nullptr) {
+        if(!instance_variable.second.has_value()) {
             variables[instance_variable.first] = lavi::lang::api::to_object(interpreter, nullptr);
         } else {
             variables[instance_variable.first] = interpreter->execute(*instance_variable.second);

@@ -247,7 +247,12 @@ static std::shared_ptr<lavi::lang::klass> do_execute_classdecl(lavi::lang::inter
                 param = fn_params->childrens().data();
             }
 
-            klass->instance_variables[var_name] = param;
+            if(klass->instance_variables.find(var_name) == klass->instance_variables.end()) {
+                klass->string_holder.emplace_back(std::string(var_name));
+                var_name = klass->string_holder.back();
+            }
+
+            klass->instance_variables[var_name] = param ? std::optional<lavi::lang::parser::ast_node>(*param) : std::nullopt;
         }
         break;
         case lavi::lang::parser::ast_node_type::ast_node_classdecl: {
@@ -269,7 +274,7 @@ static std::shared_ptr<lavi::lang::klass> do_execute_classdecl(lavi::lang::inter
 
             std::string* corrected_enum_name = &klass->string_holder.back();
 
-            klass->instance_variables[klass->string_holder.back()] = nullptr;
+            klass->instance_variables[klass->string_holder.back()] = std::nullopt;
 
             for(const auto& enum_child : class_child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_arraydecl)->childrens()) {
                 std::string_view enum_child_name = enum_child.token().content;
