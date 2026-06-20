@@ -8,8 +8,7 @@ on:
 
   pull_request:
     branches:
-      - master
-      - '1.*.x'
+      - '**'
 
 concurrency:
   group: release-${{ github.ref }}
