@@ -93,5 +93,18 @@ describe 'functions' do
       declare_class
       expect(Foo.new.x).to eq(42)
     end
+
+    it 'keeps classes globally accessible even when declared in block scope' do
+      fn declare_class_in_block
+        if true
+          class Bar
+            var x = 21
+          end
+        end
+      end
+
+      declare_class_in_block
+      expect(Bar.new.x).to eq(21)
+    end
   end
 end

@@ -105,12 +105,7 @@ lavi::lang::interpreter::interpreter()
 
 void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::klass> klass)
 {
-    bool should_load_globally = current_context != global_context &&
-                                current_context->caller_node != nullptr &&
-                                !current_context->is_block_context;
-
-    auto target_context = should_load_globally ? global_context : current_context;
-    target_context->variables[klass->name] = lavi::lang::api::to_object(this, klass);
+    global_context->variables[klass->name] = lavi::lang::api::to_object(this, klass);
 }
 
 std::shared_ptr<lavi::lang::klass> lavi::lang::interpreter::find_class(const std::string_view& name)
