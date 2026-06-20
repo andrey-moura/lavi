@@ -252,7 +252,7 @@ static std::shared_ptr<lavi::lang::klass> do_execute_classdecl(lavi::lang::inter
                 var_name = klass->string_holder.back();
             }
 
-            klass->instance_variables[var_name] = param ? std::optional<lavi::lang::parser::ast_node>(*param) : std::nullopt;
+            klass->instance_variables[var_name] = param ? std::make_optional(*param) : std::nullopt;
         }
         break;
         case lavi::lang::parser::ast_node_type::ast_node_classdecl: {
