@@ -49,7 +49,7 @@ namespace lavi
                 lavi::lang::interpreter* interpreter,
                 std::string_view function_name,
                 std::initializer_list<std::shared_ptr<lavi::lang::object>> positional_params = {},
-                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params = {}
+                std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> named_params = {}
             );
             /// @brief Call a function.
             /// @param interpreter The interpreter.
@@ -61,13 +61,13 @@ namespace lavi
                 std::string_view function_name,
                 std::shared_ptr<lavi::lang::object> object,
                 std::vector<std::shared_ptr<lavi::lang::object>> positional_params = {},
-                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params = {}
+                std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> named_params = {}
             );
             /// @brief Yield a value to the caller block.
             /// @param interpreter The interpreter.
             /// @param value The value to yield.
             /// @return Returns the value sent by the caller block.
-            std::shared_ptr<lavi::lang::object> yield(lavi::lang::interpreter* interpreter, std::vector<std::shared_ptr<lavi::lang::object>> position_params = {}, std::map<std::string, std::shared_ptr<lavi::lang::object>> named_params = {});
+            std::shared_ptr<lavi::lang::object> yield(lavi::lang::interpreter* interpreter, std::vector<std::shared_ptr<lavi::lang::object>> position_params = {}, std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> named_params = {});
             /// @brief Creates the object with a value and automatically determines the class.
             /// @tparam T The type of the value.
             /// @param interpreter The interpreter.
@@ -150,7 +150,7 @@ namespace lavi
                 lavi::lang::interpreter* interpreter,
                 std::shared_ptr<lavi::lang::klass> klass,
                 std::vector<std::shared_ptr<lavi::lang::object>> positional_params = {},
-                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params = {}
+                std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> named_params = {}
             );
             /// @brief Checks if the object is truthy (not null and not false).
             /// @param interpreter The interpreter.

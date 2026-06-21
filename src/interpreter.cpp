@@ -48,7 +48,7 @@ struct andy_lang_exception : std::exception {
         }
 };
 
-lavi::lang::function execute_method_definition(const lavi::lang::parser::ast_node& class_child)
+std::shared_ptr<lavi::lang::function> execute_method_definition(const lavi::lang::parser::ast_node& class_child)
 {
     std::string_view method_name = class_child.decname();
 
@@ -89,12 +89,12 @@ lavi::lang::function execute_method_definition(const lavi::lang::parser::ast_nod
 
     auto method_type = static_node ? lavi::lang::function_storage_type::class_function : lavi::lang::function_storage_type::instance_function;
 
-    lavi::lang::function method;
-    method.name = method_name;
-    method.storage_type = method_type;
-    method.positional_params = std::move(positional_params);
-    method.named_params = std::move(named_params);
-    method.block_ast = class_child;
+    std::shared_ptr<lavi::lang::function> method = std::make_shared<lavi::lang::function>();
+    method->name = method_name;
+    method->storage_type = method_type;
+    method->positional_params = std::move(positional_params);
+    method->named_params = std::move(named_params);
+    method->block_ast = class_child;
     return method;
 }
 
@@ -182,7 +182,7 @@ static void pop_context_from_node(lavi::lang::interpreter* interpreter, const la
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_decl(const lavi::lang::parser::ast_node& source_code)
 {
     auto method = execute_method_definition(source_code);
-    current_context->functions[method.name] = std::make_shared<lavi::lang::function>(std::move(method));
+    current_context->functions[method->name] = method;
     return nullptr;
 }
 
@@ -230,10 +230,10 @@ static std::shared_ptr<lavi::lang::klass> do_execute_classdecl(lavi::lang::inter
         {
         case lavi::lang::parser::ast_node_type::ast_node_fn_decl: {
             auto method = execute_method_definition(class_child);
-            if(method.storage_type == lavi::lang::function_storage_type::class_function || source_code.decl_type() == "namespace") {
-                klass->functions[method.name] = std::make_shared<lavi::lang::function>(std::move(method));
+            if(method->storage_type == lavi::lang::function_storage_type::class_function || source_code.decl_type() == "namespace") {
+                klass->functions[method->name] = method;
             } else {
-                klass->instance_functions[method.name] = std::make_shared<lavi::lang::function>(std::move(method));
+                klass->instance_functions[method->name] = method;
             }
         }
         break;
@@ -243,9 +243,9 @@ static std::shared_ptr<lavi::lang::klass> do_execute_classdecl(lavi::lang::inter
             const lavi::lang::parser::ast_node* fn_params = nullptr;
             
             if(fn_params = fn_call->child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params)) {
-                klass->instance_variables[var_name] = fn_params->childrens().front();
+                klass->instance_variables[std::string(var_name)] = fn_params->childrens().front();
             } else {
-                klass->instance_variables[var_name] = lavi::lang::parser::ast_node(); // undefined node, will be treated as nil
+                klass->instance_variables[std::string(var_name)] = lavi::lang::parser::ast_node(); // undefined node, will be treated as nil
             }
         }
         break;
@@ -257,18 +257,14 @@ static std::shared_ptr<lavi::lang::klass> do_execute_classdecl(lavi::lang::inter
         break;
         case lavi::lang::parser::ast_node_type::ast_node_enum: {
             std::string_view enum_name = class_child.decname();
-            std::string corrected_enum_name_temp;
-            corrected_enum_name_temp.reserve(enum_name.size() + enum_name.size() / 2);
+            std::string corrected_enum_name;
+            corrected_enum_name.reserve(enum_name.size() + enum_name.size() / 2);
             for(auto c : enum_name) {
                 c = std::tolower(c);
-                corrected_enum_name_temp.push_back(c);
+                corrected_enum_name.push_back(c);
             }
 
-            klass->string_holder.push_back(std::move(corrected_enum_name_temp));
-
-            std::string* corrected_enum_name = &klass->string_holder.back();
-
-            klass->instance_variables[klass->string_holder.back()] = lavi::lang::parser::ast_node(); // undefined node, will be treated as nil
+            klass->instance_variables[corrected_enum_name] = lavi::lang::parser::ast_node(); // undefined node, will be treated as nil
 
             for(const auto& enum_child : class_child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_arraydecl)->childrens()) {
                 std::string_view enum_child_name = enum_child.token().content;
@@ -276,11 +272,10 @@ static std::shared_ptr<lavi::lang::klass> do_execute_classdecl(lavi::lang::inter
                 enum_child_name_question.reserve(enum_child_name.size() + 1);
                 enum_child_name_question.append(enum_child_name);
                 enum_child_name_question.push_back('?');
-                klass->string_holder.push_back(std::move(enum_child_name_question));
-                klass->instance_functions[klass->string_holder.back()] = std::make_shared<lavi::lang::function>(klass->string_holder.back(), [enum_name, enum_child_name, corrected_enum_name](lavi::lang::interpreter* interpreter) {
-                    auto it = interpreter->current_context->self->variables.find(*corrected_enum_name);
+                klass->instance_functions[enum_child_name_question] = std::make_shared<lavi::lang::function>(enum_child_name_question, [enum_name, enum_child_name, corrected_enum_name](lavi::lang::interpreter* interpreter) {
+                    auto it = interpreter->current_context->self->variables.find(corrected_enum_name);
                     if(it == interpreter->current_context->self->variables.end()) {
-                        lavi::lang::error::internal("Variable {} not found in object of class {} while evaluating {}?", *corrected_enum_name, interpreter->current_context->self->klass->name, enum_child_name);
+                        lavi::lang::error::internal("Variable {} not found in object of class {} while evaluating {}?", corrected_enum_name, interpreter->current_context->self->klass->name, enum_child_name);
                         exit(1);
                     }
 
@@ -371,7 +366,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
     }
 
     std::vector<std::shared_ptr<lavi::lang::object>> positional_params;
-    std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params;
+    std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> named_params;
 
     const lavi::lang::parser::ast_node* params_node = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params);
 
@@ -763,7 +758,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_vardecl(con
 {
     std::string_view var_name = source_code.decname();
     std::shared_ptr<lavi::lang::object> value = std::make_shared<lavi::lang::object>(lavi::lang::null_class);
-    current_context->variables[var_name] = value;
+    current_context->variables[std::string(var_name)] = value;
 
     if(auto fn_call = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_call)) {
         value = execute(*fn_call);
@@ -1034,7 +1029,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_try(const l
         }
         auto catch_context = catcher->second->child_from_type(lavi::lang::parser::ast_node_type::ast_node_context);
         push_block_context();
-        current_context->variables[catcher->second->decname()] = e.exception_object;
+        current_context->variables[std::string(catcher->second->decname())] = e.exception_object;
         execute(*catch_context);
         pop_context();
     }

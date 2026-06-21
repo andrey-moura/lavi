@@ -32,7 +32,7 @@ namespace lavi {
         class function
         {
         public:
-            std::string_view name;
+            std::string name;
             lavi::lang::parser::ast_node block_ast;
             function_storage_type storage_type;
             std::vector<fn_parameter> positional_params;

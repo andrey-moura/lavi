@@ -19,13 +19,13 @@ namespace lavi {
             klass(std::string_view __name, std::vector<lavi::lang::function> __methods = {});
             ~klass();
         public:
-            std::string_view name;
+            std::string name;
             std::shared_ptr<lavi::lang::klass> base;
             std::vector<std::shared_ptr<lavi::lang::klass>> deriveds;
 
-            std::map<std::string_view, lavi::lang::parser::ast_node> instance_variables;
-            std::map<std::string_view, std::shared_ptr<lavi::lang::function>> instance_functions;
-            std::map<std::string_view, std::shared_ptr<lavi::lang::inline_function>> instance_inline_functions;
+            std::map<std::string, lavi::lang::parser::ast_node, std::less<>> instance_variables;
+            std::map<std::string, std::shared_ptr<lavi::lang::function>, std::less<>> instance_functions;
+            std::map<std::string, std::shared_ptr<lavi::lang::inline_function>, std::less<>> instance_inline_functions;
         public:
             static std::shared_ptr<lavi::lang::klass> create(std::string_view name);
             static std::shared_ptr<lavi::lang::klass> create_builtin(std::string_view name);

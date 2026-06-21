@@ -113,7 +113,7 @@ namespace lavi
                 lavi::lang::lexer::token& operator=(const lavi::lang::lexer::token& other) = default;
             };
         protected:
-            std::string_view m_source;
+            std::string m_source;
             std::shared_ptr<std::string> m_file_name;
 
             std::vector<std::string> m_includes;            
