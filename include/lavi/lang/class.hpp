@@ -23,7 +23,7 @@ namespace lavi {
             std::shared_ptr<lavi::lang::structure> base;
             std::vector<std::shared_ptr<lavi::lang::structure>> deriveds;
 
-            std::map<std::string_view, const lavi::lang::parser::ast_node*> instance_variables;
+            std::map<std::string_view, lavi::lang::parser::ast_node> instance_variables;
             std::map<std::string_view, std::shared_ptr<lavi::lang::function>> instance_functions;
             std::map<std::string_view, std::shared_ptr<lavi::lang::inline_function>> instance_inline_functions;
         public:

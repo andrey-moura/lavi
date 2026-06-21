@@ -78,7 +78,7 @@ lavi::lang::function execute_method_definition(const lavi::lang::parser::ast_nod
             }
 
             if(auto* default_node = param.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl)) {
-                fn_param.default_value_node = default_node->childrens().data();
+                fn_param.default_value_node = default_node->childrens().front();
             }
 
             where_to_push->push_back(std::move(fn_param));
@@ -370,13 +370,12 @@ static std::shared_ptr<lavi::lang::structure> do_execute_classdecl(lavi::lang::i
             std::string_view var_name = class_child.decname();
             const lavi::lang::parser::ast_node* fn_call = class_child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_call);
             const lavi::lang::parser::ast_node* fn_params = nullptr;
-            const lavi::lang::parser::ast_node* param = nullptr;
             
             if(fn_params = fn_call->child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_params)) {
-                param = fn_params->childrens().data();
+                cls->instance_variables[var_name] = fn_params->childrens().front();
+            } else {
+                cls->instance_variables[var_name] = lavi::lang::parser::ast_node(); // undefined node, will be treated as nil
             }
-
-            cls->instance_variables[var_name] = param;
         }
         break;
         case lavi::lang::parser::ast_node_type::ast_node_classdecl: {
@@ -398,7 +397,7 @@ static std::shared_ptr<lavi::lang::structure> do_execute_classdecl(lavi::lang::i
 
             std::string* corrected_enum_name = &cls->string_holder.back();
 
-            cls->instance_variables[cls->string_holder.back()] = nullptr;
+            cls->instance_variables[cls->string_holder.back()] = lavi::lang::parser::ast_node(); // undefined node, will be treated as nil
 
             for(const auto& enum_child : class_child.child_from_type(lavi::lang::parser::ast_node_type::ast_node_arraydecl)->childrens()) {
                 std::string_view enum_child_name = enum_child.token().content;
@@ -746,8 +745,8 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
     if(method_to_call) {
         if(current_context->positional_params.size() < method_to_call->positional_params.size()) {
             for(size_t i = current_context->positional_params.size(); i < method_to_call->positional_params.size(); i++) {
-                if(method_to_call->positional_params[i].default_value_node) {
-                    current_context->positional_params.push_back(execute(method_to_call->positional_params[i].default_value_node->childrens().front()));
+                if(!method_to_call->positional_params[i].default_value_node.is_undefined()) {
+                    current_context->positional_params.push_back(execute(method_to_call->positional_params[i].default_value_node.childrens().front()));
                     continue;
                 }
                 // Found 1 or more missing positional parameters without default values, throw an error.
@@ -763,9 +762,9 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
             auto it = current_context->named_params.find(param.name);
 
             if(it == current_context->named_params.end()) {
-                if(param.default_value_node) {
+                if(!param.default_value_node.is_undefined()) {
                     current_context->named_params[param.name] = node_to_object(
-                        *param.default_value_node,
+                        param.default_value_node,
                         current_context->cls,
                         current_context->self ? current_context->self->shared_from_this() : nullptr
                     );

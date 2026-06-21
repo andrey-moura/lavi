@@ -14,7 +14,7 @@ namespace lavi
         {
         public:
             lexer() = default;
-            lexer(std::string __file_name, std::string __source);
+            lexer(std::string __file_name, std::string_view __source);
             ~lexer() = default;
         public:
             enum token_type {
@@ -113,7 +113,7 @@ namespace lavi
                 lavi::lang::lexer::token& operator=(const lavi::lang::lexer::token& other) = default;
             };
         protected:
-            std::string m_source;
+            std::string_view m_source;
             std::shared_ptr<std::string> m_file_name;
 
             std::vector<std::string> m_includes;            
@@ -141,7 +141,7 @@ namespace lavi
             void include_from_parent(std::string_view file_name);
             /// @brief Discard the first character from the m_current and update the start position.
             const char& discard();
-            const std::string& source() { return m_source; }
+            std::string_view source() { return m_source; }
         protected:
             /// @brief Update the start position (line, column, offset).
             /// @param token The token which should update the position.

@@ -22,11 +22,11 @@ namespace lavi {
         {
             fn_parameter() = default;
             fn_parameter(std::string_view __name);
-            fn_parameter(std::string __name, bool __named, const lavi::lang::parser::ast_node* __default_value_node)
-                : name(std::move(__name)), named(__named), default_value_node(__default_value_node) {
+            fn_parameter(std::string __name, bool __named, lavi::lang::parser::ast_node __default_value_node = lavi::lang::parser::ast_node())
+                : name(std::move(__name)), named(__named), default_value_node(std::move(__default_value_node)) {
             }
             std::string name;
-            const lavi::lang::parser::ast_node* default_value_node = nullptr;
+            lavi::lang::parser::ast_node default_value_node;
             bool named = false;
         };
         class function
