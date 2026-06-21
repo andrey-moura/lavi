@@ -29,11 +29,11 @@ namespace lavi
             lavi::lang::lexer* main_lexer = nullptr;
         public:
             /// @brief Load a class into the vm. The class is kept alive by the vm untill it is destroyed.
-            /// @param cls The class to be loaded. It is kept alive by the vm untill it is destroyed. It is globally accessible.
-            void load(std::shared_ptr<lavi::lang::structure> cls);
+            /// @param klass The class to be loaded. It is kept alive by the vm untill it is destroyed. It is globally accessible.
+            void load(std::shared_ptr<lavi::lang::klass> klass);
 
             /// @brief Exeuctes a syntax tree into the interpreter. Note that if the code has while loops with no exit condition, this method will never return.
-            /// @param cls The syntax tree to exeuctes. All its childs (not recursively) will be executed.
+            /// @param klass The syntax tree to exeuctes. All its childs (not recursively) will be executed.
             std::shared_ptr<lavi::lang::object> execute(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_all(
                 std::vector<lavi::lang::parser::ast_node>::const_iterator begin,
@@ -69,62 +69,10 @@ namespace lavi
             std::shared_ptr<lavi::lang::object> execute_yield(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_try(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_throw(const lavi::lang::parser::ast_node& source_code);
-            /// @brief The global false class.
-            std::shared_ptr<lavi::lang::structure> FalseClass;
-            /// @brief The global true class.
-            std::shared_ptr<lavi::lang::structure> TrueClass;
 
-            /// @brief The global string class.
-            std::shared_ptr<lavi::lang::structure> StringClass;
+            std::shared_ptr<lavi::lang::klass> find_class(const std::string_view& name);
 
-            /// @brief The global integer class.
-            std::shared_ptr<lavi::lang::structure> IntegerClass;
-
-            /// @brief The global double class.
-            std::shared_ptr<lavi::lang::structure> DoubleClass;
-
-            /// @brief The global float class.
-            std::shared_ptr<lavi::lang::structure> FloatClass;
-
-            /// @brief The global file class.
-            std::shared_ptr<lavi::lang::structure> FileClass;
-
-            /// @brief The global array class.
-            std::shared_ptr<lavi::lang::structure> ArrayClass;
-
-            /// @brief The global null class.
-            std::shared_ptr<lavi::lang::structure> NullClass;
-
-            /// @brief The global hash class.
-            std::shared_ptr<lavi::lang::structure> HashClass;
-
-            /// @brief The global system class.
-            std::shared_ptr<lavi::lang::structure> SystemClass;
-
-            /// @brief The global path class.
-            std::shared_ptr<lavi::lang::structure> PathClass;
-
-            /// @brief The global andy config class.
-            std::shared_ptr<lavi::lang::structure> AndyConfigClass;
-
-            /// @brief The global class class.
-            std::shared_ptr<lavi::lang::structure> ClassClass;
-
-            /// @brief The global function class.
-            std::shared_ptr<lavi::lang::structure> FunctionClass;
-
-            /// @brief The global exception class.
-            std::shared_ptr<lavi::lang::structure> ExceptionClass;
-
-            /// @brief The global no function error class.
-            std::shared_ptr<lavi::lang::structure> NoFunctionErrorClass;
-
-            /// @brief The global runtime error class.
-            std::shared_ptr<lavi::lang::structure> RuntimeErrorClass;
-
-            std::shared_ptr<lavi::lang::structure> find_class(const std::string_view& name);
-
-            const std::shared_ptr<lavi::lang::object> node_to_object(const lavi::lang::parser::ast_node& node, std::shared_ptr<lavi::lang::structure> cls = nullptr, std::shared_ptr<lavi::lang::object> object = nullptr);
+            const std::shared_ptr<lavi::lang::object> node_to_object(const lavi::lang::parser::ast_node& node, std::shared_ptr<lavi::lang::klass> klass = nullptr, std::shared_ptr<lavi::lang::object> object = nullptr);
 
             void load_extension(lavi::lang::extension* extension);
 

@@ -6,7 +6,7 @@
 #include <lavi/lang/api.hpp>
 #include <lavi/lang/extension.hpp>
 
-extern std::shared_ptr<lavi::lang::structure> create_yaml_class(lavi::lang::interpreter* interpreter);
+extern std::shared_ptr<lavi::lang::klass> create_yaml_class();
 
 class yaml_extension : public lavi::lang::extension
 {
@@ -23,7 +23,7 @@ public:
 public:
     virtual void load(lavi::lang::interpreter* interpreter) override
     {
-        auto yaml_class = create_yaml_class(interpreter);
+        auto yaml_class = create_yaml_class();
         interpreter->load(yaml_class);
     }
 };

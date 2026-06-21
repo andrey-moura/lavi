@@ -3,18 +3,18 @@
 
 #include "lavi/lang/api.hpp"
 
-std::shared_ptr<lavi::lang::structure> create_yaml_class(lavi::lang::interpreter* interpreter)
+std::shared_ptr<lavi::lang::klass> create_yaml_class()
 {
-    auto yaml_class = std::make_shared<lavi::lang::structure>("YAML");
+    auto yaml_class = lavi::lang::klass::create_builtin("YAML");
 
     yaml_class->functions["parse"] = std::make_shared<lavi::lang::function>("parse", std::initializer_list<std::string>{ "what" }, [yaml_class](lavi::lang::interpreter* interpreter) {
         std::string content;
 
         auto& what_object = interpreter->current_context->positional_params[0];
 
-        if(what_object->cls == interpreter->PathClass) {
+        if(what_object->klass == lavi::lang::path_class) {
             content = lavi::lang::api::call(interpreter, "File.read", { what_object })->as<std::string>();
-        } else if(what_object->cls == interpreter->StringClass) {
+        } else if(what_object->klass == lavi::lang::string_class) {
             content = what_object->as<std::string>();
         } else {
             content = lavi::lang::api::call(interpreter, "to_string", what_object)->as<std::string>();

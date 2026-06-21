@@ -13,7 +13,7 @@ namespace lavi
     class object;
     class function;
     using inline_function = std::shared_ptr<lavi::lang::object>(*)(lavi::lang::interpreter*, std::shared_ptr<lavi::lang::object>&, const lavi::lang::parser::ast_node&);
-    class structure;
+    class klass;
     struct scope
     {
       public:

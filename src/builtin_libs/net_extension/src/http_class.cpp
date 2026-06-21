@@ -3,9 +3,9 @@
 
 #include <iostream>
 
-std::shared_ptr<lavi::lang::structure> create_http_class(lavi::lang::interpreter* interpreter)
+std::shared_ptr<lavi::lang::klass> create_http_class()
 {
-    auto response_class = std::make_shared<lavi::lang::structure>("Response");
+    auto response_class = lavi::lang::klass::create_builtin("Response");
     response_class->instance_functions["text"] = std::make_shared<lavi::lang::function>("text", [](lavi::lang::interpreter* interpreter) {
         auto& response = interpreter->current_context->self->as<lavi::net::http::response>();
         std::string_view text = response.text();
@@ -36,7 +36,7 @@ std::shared_ptr<lavi::lang::structure> create_http_class(lavi::lang::interpreter
         auto& response = interpreter->current_context->self->as<lavi::net::http::response>();
         return lavi::lang::api::to_object(interpreter, response.headers["content-type"].starts_with("application/json"));
     });
-    auto http_class = std::make_shared<lavi::lang::structure>("HTTP");
+    auto http_class = lavi::lang::klass::create_builtin("HTTP");
     http_class->functions["get"] = std::make_shared<lavi::lang::function>("get", std::initializer_list<std::string>{ "url" }, [response_class](lavi::lang::interpreter* interpreter) {
         const auto& url = interpreter->current_context->positional_params[0]->as<std::string>();
 
@@ -47,6 +47,6 @@ std::shared_ptr<lavi::lang::structure> create_http_class(lavi::lang::interpreter
         response_object->variables["status_code"] = lavi::lang::api::to_object(interpreter, status_code);
         return response_object;
     });
-    lavi::lang::api::contained_class(interpreter, http_class, response_class);
+    lavi::lang::api::contained_class(http_class, response_class);
     return http_class;
 }
