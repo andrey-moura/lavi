@@ -13,8 +13,6 @@
 #   include <Windows.h>
 #endif
 
-#include <andy/file.hpp>
-
 std::map<std::string_view, std::shared_ptr<lavi::lang::extension>> lavi::lang::extension::builtins;
 std::map<std::string_view, std::shared_ptr<lavi::lang::extension>> symbol_to_extension;
 
@@ -50,7 +48,16 @@ std::filesystem::path find_module_path(
     std::filesystem::path& current_path
 )
 {
-    std::filesystem::path executable_path = lavi::file::executable_path();
+    std::filesystem::path executable_path;
+#ifdef __linux__
+    executable_path = std::filesystem::read_symlink("/proc/self/exe");
+#elif _WIN32
+    char buffer[MAX_PATH];
+    GetModuleFileNameA(NULL, buffer, MAX_PATH);
+    executable_path = std::filesystem::path(buffer);
+#else
+    throw std::runtime_error("unsupported platform");
+#endif
     std::filesystem::path module_path = executable_path;
 
     std::string library_name = std::string(module);

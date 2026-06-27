@@ -7,9 +7,9 @@
 
 #include <andy/console.hpp>
 
-lavi::lang::object::object(std::shared_ptr<lavi::lang::structure> c)
+lavi::lang::object::object(std::shared_ptr<lavi::lang::klass> c)
 {
-    cls = c;
+    klass = c;
     lavi::console::log_debug(default_string_representation() + " created");
 }
 
@@ -26,8 +26,8 @@ const std::string& lavi::lang::object::default_string_representation()
 {
     string_representation_cache.clear();
 
-    if(cls) {
-        string_representation_cache += cls->name;
+    if(klass) {
+        string_representation_cache += klass->name;
         string_representation_cache.push_back('#');
     }
 
@@ -38,18 +38,18 @@ const std::string& lavi::lang::object::default_string_representation()
 
 void lavi::lang::object::initialize(lavi::lang::interpreter* interpreter)
 {
-    for(auto& instance_variable : cls->instance_variables) {
-        if(instance_variable.second == nullptr) {
+    for(auto& instance_variable : klass->instance_variables) {
+        if(instance_variable.second.is_undefined()) {
             variables[instance_variable.first] = lavi::lang::api::to_object(interpreter, nullptr);
         } else {
-            variables[instance_variable.first] = interpreter->execute(*instance_variable.second);
+            variables[instance_variable.first] = interpreter->execute(instance_variable.second);
         }
     }
-    functions = cls->instance_functions;
-    inline_functions = cls->instance_inline_functions;
+    functions = klass->instance_functions;
+    inline_functions = klass->instance_inline_functions;
 }
 
 void lavi::lang::object::log_native_destructor()
 {
-    lavi::console::log_debug("{}#{} native destructor", cls->name, (void*)this);
+    lavi::console::log_debug("{}#{} native destructor", klass->name, (void*)this);
 }

@@ -10,7 +10,7 @@
 namespace lavi {
     namespace lang {
         class object;
-        class structure;
+        class klass;
         class function;
         class interpreter;
         using inline_function = std::shared_ptr<lavi::lang::object>(*)(lavi::lang::interpreter*, std::shared_ptr<lavi::lang::object>&, const lavi::lang::parser::ast_node&);
@@ -22,17 +22,17 @@ namespace lavi {
         {
             fn_parameter() = default;
             fn_parameter(std::string_view __name);
-            fn_parameter(std::string __name, bool __named, const lavi::lang::parser::ast_node* __default_value_node)
-                : name(std::move(__name)), named(__named), default_value_node(__default_value_node) {
+            fn_parameter(std::string __name, bool __named, lavi::lang::parser::ast_node __default_value_node = lavi::lang::parser::ast_node())
+                : name(std::move(__name)), named(__named), default_value_node(std::move(__default_value_node)) {
             }
             std::string name;
-            const lavi::lang::parser::ast_node* default_value_node = nullptr;
+            lavi::lang::parser::ast_node default_value_node;
             bool named = false;
         };
         class function
         {
         public:
-            std::string_view name;
+            std::string name;
             lavi::lang::parser::ast_node block_ast;
             function_storage_type storage_type;
             std::vector<fn_parameter> positional_params;
@@ -65,9 +65,6 @@ namespace lavi {
             function(std::string_view name, std::function<std::shared_ptr<lavi::lang::object>(lavi::lang::interpreter*)> fn)
                 : name(name), native_function(fn) {
             }
-
-            std::shared_ptr<lavi::lang::object> call(std::shared_ptr<lavi::lang::object> o);
-            std::shared_ptr<lavi::lang::object> call(lavi::lang::structure* c);
 
             protected:
                 void init_params(std::vector<std::string> __params);

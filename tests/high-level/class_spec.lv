@@ -256,14 +256,14 @@ describe 'class' do
   end
   context 'when declaring variable inside instance function' do
     it 'should not be accessible outside the function' do
-      class Foo
+      class FooWithBarFunction
         fn bar
           var x = 42
           x
         end
       end
 
-      var f = Foo.new
+      var f = FooWithBarFunction.new
       expect(f.bar).to eq(42)
 
       var exeception = null

@@ -8,16 +8,16 @@ namespace lavi
 {
     namespace lang
     {
-        class structure;
+        class klass;
         class object;
         class parser;
         // The context of the interpreter execution.
         struct interpreter_context : public lavi::lang::scope
         {
             std::shared_ptr<lavi::lang::object> self;
-            std::shared_ptr<lavi::lang::structure> cls;
+            std::shared_ptr<lavi::lang::klass> klass;
 
-            std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params;
+            std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> named_params;
             std::vector<std::shared_ptr<lavi::lang::object>> positional_params;
             
             const lavi::lang::parser::ast_node* given_block = nullptr;
