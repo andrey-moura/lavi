@@ -94,7 +94,10 @@ namespace lavi
                 } else if constexpr(std::is_same_v<T, lavi::lang::hash>) {
                     auto obj = lavi::lang::object::instantiate(interpreter, lavi::lang::hash_class, std::move(value));
                     return obj;
-                } else if constexpr(std::is_same_v<T, std::map<std::string, std::shared_ptr<lavi::lang::object>>> || std::is_same_v<T, std::map<std::string_view, std::shared_ptr<lavi::lang::object>>>) {
+                } else if constexpr(std::is_same_v<T, std::map<std::string, std::shared_ptr<lavi::lang::object>>> ||
+                                    std::is_same_v<T, std::map<std::string_view, std::shared_ptr<lavi::lang::object>>> ||
+                                    std::is_same_v<T, std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>>>
+                                ) {
                     lavi::lang::hash hash(interpreter);
                     for(auto& [key, val] : value) {
                         hash.set(to_object(interpreter, key), std::move(val));
