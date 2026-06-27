@@ -1,0 +1,1 @@
+/usr/bin/c++ -fsanitize=address -fno-omit-frame-pointer -g -D__ANDY_DEBUG__ -fsanitize=address -Wl,--export-dynamic -Wl,--dependency-file=CMakeFiles/lavi.dir/link.d CMakeFiles/lavi.dir/src/lavi.cpp.o -o lavi  liblavi-lang.a -ldl

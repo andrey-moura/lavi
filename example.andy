@@ -1,0 +1,11 @@
+fn declare_class
+  fn do_declare_class
+    class Foo
+      var x = 42
+    end
+  end
+  declare_class
+end
+
+declare_class
+out Foo.new.x

@@ -1,0 +1,1 @@
+/usr/bin/c++ -fsanitize=address -fno-omit-frame-pointer -g -D__ANDY_DEBUG__ -fsanitize=address -Wl,--dependency-file=CMakeFiles/andy-test.dir/link.d "CMakeFiles/andy-test.dir/modules/andy-tests/src/main.cpp.o" -o andy-test
