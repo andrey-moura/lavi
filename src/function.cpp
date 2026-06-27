@@ -13,19 +13,19 @@ lavi::lang::fn_parameter::fn_parameter(std::string_view __name)
     }
 
     lavi::lang::parser parser;
-    auto* node = new lavi::lang::parser::ast_node(std::move(parser.parse_all(lexer)));
-    node = node->childrens().data();
-    switch(node->type()) {
+    auto node = parser.parse_all(lexer).childrens().front();
+
+    switch(node.type()) {
         case lavi::lang::parser::ast_node_type::ast_node_declname:
-            name = node->token().content;
+            name = node.token().content;
             break;
         case lavi::lang::parser::ast_node_type::ast_node_pair:
-            name = node->child_content_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
+            name = node.child_content_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
             named = true;
-            default_value_node = node->child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
+            default_value_node = *node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl);
             break;
         default:
-            throw std::runtime_error("Invalid parameter type: " + std::to_string(static_cast<int>(node->type())));
+            throw std::runtime_error("Invalid parameter type: " + std::to_string(static_cast<int>(node.type())));
     }
 }
 

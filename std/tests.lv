@@ -1,4 +1,4 @@
-class ExpectationNotMet extends RuntimeError
+class ExpectationNotMetError extends RuntimeError
     var message = null
     fn init(msg)
         message = msg
@@ -15,7 +15,7 @@ class EQ
         if actual == expected
             return true
         else
-            throw ExpectationNotMet.new("Expected ${expected.inspect}, but got ${actual.inspect}")
+            throw ExpectationNotMetError.new("Expected ${expected.inspect}, but got ${actual.inspect}")
         end
     end
 end
@@ -30,7 +30,7 @@ class Include
         if actual.include?(expected)
             return true
         else
-            throw ExpectationNotMet.new("Expected ${actual} to include ${expected}")
+            throw ExpectationNotMetError.new("Expected ${actual} to include ${expected}")
         end
     end
 end
@@ -45,7 +45,7 @@ class EndsWith
         if actual.ends_with?(expected)
             return true
         else
-            throw ExpectationNotMet.new("Expected ${actual} to end with ${expected}")
+            throw ExpectationNotMetError.new("Expected ${actual} to end with ${expected}")
         end
     end
 end
@@ -60,7 +60,7 @@ class BeA
         if actual.is_a?(expected)
             true
         else
-            throw ExpectationNotMet.new("Expected ${actual} to be a ${expected}")
+            throw ExpectationNotMetError.new("Expected ${actual} to be a ${expected}")
         end
     end
 end
@@ -123,7 +123,7 @@ fn it(what)
     var error_msg = null
     try
         yield
-    catch(ExpectationNotMet e)
+    catch(ExpectationNotMetError e)
         error_msg = e.message
         errors.push("${describe_stack.join(' ')} ${what}\n${error_msg}")
     catch(e)

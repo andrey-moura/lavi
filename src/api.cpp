@@ -1,4 +1,5 @@
 #include <fstream>
+#include <string>
 
 #include <lavi/lang/api.hpp>
 #include <lavi/lang/preprocessor.hpp>
@@ -8,7 +9,7 @@
 
 extern void create_builtin_libs();
 
-std::map<std::string_view, lavi::lang::parser::ast_node> node_cache;
+std::map<std::string, lavi::lang::parser::ast_node, std::less<>> node_cache;
 
 namespace lavi
 {
@@ -68,7 +69,7 @@ namespace lavi
                 std::string_view function_name,
                 std::shared_ptr<lavi::lang::object> object,
                 std::vector<std::shared_ptr<lavi::lang::object>> positional_params,
-                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params
+                std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> named_params
             )
             {
                 if(object) {
@@ -153,7 +154,7 @@ namespace lavi
                 lavi::lang::interpreter* interpreter,
                 std::string_view function_name,
                 std::initializer_list<std::shared_ptr<lavi::lang::object>> positional_params,
-                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params
+                std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> named_params
             )
             {
                 std::shared_ptr<lavi::lang::object> object = nullptr;
@@ -181,7 +182,11 @@ namespace lavi
                 return call(interpreter, function_name, object, std::move(positional_params), std::move(named_params));
             }
 
-            std::shared_ptr<lavi::lang::object> yield(lavi::lang::interpreter* interpreter, std::vector<std::shared_ptr<lavi::lang::object>> position_params, std::map<std::string, std::shared_ptr<lavi::lang::object>> named_params)
+            std::shared_ptr<lavi::lang::object> yield(
+                lavi::lang::interpreter* interpreter,
+                std::vector<std::shared_ptr<lavi::lang::object>> position_params,
+                std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> named_params
+            )
             {
                 auto* block = interpreter->current_context->given_block;
 
@@ -221,7 +226,7 @@ namespace lavi
                 lavi::lang::interpreter* interpreter,
                 std::shared_ptr<lavi::lang::klass> klass,
                 std::vector<std::shared_ptr<lavi::lang::object>> positional_params,
-                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params
+                std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> named_params
             )
             {
                 auto obj = object::instantiate(interpreter, klass);
@@ -284,21 +289,21 @@ namespace lavi
                 }
 
                 // Yes, the cache is kept alive during the execution of the program
-                lavi::lang::lexer* lexer = new lavi::lang::lexer(path_or_key, std::move(source_code));
+                lavi::lang::lexer lexer(path_or_key, std::move(source_code));
 
-                lexer->tokenize();
+                lexer.tokenize();
 
                 for(const auto& include : interpreter->main_lexer->includes()) {
-                    lexer->include_from_parent(include);
+                    lexer.include_from_parent(include);
                 }
 
                 lavi::lang::preprocessor preprocessor;
-                preprocessor.process(source_code, *lexer);
+                preprocessor.process(source_code, lexer);
 
                 lavi::lang::parser p;
-                auto node = p.parse_all(*lexer);
+                auto node = p.parse_all(lexer);
 
-                return node_cache[lexer->source()] = std::move(node);
+                return node_cache[path_or_key] = std::move(node);
             }
         };
     }; // namespace lang

@@ -223,10 +223,10 @@ namespace lavi
                 });
             }
             for(auto& [name, func_ptr] : inline_functions) {
-                klass->instance_inline_functions[name] = std::make_shared<lavi::lang::inline_function>(func_ptr);
+                klass->instance_inline_functions[std::string(name)] = std::make_shared<lavi::lang::inline_function>(func_ptr);
             }
             for(auto& [name, func] : instance_functions) {
-                klass->instance_functions[name] = std::make_shared<lavi::lang::function>(std::move(func));
+                klass->instance_functions[std::string(name)] = std::make_shared<lavi::lang::function>(std::move(func));
             }
         }
     };
