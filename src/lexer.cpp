@@ -3,11 +3,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <cstdint>
-
-// Permitted delimiters: (){};:,
-const static uint64_t __is_delimiter_lookup[] = { 0, 0, 0, 0, 0, 0x100000101, 0, 0x1010000, 0, 0, 0, 0, 0, 0, 0, 0x10001000000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-const static bool* is_delimiter_lookup = (bool*)__is_delimiter_lookup;
-const static uint64_t is_operator_lookup[] = { 0, 0, 0, 0, 0x1010000000100, 0x101010001010000, 0, 0x101010100000000, 0, 0, 0, 0x10001000000, 0, 0, 0, 0x100000000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+#include <array>
 
 static bool is_alphanum(const char& c)
 {
@@ -88,7 +84,23 @@ const static std::map<std::string_view, lavi::lang::lexer::operator_type> string
 
 static size_t is_delimiter(std::string_view str)
 {
-    if(str.starts_with("end")) {
+    static constexpr auto is_delimiter_lookup = [] {
+        std::array<bool, 256> t{};
+        t['('] = true;
+        t[')'] = true;
+        t[','] = true;
+        t[':'] = true;
+        t[';'] = true;
+        t['{'] = true;
+        t['}'] = true;
+        return t;
+    }();
+
+    if(is_delimiter_lookup[(uint8_t)str.front()]) {
+        return 1;
+    }
+
+    if(str.size() >= 3 && str[0] == 'e' && str[1] == 'n' && str[2] == 'd') {
         // Now we can have
         // end
         // end[];,()
@@ -98,18 +110,39 @@ static size_t is_delimiter(std::string_view str)
         {
             return 3;
         }
-        if(str.size() > 3) {
-            char next_char = str[3];
-            if(!is_word_char(next_char)) {
-                return 3;
-            }
+
+        char next_char = str[3];
+
+        if(!is_word_char(next_char)) {
+            return 3;
         }
     }
-    return (size_t)((bool*)is_delimiter_lookup)[(uint8_t)str.front()];
+
+    return 0;
 }
 
 static bool is_operator(const char& c) {
-    return ((bool*)is_operator_lookup)[(uint8_t)c];
+    static constexpr std::array<bool, 256> is_operator_lookup = [] {
+        std::array<bool, 256> t{};
+        t['!'] = true;
+        t['%'] = true;
+        t['&'] = true;
+        t['*'] = true;
+        t['+'] = true;
+        t['-'] = true;
+        t['.'] = true;
+        t['/'] = true;
+        t['<'] = true;
+        t['='] = true;
+        t['>'] = true;
+        t['?'] = true;
+        t['['] = true;
+        t[']'] = true;
+        t['|'] = true;
+        return t;
+    }();
+
+    return is_operator_lookup[(uint8_t)c];
 }
 
 static bool is_keyword(std::string_view str) {
@@ -377,25 +410,27 @@ void lavi::lang::lexer::read_next_token()
         return;
     }
 
+    // Read this before checking for delimiters, because '::' is a operator, ':test' is a string literal, and ':' is a delimiter.
+    if(c == ':' && m_current.size() > 1) {
+        if(m_current[1] == ':') {
+            // It is a scope resolution operator
+            read(2);
+            push_token(token_type::token_operator);
+            return;
+        } else
+        if(is_alpha(m_current[1])) {
+            discard();
+            while(m_current.size() && is_word_char(m_current.front())) { 
+                read();
+            }
+            push_token(token_type::token_literal, token_kind::token_string);
+            m_tokens.back().string_literal = m_tokens.back().content;
+            return;
+        }
+    }
+
     size_t delimiter_size = is_delimiter(m_current);
     if(delimiter_size) {
-        if(c == ':' && m_current.size() > 1) {
-            if(m_current[1] == ':') {
-                // It is a scope resolution operator
-                read(2);
-                push_token(token_type::token_operator);
-                return;
-            } else
-            if(is_alpha(m_current[1])) {
-                discard();
-                while(m_current.size() && is_word_char(m_current.front())) { 
-                    read();
-                }
-                push_token(token_type::token_literal, token_kind::token_string);
-                m_tokens.back().string_literal = m_tokens.back().content;
-                return;
-            }
-        }
         read(delimiter_size);
         push_token(token_type::token_delimiter);
         return;
@@ -454,7 +489,9 @@ void lavi::lang::lexer::read_next_token()
             }
         }
 
-        operator_type op = to_operator(m_buffer);
+        // Not used currently
+        // operator_type op = to_operator(m_buffer);
+        operator_type op = operator_type::operator_max;
 
         push_token(token_type::token_operator, token_kind::token_null, op);
         return;
