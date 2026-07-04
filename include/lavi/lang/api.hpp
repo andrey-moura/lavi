@@ -49,7 +49,7 @@ namespace lavi
                 lavi::lang::interpreter* interpreter,
                 std::string_view function_name,
                 std::initializer_list<std::shared_ptr<lavi::lang::object>> positional_params = {},
-                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params = {}
+                std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> named_params = {}
             );
             /// @brief Call a function.
             /// @param interpreter The interpreter.
@@ -61,13 +61,13 @@ namespace lavi
                 std::string_view function_name,
                 std::shared_ptr<lavi::lang::object> object,
                 std::vector<std::shared_ptr<lavi::lang::object>> positional_params = {},
-                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params = {}
+                std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> named_params = {}
             );
             /// @brief Yield a value to the caller block.
             /// @param interpreter The interpreter.
             /// @param value The value to yield.
             /// @return Returns the value sent by the caller block.
-            std::shared_ptr<lavi::lang::object> yield(lavi::lang::interpreter* interpreter, std::vector<std::shared_ptr<lavi::lang::object>> position_params = {}, std::map<std::string, std::shared_ptr<lavi::lang::object>> named_params = {});
+            std::shared_ptr<lavi::lang::object> yield(lavi::lang::interpreter* interpreter, std::vector<std::shared_ptr<lavi::lang::object>> position_params = {}, std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> named_params = {});
             /// @brief Creates the object with a value and automatically determines the class.
             /// @tparam T The type of the value.
             /// @param interpreter The interpreter.
@@ -94,7 +94,10 @@ namespace lavi
                 } else if constexpr(std::is_same_v<T, lavi::lang::hash>) {
                     auto obj = lavi::lang::object::instantiate(interpreter, lavi::lang::hash_class, std::move(value));
                     return obj;
-                } else if constexpr(std::is_same_v<T, std::map<std::string, std::shared_ptr<lavi::lang::object>>> || std::is_same_v<T, std::map<std::string_view, std::shared_ptr<lavi::lang::object>>>) {
+                } else if constexpr(std::is_same_v<T, std::map<std::string, std::shared_ptr<lavi::lang::object>>> ||
+                                    std::is_same_v<T, std::map<std::string_view, std::shared_ptr<lavi::lang::object>>> ||
+                                    std::is_same_v<T, std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>>>
+                                ) {
                     lavi::lang::hash hash(interpreter);
                     for(auto& [key, val] : value) {
                         hash.set(to_object(interpreter, key), std::move(val));
@@ -150,7 +153,7 @@ namespace lavi
                 lavi::lang::interpreter* interpreter,
                 std::shared_ptr<lavi::lang::klass> klass,
                 std::vector<std::shared_ptr<lavi::lang::object>> positional_params = {},
-                std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params = {}
+                std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> named_params = {}
             );
             /// @brief Checks if the object is truthy (not null and not false).
             /// @param interpreter The interpreter.
@@ -168,6 +171,15 @@ namespace lavi
             /// @param klass The class.
             /// @param contained The contained class.
             void contained_class(std::shared_ptr<lavi::lang::klass> klass, std::shared_ptr<lavi::lang::klass> contained);
+            /// @brief Load the source code without executing it.
+            /// @param interpreter The interpreter.
+            /// @param path_or_key The path or unique key to the source code.
+            /// @param source_code The code to be executed.
+            lavi::lang::parser::ast_node& load(
+                lavi::lang::interpreter* interpreter,
+                std::string path_or_key,
+                std::string source_code
+            );
         };
     };
 };

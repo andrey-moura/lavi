@@ -1,6 +1,6 @@
 #include 'std/tests'
 
-describe 'type' do
+describe 'class' do
   context 'when creating instances' do
     it 'initializes instance variables with default values' do
       class Foo
@@ -245,17 +245,70 @@ describe 'type' do
       var d = Dog.new
       expect(d.bark).to eq('woof')
     end
+    context 'not defined' do
+      context 'when the class is not used' do
+        it 'does not throw error' do
+          class BaseDerivedFromUndefined extends UndefinedBase
+          end
+        end
+      end
+      context 'when the class is used' do
+        context 'to call a static function' do
+          it 'does not throw error' do
+            class BaseDerivedFromUndefined extends UndefinedBase
+              static fn foo
+                return 42
+              end
+            end
+
+            expect(BaseDerivedFromUndefined.foo).to eq(42)
+          end
+        end
+        context 'to create an instance' do
+          it 'throws error' do
+            class BaseDerivedFromUndefined extends UndefinedBase
+            end
+
+            var exception = null
+
+            try
+              var instance = BaseDerivedFromUndefined.new
+            catch(e)
+              exception = e
+            end
+
+            if exception
+              expect(exception.class).to eq(UndefinedClassError)
+            else
+              throw ExpectationNotMetError.new('no exception thrown')
+            end
+          end
+        end
+      end
+      context 'when the base class is defined later' do
+        it 'does not throw error' do
+          class BaseDerivedFromLaterDefined extends LaterDefinedBase
+          end
+
+          class LaterDefinedBase
+          end
+
+          var instance = BaseDerivedFromLaterDefined.new
+          expect(instance.class.name).to eq('BaseDerivedFromLaterDefined')
+        end
+      end
+    end
   end
   context 'when declaring variable inside instance function' do
     it 'should not be accessible outside the function' do
-      class Foo
+      class FooWithBarFunction
         fn bar
           var x = 42
           x
         end
       end
 
-      var f = Foo.new
+      var f = FooWithBarFunction.new
       expect(f.bar).to eq(42)
 
       var exeception = null

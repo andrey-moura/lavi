@@ -151,9 +151,9 @@ static lavi::lang::lexer::operator_type to_operator(std::string_view str) {
     return it->second;
 }
 
-lavi::lang::lexer::lexer(std::string __file_name, std::string __source)
+lavi::lang::lexer::lexer(std::string __file_name, std::string_view __source)
     : m_file_name(std::make_shared<std::string>(std::move(__file_name))),
-    m_source(std::move(__source)),
+    m_source(__source),
     m_current(m_source)
 {
 

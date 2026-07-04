@@ -111,8 +111,8 @@
     ],
     "cmake.debugConfig": {
         "args": [
-            "--cxx",
-            "/usr/include/libelf.h"
+            "examples/minimal.lv",
+            "tests/high-level/class_spec.lv"
         ],
         "cwd": "${workspaceFolder}",
         "visualizerFile": "${workspaceFolder}/natvis.xml",

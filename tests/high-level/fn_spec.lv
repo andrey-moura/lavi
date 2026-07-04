@@ -60,7 +60,7 @@ describe 'functions' do
     end
   end
 
-  describe 'with named parameters' do
+  context 'with named parameters' do
     context 'with default parameters' do
       context 'when no parameters are provided' do
         it 'uses default values for parameters' do
@@ -80,6 +80,18 @@ describe 'functions' do
           expect(greet(name: 'Alice')).to eq('Hello, Alice!')
         end
       end
+    end
+  end
+
+  context "with class definition on it's body" do
+    it 'makes the class globally acessible' do
+      fn declare_class
+        class Foo
+          var x = 42
+        end
+      end
+      declare_class
+      expect(Foo.new.x).to eq(42)
     end
   end
 end

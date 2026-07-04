@@ -17,7 +17,7 @@ namespace lavi
             std::shared_ptr<lavi::lang::object> self;
             std::shared_ptr<lavi::lang::klass> klass;
 
-            std::map<std::string_view, std::shared_ptr<lavi::lang::object>> named_params;
+            std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> named_params;
             std::vector<std::shared_ptr<lavi::lang::object>> positional_params;
             
             const lavi::lang::parser::ast_node* given_block = nullptr;
@@ -29,6 +29,8 @@ namespace lavi
             std::shared_ptr<lavi::lang::interpreter_context> lexical_parent = nullptr;
             std::shared_ptr<lavi::lang::interpreter_context> given_block_lexical_context = nullptr;
             const lavi::lang::parser::ast_node* caller_node = nullptr;
+
+            std::map<std::string, std::shared_ptr<lavi::lang::klass>, std::less<>> forward_declarations;
         };
     }; // namespace lang
 }; // namespace lavi

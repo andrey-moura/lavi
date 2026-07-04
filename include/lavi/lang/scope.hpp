@@ -17,11 +17,9 @@ namespace lavi
     struct scope
     {
       public:
-        std::map<std::string_view, std::shared_ptr<lavi::lang::object>> variables;
-        std::map<std::string_view, std::shared_ptr<lavi::lang::function>> functions;
-        std::map<std::string_view, std::shared_ptr<lavi::lang::inline_function>> inline_functions;
-
-        std::deque<std::string> string_holder;
+        std::map<std::string, std::shared_ptr<lavi::lang::object>, std::less<>> variables;
+        std::map<std::string, std::shared_ptr<lavi::lang::function>, std::less<>> functions;
+        std::map<std::string, std::shared_ptr<lavi::lang::inline_function>, std::less<>> inline_functions;
     };
   }
 };
