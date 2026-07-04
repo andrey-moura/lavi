@@ -84,6 +84,11 @@ const static std::map<std::string_view, lavi::lang::lexer::operator_type> string
 
 static size_t is_delimiter(std::string_view str)
 {
+    if(str[0] == ':' && str.size() >= 2 && str[1] == ':') {
+        // '::' is not a delimiter
+        return 0;
+    }
+
     static constexpr auto is_delimiter_lookup = [] {
         std::array<bool, 256> t{};
         t['('] = true;
@@ -410,14 +415,8 @@ void lavi::lang::lexer::read_next_token()
         return;
     }
 
-    // Read this before checking for delimiters, because '::' is a operator, ':test' is a string literal, and ':' is a delimiter.
+    // Read this before checking for delimiters, because ':test' is a string literal, and ':' is a delimiter.
     if(c == ':' && m_current.size() > 1) {
-        if(m_current[1] == ':') {
-            // It is a scope resolution operator
-            read(2);
-            push_token(token_type::token_operator);
-            return;
-        } else
         if(is_alpha(m_current[1])) {
             discard();
             while(m_current.size() && is_word_char(m_current.front())) { 
@@ -532,8 +531,28 @@ void lavi::lang::lexer::read_next_token()
     }
 
     // It must be a identifier or a keyword
-    read_while([](const char& c) {
-        return is_word_char(c);
+    read_while([this](const char& c) {
+        if(is_word_char(c)) return true;
+
+        bool current_char_is_colon = c == ':';
+
+        if(!current_char_is_colon) {
+            return false;
+        }
+
+        bool the_next_char_is_colon = m_current.size() > 1 && m_current[1] == ':';
+
+        if(the_next_char_is_colon && current_char_is_colon) {
+            return true;
+        }
+
+        bool previous_char_is_colon = m_buffer.size() > 1 && m_buffer.back() == ':';
+
+        if(previous_char_is_colon && current_char_is_colon) {
+            return true;
+        }
+
+        return false;
     });
 
     if(m_buffer.empty()) {

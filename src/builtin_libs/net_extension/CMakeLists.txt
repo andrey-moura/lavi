@@ -7,6 +7,7 @@ if(ANDY_NET_BACKEND)
         ${CMAKE_CURRENT_LIST_DIR}/src/http_class.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/net_class.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/net_extension.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/response_class.cpp
         $<TARGET_OBJECTS:andy-net>
     )
 else()

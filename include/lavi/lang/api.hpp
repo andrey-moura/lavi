@@ -166,11 +166,6 @@ namespace lavi
             /// @param klass The class to check.
             /// @return Returns true if the object is an instance of the class or one of its subclasses, false otherwise.
             bool is_a(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> obj, std::shared_ptr<lavi::lang::klass> klass);
-            /// @brief Adds a class to another class.
-            /// @param interpreter The interpreter.
-            /// @param klass The class.
-            /// @param contained The contained class.
-            void contained_class(std::shared_ptr<lavi::lang::klass> klass, std::shared_ptr<lavi::lang::klass> contained);
             /// @brief Load the source code without executing it.
             /// @param interpreter The interpreter.
             /// @param path_or_key The path or unique key to the source code.

@@ -326,4 +326,31 @@ describe 'class' do
       end
     end
   end
+  context 'declared inside a namespace' do
+    namespace MyNamespaceWithClass
+      class MyClassInsideNamespace
+        var x = 42
+      end
+    end
+    it 'is accessible outside the module' do
+      var instance = MyNamespaceWithClass::MyClassInsideNamespace.new
+      expect(instance.x).to eq(42)
+    end
+    it 'is named with full module path' do
+      expect(MyNamespaceWithClass::MyClassInsideNamespace.name).to eq('MyNamespaceWithClass::MyClassInsideNamespace')
+    end
+    context 'with a base in the same namespace' do
+      namespace MyNamespaceWithBase
+        class BaseFromNamespace
+          var x = 42
+        end
+        class DerivedFromNamespace extends BaseFromNamespace
+        end
+      end
+      it 'inherits from the base class' do
+        var instance = MyNamespaceWithBase::DerivedFromNamespace.new
+        expect(instance.x).to eq(42)
+      end
+    end
+  end
 end
