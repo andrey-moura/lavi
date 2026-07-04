@@ -164,10 +164,6 @@ static std::shared_ptr<lavi::lang::klass> do_execute_classdecl(lavi::lang::inter
 
     if (baseclass_node)
     {
-        // auto object = lavi::lang::api::to_object(interpreter, klass);
-
-        // interpreter->push_context_with_object(object);
-
         auto declname_node = baseclass_node->child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
         auto base_class = interpreter->find_class(declname_node->token().content);
 

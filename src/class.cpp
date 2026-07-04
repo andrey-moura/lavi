@@ -247,6 +247,7 @@ std::shared_ptr<lavi::lang::klass> lavi::lang::klass::create(std::string_view na
 std::shared_ptr<lavi::lang::klass> lavi::lang::klass::create_builtin(std::string_view name)
 {
     auto klass = create(name);
+    klass->is_defined = true;
     builtin_classes.push_back(klass);
     return klass;
 }
