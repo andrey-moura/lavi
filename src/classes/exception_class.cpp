@@ -16,6 +16,12 @@ void create_runtime_error_class()
   lavi::lang::runtime_error_class->base = lavi::lang::exception_class;
 }
 
+void create_undefined_class_error_class()
+{
+  lavi::lang::undefined_class_error_class = lavi::lang::klass::create_builtin("UndefinedClassError");
+  lavi::lang::undefined_class_error_class->base = lavi::lang::exception_class;
+}
+
 void create_exception_class()
 {
   lavi::lang::exception_class = lavi::lang::klass::create_builtin("Exception");
@@ -27,4 +33,5 @@ void create_exception_class()
 
   create_no_function_error_class();
   create_runtime_error_class();
+  create_undefined_class_error_class();
 }
