@@ -3,7 +3,6 @@
 #endif
 
 #include <iostream>
-#include <random>
 #include <filesystem>
 #include <fstream>
 
@@ -17,17 +16,8 @@
 
 void create_std_class()
 {
-    auto random_class = lavi::lang::klass::create_builtin("Random");
-    random_class->functions["integer"] = std::make_shared<lavi::lang::function>("integer", [](lavi::lang::interpreter* interpreter) {
-        static std::random_device rd;
-        static std::mt19937 gen(rd());
-        std::uniform_int_distribution<int> dis(INT_MIN, INT_MAX);
-        return lavi::lang::object::instantiate(interpreter, lavi::lang::integer_class, dis(gen));
-    });
-
     // This is not on builtin list!!
     lavi::lang::std_class = std::make_shared<lavi::lang::klass>("std");
-    lavi::lang::api::contained_class(lavi::lang::std_class, random_class);
 
     lavi::lang::std_class->functions["print"] = std::make_shared<lavi::lang::function>("print",std::initializer_list<std::string>{"message"}, [](lavi::lang::interpreter* interpreter) {
         std::shared_ptr<lavi::lang::object> obj = interpreter->current_context->positional_params[0];

@@ -57,13 +57,6 @@ namespace lavi
                 return ret;
             }
 
-            void contained_class(std::shared_ptr<lavi::lang::klass> klass, std::shared_ptr<lavi::lang::klass> contained) {
-                klass->functions[contained->name] = std::make_shared<lavi::lang::function>(contained->name, [contained](lavi::lang::interpreter* interpreter) {
-                    auto cls_object = lavi::lang::api::to_object(interpreter, contained);
-                    return cls_object;
-                });
-            }
-
             std::shared_ptr<lavi::lang::object> call(
                 lavi::lang::interpreter* interpreter,
                 std::string_view function_name,
