@@ -8,45 +8,7 @@
 #include "lavi/lang/lang.hpp"
 #include "lavi/lang/api.hpp"
 #include "lavi/lang/classes.hpp"
-
-struct andy_lang_exception : std::exception {
-    andy_lang_exception(
-        lavi::lang::interpreter* __interpreter,
-        std::shared_ptr<lavi::lang::object> __object
-    )
-        : exception_object(__object), interpreter(__interpreter)
-    {
-        if(!lavi::lang::api::is_a(interpreter, exception_object, lavi::lang::exception_class)) {
-            exception_object = lavi::lang::api::new_object(
-                interpreter,
-                lavi::lang::runtime_error_class,
-                {
-                    __object->klass == lavi::lang::string_class
-                        ?
-                        __object
-                        : lavi::lang::api::call(interpreter, "to_string", __object)
-                }
-            );
-        }
-        fetch_what();
-    }
-
-    std::shared_ptr<lavi::lang::object> exception_object;
-    lavi::lang::interpreter* interpreter;
-    private:
-        std::string temp_message;
-    public:
-        void fetch_what()
-        {
-            auto variable = lavi::lang::api::call(interpreter, "message", exception_object);
-
-            temp_message = variable->as<std::string>();
-        }
-        const char* what() const noexcept override
-        {
-            return temp_message.c_str();
-        }
-};
+#include "lavi/lang/exception.hpp"
 
 std::shared_ptr<lavi::lang::function> execute_method_definition(const lavi::lang::parser::ast_node& class_child)
 {
@@ -561,15 +523,11 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
                     what.append(". Did you forget to import '" + extension->name() + "'?");
                 }
 
-                auto exception_object = lavi::lang::api::new_object(
+                throw lavi::lang::exception(
                     this,
-                    lavi::lang::no_function_error_class,
-                    { 
-                        lavi::lang::api::to_object(this, what)
-                    }
+                    what,
+                    lavi::lang::no_function_error_class
                 );
-
-                throw andy_lang_exception(this, exception_object);
             }
 
             auto previous_positional_params = std::move(positional_params);
@@ -890,7 +848,11 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_yield(const
     auto block = current_context->given_block;
 
     if(!block) {
-        throw andy_lang_exception(this, lavi::lang::api::to_object(this, "No block given to yield"));
+        throw lavi::lang::exception(
+            this,
+            "No block given to yield",
+            lavi::lang::runtime_error_class
+        );
     }
 
     // Create a block context whose lexical_parent is the context where the DO...END block
@@ -1004,7 +966,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_try(const l
 
         auto context = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context);
         execute(*context);
-    } catch(const andy_lang_exception& e) {
+    } catch(const lavi::lang::exception& e) {
         // Go back to the push_context on the beginning of this function
         while(current_context && !current_context->catching_exception) {
             pop_context();
@@ -1039,12 +1001,18 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_try(const l
 
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_throw(const lavi::lang::parser::ast_node& source_code)
 {
-    auto exception_object = execute(source_code.childrens().front());
+    std::shared_ptr<lavi::lang::object> exception_object = execute(source_code.childrens().front());
 
-    throw andy_lang_exception(
+    if(!lavi::lang::api::is_a(this, exception_object, lavi::lang::exception_class)) {
+        std::shared_ptr<lavi::lang::object> exception_object_as_string = lavi::lang::api::call(this, "to_string", exception_object);
+        exception_object = lavi::lang::api::new_object(
         this,
-        exception_object
+            lavi::lang::exception_class,
+            { exception_object_as_string }
     );
+    }
+
+    throw lavi::lang::exception(this, exception_object);
 
     return exception_object;
 }
