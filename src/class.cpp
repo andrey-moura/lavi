@@ -188,6 +188,14 @@ std::shared_ptr<lavi::lang::klass> lavi::lang::klass::create(std::string_view na
         });
     }
 
+    auto inspect_function = klass->functions.find("inspect");
+
+    if(inspect_function == klass->functions.end()) {
+        klass->functions["inspect"] = std::make_shared<lavi::lang::function>("inspect", [klass](lavi::lang::interpreter* interpreter) {
+            return lavi::lang::api::to_object(interpreter, klass->name);
+        });
+    }
+
     auto inspect_instance_function = klass->instance_functions.find("inspect");
 
     if(inspect_instance_function == klass->instance_functions.end()) {
