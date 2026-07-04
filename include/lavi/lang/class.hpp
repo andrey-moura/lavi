@@ -22,7 +22,6 @@ namespace lavi {
             std::string name;
             std::shared_ptr<lavi::lang::klass> base;
             std::vector<std::shared_ptr<lavi::lang::klass>> deriveds;
-            bool is_defined = false;
 
             std::map<std::string, lavi::lang::parser::ast_node, std::less<>> instance_variables;
             std::map<std::string, std::shared_ptr<lavi::lang::function>, std::less<>> instance_functions;

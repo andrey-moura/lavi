@@ -52,7 +52,6 @@ namespace lavi
     std::shared_ptr<lavi::lang::klass> exception_class;
     std::shared_ptr<lavi::lang::klass> no_function_error_class;
     std::shared_ptr<lavi::lang::klass> runtime_error_class;
-    std::shared_ptr<lavi::lang::klass> undefined_class_error_class;
   }
 }
 
@@ -247,7 +246,6 @@ std::shared_ptr<lavi::lang::klass> lavi::lang::klass::create(std::string_view na
 std::shared_ptr<lavi::lang::klass> lavi::lang::klass::create_builtin(std::string_view name)
 {
     auto klass = create(name);
-    klass->is_defined = true;
     builtin_classes.push_back(klass);
     return klass;
 }
