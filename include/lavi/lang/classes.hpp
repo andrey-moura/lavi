@@ -68,5 +68,8 @@ namespace lavi
 
     /// @brief The global runtime error class.
     extern std::shared_ptr<lavi::lang::klass> runtime_error_class;
+
+    /// @brief The global undefined class error class.
+    extern std::shared_ptr<lavi::lang::klass> undefined_class_error_class;
   };
 }

@@ -113,7 +113,7 @@
     ],
     "cmake.debugConfig": {
         "args": [
-            "tests",
+            "examples/minimal.lv",
             "tests/high-level/class_spec.lv"
         ],
         "cwd": "${workspaceFolder}",

@@ -213,6 +213,92 @@ describe 'class' do
       expect(p2.name).to eq('Bob')
     end
   end
+  context 'with base' do
+    it 'inherits instance variables' do
+      class Animal
+        var species = null
+
+        fn init
+          species = 'generic animal'
+        end
+      end
+
+      class Dog extends Animal
+      end
+
+      var d = Dog.new
+      expect(d.species).to eq('generic animal')
+    end
+    it 'inherits instance methods' do
+      class Speaker
+        fn speak(what)
+          what
+        end
+      end
+
+      class Dog extends Speaker
+        fn bark
+          speak :woof
+        end
+      end
+
+      var d = Dog.new
+      expect(d.bark).to eq('woof')
+    end
+    context 'not defined' do
+      context 'when the class is not used' do
+        it 'does not throw error' do
+          class BaseDerivedFromUndefined extends UndefinedBase
+          end
+        end
+      end
+      context 'when the class is used' do
+        context 'to call a static function' do
+          it 'does not throw error' do
+            class BaseDerivedFromUndefined extends UndefinedBase
+              static fn foo
+                return 42
+              end
+            end
+
+            expect(BaseDerivedFromUndefined.foo).to eq(42)
+          end
+        end
+        context 'to create an instance' do
+          it 'throws error' do
+            class BaseDerivedFromUndefined extends UndefinedBase
+            end
+
+            var exception = null
+
+            try
+              var instance = BaseDerivedFromUndefined.new
+            catch(e)
+              exception = e
+            end
+
+            if exception
+              expect(exception.class).to eq(UndefinedClassError)
+            else
+              throw ExpectationNotMetError.new('no exception thrown')
+            end
+          end
+        end
+      end
+      context 'when the base class is defined later' do
+        it 'does not throw error' do
+          class BaseDerivedFromLaterDefined extends LaterDefinedBase
+          end
+
+          class LaterDefinedBase
+          end
+
+          var instance = BaseDerivedFromLaterDefined.new
+          expect(instance.class.name).to eq('BaseDerivedFromLaterDefined')
+        end
+      end
+    end
+  end
   context 'when declaring variable inside instance function' do
     it 'should not be accessible outside the function' do
       class FooWithBarFunction

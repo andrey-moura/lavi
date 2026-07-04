@@ -1,5 +1,6 @@
 #include <lavi/lang/object.hpp>
 
+#include <lavi/lang/exception.hpp>
 #include <lavi/lang/class.hpp>
 #include <lavi/lang/function.hpp>
 #include <lavi/lang/interpreter.hpp>
@@ -38,6 +39,13 @@ const std::string& lavi::lang::object::default_string_representation()
 
 void lavi::lang::object::initialize(lavi::lang::interpreter* interpreter)
 {
+    if(!klass->is_defined) {
+        throw lavi::lang::exception(
+            interpreter,
+            klass->name,
+            lavi::lang::undefined_class_error_class
+        );
+    }
     for(auto& instance_variable : klass->instance_variables) {
         if(instance_variable.second.is_undefined()) {
             variables[instance_variable.first] = lavi::lang::api::to_object(interpreter, nullptr);

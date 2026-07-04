@@ -72,15 +72,6 @@ void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::klass> klass)
 
 std::shared_ptr<lavi::lang::klass> lavi::lang::interpreter::find_class(const std::string_view& name)
 {
-    if(current_context != global_context) {
-        auto it = current_context->variables.find(name);
-
-        if(it != current_context->variables.end() && it->second->klass == lavi::lang::class_class)
-        {
-            return it->second->as<std::shared_ptr<lavi::lang::klass>>();
-        }
-    }
-
     auto it = global_context->variables.find(name);
 
     if(it != global_context->variables.end() && it->second->klass == lavi::lang::class_class)
@@ -155,31 +146,36 @@ static std::shared_ptr<lavi::lang::klass> do_execute_classdecl(lavi::lang::inter
     auto klass = interpreter->find_class(class_name);
 
     if (!klass) {
-        klass = lavi::lang::klass::create(class_name);
+        for(auto& forward_declared_class : interpreter->current_context->forward_declarations) {
+            if(forward_declared_class.first == class_name) {
+                klass = forward_declared_class.second;
+                break;
+            }
+        }
+
+        if(!klass) {
+            klass = lavi::lang::klass::create(class_name);
+        }
     }
+
+    klass->is_defined = true;
 
     auto baseclass_node = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_classdecl_base);
 
     if (baseclass_node)
     {
-        auto object = lavi::lang::api::to_object(interpreter, klass);
-
-        // interpreter->push_context_with_object(object);
-
         auto declname_node = baseclass_node->child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
-        auto base_class_object = interpreter->execute(*declname_node);
+        auto base_class = interpreter->find_class(declname_node->token().content);
 
-        // interpreter->pop_context();
-
-        if(!base_class_object) {
-            throw std::runtime_error("base class " + std::string(baseclass_node->decname()) + " not found");
+        if(!base_class) {
+            auto forward_declared_class_it = interpreter->current_context->forward_declarations.find(declname_node->token().content);
+            if(forward_declared_class_it != interpreter->current_context->forward_declarations.end()) {
+                base_class = forward_declared_class_it->second;
+            } else {
+                base_class = lavi::lang::klass::create(declname_node->token().content);
+                interpreter->current_context->forward_declarations.insert({declname_node->token().content, base_class});
+            }
         }
-
-        if(base_class_object->klass->name != "Class") {
-            throw std::runtime_error("base class " + std::string(baseclass_node->decname()) + " is not a class");
-        }
-
-        std::shared_ptr<lavi::lang::klass> base_class = base_class_object->as<std::shared_ptr<lavi::lang::klass>>();
 
         klass->base = base_class;
         base_class->deriveds.push_back(klass);
@@ -524,7 +520,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
                     what.reserve(what.size() + extension->name().size() + 30);
                     what.append(". Did you forget to import '" + extension->name() + "'?");
                 }
-
+            
                 throw lavi::lang::exception(
                     this,
                     what,
@@ -1008,10 +1004,10 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_throw(const
     if(!lavi::lang::api::is_a(this, exception_object, lavi::lang::exception_class)) {
         std::shared_ptr<lavi::lang::object> exception_object_as_string = lavi::lang::api::call(this, "to_string", exception_object);
         exception_object = lavi::lang::api::new_object(
-        this,
+            this,
             lavi::lang::exception_class,
             { exception_object_as_string }
-    );
+        );
     }
 
     throw lavi::lang::exception(this, exception_object);
