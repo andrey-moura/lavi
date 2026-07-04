@@ -9,7 +9,7 @@ describe 'namespace' do
         end
       end
 
-      var b = Foo.Bar.new
+      var b = Foo::Bar.new
       expect(b.x).to eq(42)
     end
 
@@ -24,8 +24,8 @@ describe 'namespace' do
         end
       end
 
-      var a = Foo.A.new
-      var b = Foo.B.new
+      var a = Foo::A.new
+      var b = Foo::B.new
 
       expect(a.value).to eq(1)
       expect(b.value).to eq(2)
@@ -44,9 +44,9 @@ describe 'namespace' do
         end
       end
 
-      var c = Toolbox.Counter.new
+      var c = Toolbox::Counter.new
       expect(c.value).to eq(0)
-      expect(Toolbox.Math.inc(9)).to eq(10)
+      expect(Toolbox::Math.inc(9)).to eq(10)
     end
   end
 
@@ -60,7 +60,7 @@ describe 'namespace' do
         end
       end
 
-      var t = A.B.T.new
+      var t = A::B::T.new
       expect(t.msg).to eq('ok')
     end
 
@@ -75,7 +75,7 @@ describe 'namespace' do
         end
       end
 
-      expect(Core.Convert.Hex.twice(6)).to eq(12)
+      expect(Core::Convert::Hex.twice(6)).to eq(12)
     end
   end
 
@@ -89,7 +89,7 @@ describe 'namespace' do
         end
       end
 
-      expect(Utils.Math.triple(3)).to eq(9)
+      expect(Utils::Math.triple(3)).to eq(9)
     end
   end
 
@@ -107,7 +107,7 @@ describe 'namespace' do
         end
       end
 
-      var i = MyLib.Item.new
+      var i = MyLib::Item.new
       i.set 'X'
 
       expect(i.v).to eq('X')
@@ -128,8 +128,8 @@ describe 'namespace' do
         end
       end
 
-      var a = MyLib.A.new
-      var b = MyLib.B.new
+      var a = MyLib::A.new
+      var b = MyLib::B.new
 
       expect(a.v).to eq('A')
       expect(b.v).to eq('B')

@@ -71,5 +71,8 @@ namespace lavi
 
     /// @brief The global undefined class error class.
     extern std::shared_ptr<lavi::lang::klass> undefined_class_error_class;
+
+    /// @brief The global random class.
+    extern std::shared_ptr<lavi::lang::klass> random_class;
   };
 }

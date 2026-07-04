@@ -31,6 +31,8 @@ namespace lavi
             const lavi::lang::parser::ast_node* caller_node = nullptr;
 
             std::map<std::string, std::shared_ptr<lavi::lang::klass>, std::less<>> forward_declarations;
+
+            std::string fully_qualified_name(std::string_view name) const;
         };
     }; // namespace lang
 }; // namespace lavi

@@ -70,16 +70,32 @@ void lavi::lang::interpreter::load(std::shared_ptr<lavi::lang::klass> klass)
     global_context->variables[klass->name] = lavi::lang::api::to_object(this, klass);
 }
 
-std::shared_ptr<lavi::lang::klass> lavi::lang::interpreter::find_class(const std::string_view& name)
+static std::shared_ptr<lavi::lang::klass> do_find_class(lavi::lang::interpreter* interpreter, const std::string_view& name)
 {
-    auto it = global_context->variables.find(name);
+    auto it = interpreter->global_context->variables.find(name);
 
-    if(it != global_context->variables.end() && it->second->klass == lavi::lang::class_class)
+    if(it != interpreter->global_context->variables.end() && it->second->klass == lavi::lang::class_class)
     {
         return it->second->as<std::shared_ptr<lavi::lang::klass>>();
     }
 
     return nullptr;
+}
+
+std::shared_ptr<lavi::lang::klass> lavi::lang::interpreter::find_class(const std::string_view& name)
+{
+    if(current_context->klass)
+    {
+        auto klass = do_find_class(this, current_context->fully_qualified_name(name));
+
+        if(klass) {
+            return klass;
+        }
+    }
+
+    auto klass = do_find_class(this, name);
+
+    return klass;
 }
 
 static bool is_named_param(const lavi::lang::parser::ast_node& param)
@@ -141,7 +157,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_decl(con
 
 static std::shared_ptr<lavi::lang::klass> do_execute_classdecl(lavi::lang::interpreter* interpreter, const lavi::lang::parser::ast_node& source_code)
 {
-    std::string_view class_name = source_code.decname();
+    std::string class_name = interpreter->current_context->fully_qualified_name(source_code.decname());
 
     auto klass = interpreter->find_class(class_name);
 
@@ -209,7 +225,6 @@ static std::shared_ptr<lavi::lang::klass> do_execute_classdecl(lavi::lang::inter
         break;
         case lavi::lang::parser::ast_node_type::ast_node_classdecl: {
             auto child_cls = do_execute_classdecl(interpreter, class_child);
-            lavi::lang::api::contained_class(klass, child_cls);
             interpreter->load(child_cls);
         }
         break;
