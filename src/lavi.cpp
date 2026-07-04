@@ -2,15 +2,9 @@
 #include <filesystem>
 
 #include <lavi/lang/api.hpp>
-
+#include <lavi/lang/lang.hpp>
+#include <lavi/lang/exception.hpp>
 #include <andy/console.hpp>
-
-#ifdef __ANDY_DEBUG__
-    #define try if(true)
-    #define catch(e) if(false)
-
-    std::exception e;
-#endif
 
 std::shared_ptr<lavi::lang::interpreter> interpreter;
 
@@ -85,7 +79,9 @@ int main(int argc, char** argv) {
             int ret_value = ret->as<int>();
             return ret_value;
         }
-        
+    } catch (const lavi::lang::exception& e) {
+        std::cerr << e.exception_object->klass->name << ": " << e.what() << std::endl;
+        return 1;
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         return 1;

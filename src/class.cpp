@@ -23,8 +23,6 @@ extern void create_system_class();
 extern void create_true_class();
 extern void create_function_class();
 extern void create_exception_class();
-extern void create_no_function_error_class();
-extern void create_runtime_error_class();
 extern void create_std_class();
 
 // Define global classes
@@ -76,8 +74,6 @@ void lavi::lang::klass::create_builtin_classes()
     create_andy_config_class();
     create_function_class();
     create_exception_class();
-    create_no_function_error_class();
-    create_runtime_error_class();
     // These are not named on Interpreter because they are not used too often
     // Some of the one which are named should be moved to here soon.
     create_directory_class();
