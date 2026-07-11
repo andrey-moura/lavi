@@ -21,15 +21,13 @@ describe 'std functions' do
   end
   describe 'require' do
     fn fixture(name)
-      var path = Path.new(__dir__)
+      var path = Dir.current.path
+      path /= 'tests'
       path /= 'fixtures'
       path /= "${name}.lv"
     end
     context 'when a file is required' do
       it 'should evaluate the expression' do
-        var path = Path.new(__dir__)
-        path /= 'fixtures'
-        path /= '1.lv'
         expect(require fixture('1')).to eq 1
       end
       it 'should load definitions' do
@@ -40,6 +38,3 @@ describe 'std functions' do
     end
   end
 end
-
-// TODO list in order
-// 7. Make tests.lv accpet the file path as an argument and filter included files
