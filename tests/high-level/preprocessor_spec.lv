@@ -1,6 +1,12 @@
 #include 'std/tests'
 
 describe 'preprocessor' do
+  describe '#include' do
+    it 'allows access to functions from included files' do
+      #include 'tests/fixtures/fn.lv'
+      expect(test).to eq('123')
+    end
+  end
   describe '#if' do
     #if __linux__
       context 'verifying __linux__' do
