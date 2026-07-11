@@ -249,6 +249,11 @@ static bool is_on_same_line(const lavi::lang::lexer::token& token, const lavi::l
     return token.start.line == other.start.line;
 }
 
+static bool is_one_exactly_after_other(const lavi::lang::lexer::token& token, const lavi::lang::lexer::token& other)
+{
+    return token.end.line == other.start.line && token.end.column == other.start.column;
+}
+
 static bool is_function_call(const lavi::lang::lexer::token& token, const lavi::lang::lexer& lexer)
 {
     if(token.type != lavi::lang::lexer::token_type::token_identifier) {
@@ -271,7 +276,26 @@ static bool is_no_parentheses_function_call(const lavi::lang::lexer::token& toke
 
     bool is_identifier_or_literal_or_yield = is_identifier_or_literal(next_token) || (next_token.type == lavi::lang::lexer::token_type::token_keyword && next_token.content == "yield");
 
-    return is_identifier_or_literal_or_yield && is_on_same_line(token, next_token);
+    if(is_identifier_or_literal_or_yield && is_on_same_line(token, next_token)) {
+        return true;
+    }
+
+    if(next_token.type == lavi::lang::lexer::token_type::token_operator && (next_token.content == "[")) {
+        // We are at one of the following cases:
+        // out [1, 2, 3]
+        // array[1]
+        // To decide if it's a function call (out) or an array access (array[1]), we need to check if the next
+        // token is directly after the current token, with no spaces or new lines in between which is a array
+        // access, otherwise it's a function call.
+        auto& previous_token = lexer.see_previous();
+
+        if(!is_one_exactly_after_other(previous_token, next_token)) {
+            // The next token is not directly after the current token, so it's a function call
+            return true;
+        }
+    }
+
+    return false;
 }
 
 static bool is_any_function_call(const lavi::lang::lexer::token& token, const lavi::lang::lexer& lexer)
@@ -344,6 +368,8 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
 
                 if(operator_token.content == "[") {
                     matching = "]";
+                } else {
+                    // Can be =, ==, etc which has no matching
                 }
 
                 // ++ and -- are unary operators
@@ -566,7 +592,8 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lav
         } else if (auto& next_token = lexer.see_next();
                   (next_token.type == lavi::lang::lexer::token_type::token_identifier && next_token.content != "do") ||
                   next_token.type == lavi::lang::lexer::token_type::token_literal ||
-                    (next_token.type == lavi::lang::lexer::token_type::token_keyword && next_token.content == "yield")) {
+                    (next_token.type == lavi::lang::lexer::token_type::token_keyword && next_token.content == "yield") ||
+                        (next_token.type == lavi::lang::lexer::token_type::token_operator && next_token.content == "[")) {
             // fn call with literal or identifier
             ast_node params_node = extract_fn_call_params(lexer);
             fn_node.add_child(std::move(params_node));
