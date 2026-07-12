@@ -7,7 +7,7 @@ describe 'Dir' do
         var dir = Dir.new('tests/fixtures/glob')
         var files = dir.glob('*.txt')
 
-        expect(files).to eq(['tests/fixtures/glob/1.txt', 'tests/fixtures/glob/2.txt'].sort)
+        expect(files.sort).to eq(['tests/fixtures/glob/1.txt', 'tests/fixtures/glob/2.txt'])
       end
       context 'when no files match the pattern' do
         it 'returns an empty array' do
