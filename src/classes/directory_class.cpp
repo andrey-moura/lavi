@@ -36,6 +36,8 @@ void create_directory_class()
 
         std::vector<std::shared_ptr<lavi::lang::object>> results;
 
+        std::filesystem::path current_path = root_path;
+
         std::string_view pattern_view(pattern);
 
         std::vector<std::string_view> parts;
@@ -54,57 +56,99 @@ void create_directory_class()
             pattern_view.remove_prefix(pos + 1);
         }
 
-        std::function<void(std::filesystem::path)> recurse;
-        int current_level = -1;
-        
-        recurse = [&](std::filesystem::path current_path) {
-            current_level++;
-            std::string_view current_matching_part = parts[current_level];
-            bool should_enter_any_directory = false;
-            bool shoud_start_matching_files = false;
-            if(current_level == parts.size() - 1)
-            {
-                shoud_start_matching_files = true;
+        std::function<void()> recurse;
+        std::string_view current_part;
+        int current_part_index = 0;
 
-                if(current_matching_part.starts_with('*')) {
-                    current_matching_part.remove_prefix(1);
-                }
+        auto push_part = [&]() -> void {
+            current_part_index++;
+            if(current_part_index < parts.size()) {
+                current_part = parts[current_part_index];
             }
-            if(current_matching_part == "**") {
-                should_enter_any_directory = true;
-            }
-
-            for(auto& entry : std::filesystem::directory_iterator(current_path)) {
-                const std::filesystem::path& entry_path = entry.path();
-                std::filesystem::path relative_path = std::filesystem::relative(entry_path, current_path);
-                if(entry.is_directory()) {
-                    bool should_enter_directory = false;
-                    if(!should_enter_any_directory) {
-                        if(relative_path == current_matching_part) {
-                            should_enter_directory = true;
-                        }
-                    }
-
-                    if(should_enter_any_directory) {
-                        should_enter_directory = true;
-                    }
-                    if(should_enter_directory) {
-                        recurse(entry_path);
-                    }
-
-                } else if(shoud_start_matching_files && entry.is_regular_file()) {
-                    if(relative_path.filename().string().ends_with(current_matching_part)) {
-                        results.push_back(lavi::lang::object::instantiate(interpreter, lavi::lang::path_class, std::move(entry_path)));
-                    }
-                }
-            }
-
-            should_enter_any_directory = false;
-            shoud_start_matching_files = false;
-            current_level--;
         };
 
-        recurse(root_path);
+        auto pop_part = [&]() -> void {
+            current_part_index--;
+            if(current_part_index >= 0) {
+                current_part = parts[current_part_index];
+            }
+        };
+
+        recurse = [&]() -> void {
+            if(current_part == "**") {
+                for(auto& entry : std::filesystem::directory_iterator(current_path)) {
+                    push_part();
+
+                    const std::filesystem::path& entry_path = entry.path();
+                    std::filesystem::path relative_path = std::filesystem::relative(entry_path, current_path);
+
+                    current_path /= relative_path;
+
+                    if(std::filesystem::is_directory(current_path)) {
+                        for(auto& entry : std::filesystem::directory_iterator(current_path)) {
+                            if(entry.is_directory()) {
+                                current_path = entry.path();
+                                recurse();
+                                current_path = current_path.parent_path();
+                            } else if(entry.is_regular_file() && current_part.starts_with('*')) {
+                                std::string_view filename_pattern = current_part;
+                                filename_pattern.remove_prefix(1); // remove the first character, which is a '*'
+
+                                if(entry.path().filename().string().ends_with(filename_pattern)) {
+                                    results.push_back(lavi::lang::object::instantiate(interpreter, lavi::lang::path_class, std::move(entry.path())));
+                                }
+                            }
+                        }
+                    } // else if(std::filesystem::is_regular_file(current_path)) {
+                    //     std::string_view filename_pattern = current_part;
+                    //     filename_pattern.remove_prefix(1); // remove the first character, which is a '*'
+
+                    //     if(current_path.filename().string().ends_with(filename_pattern)) {
+                    //         results.push_back(lavi::lang::object::instantiate(interpreter, interpreter->PathClass, current_path));
+                    //     }
+                    // }
+
+                    current_path = current_path.parent_path();
+                    pop_part();
+                }
+            } else if(current_part.starts_with('*')) {
+                if(current_part == "*") {
+                    for(auto& entry : std::filesystem::directory_iterator(current_path)) {
+                        // if(entry.is_directory()) {
+                        //     current_path = entry.path();
+                        //     recurse();
+                        //     current_path = current_path.parent_path();
+                        // } else if(entry.is_regular_file() && current_part.starts_with('*')) {
+                            std::string_view filename_pattern = current_part;
+                            filename_pattern.remove_prefix(1); // remove the first character, which is a '*'
+
+                            if(entry.path().filename().string().ends_with(filename_pattern)) {
+                                results.push_back(lavi::lang::object::instantiate(interpreter, lavi::lang::path_class, std::move(entry.path())));
+                            }
+                        //}
+                    }
+                } else {
+                    std::string_view filename_pattern = current_part;
+                    filename_pattern.remove_prefix(1); // remove the first character, which is a '*'
+                    for(auto& entry : std::filesystem::directory_iterator(current_path)) {
+                        if(entry.is_regular_file() && entry.path().filename().string().ends_with(filename_pattern)) {
+                            results.push_back(lavi::lang::object::instantiate(interpreter, lavi::lang::path_class, std::move(entry.path())));
+                        }
+                    }
+                }
+            } else {
+                current_path /= current_part;
+                if(std::filesystem::exists(current_path) && std::filesystem::is_regular_file(current_path)) {
+                    results.push_back(lavi::lang::object::instantiate(interpreter, lavi::lang::path_class, std::move(current_path)));
+                }
+                push_part();
+            }
+        };
+
+        for(const auto& part : parts) {
+            current_part = part;
+            recurse();
+        }
 
         return lavi::lang::object::instantiate(interpreter, lavi::lang::array_class, std::move(results));
     });
