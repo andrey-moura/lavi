@@ -1,6 +1,7 @@
 #include <lavi/lang/lang.hpp>
 #include <lavi/lang/interpreter.hpp>
 #include <lavi/lang/api.hpp>
+#include <lavi/lang/exception.hpp>
 
 static bool utf8_is_multibyte_character_continuation(const char& c)
 {
@@ -187,6 +188,20 @@ void create_string_class()
             const std::string& other = interpreter->current_context->positional_params[0]->as<std::string>();
 
             return lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, value + other);
+        });
+
+        lavi::lang::string_class->instance_functions["<"] = std::make_shared<lavi::lang::function>("<", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
+            if(interpreter->current_context->positional_params[0]->klass != lavi::lang::string_class) {
+                throw lavi::lang::exception(
+                    interpreter,
+                    "Cannot compare String with " + interpreter->current_context->positional_params[0]->klass->name,
+                    lavi::lang::runtime_error_class
+                );
+            }
+            const std::string& value = interpreter->current_context->self->as<std::string>();
+            const std::string& other = interpreter->current_context->positional_params[0]->as<std::string>();
+
+            return lavi::lang::api::to_object(interpreter, value < other);
         });
 
         lavi::lang::string_class->instance_functions["size"] = std::make_shared<lavi::lang::function>("size", [](lavi::lang::interpreter* interpreter) {
