@@ -30,7 +30,7 @@ class Include
         if actual.include?(expected)
             return true
         else
-            throw ExpectationNotMetError.new("Expected ${actual} to include ${expected}")
+            throw ExpectationNotMet.new("Expected ${actual.inspect} to include ${expected.inspect}")
         end
     end
 end
@@ -61,6 +61,16 @@ class BeA
             true
         else
             throw ExpectationNotMetError.new("Expected ${actual} to be a ${expected}")
+        end
+    end
+end
+
+class BeEmpty
+    fn match(actual)
+        if actual.empty?
+            true
+        else
+            throw ExpectationNotMet.new("Expected ${actual.inspect} to be empty")
         end
     end
 end
@@ -164,6 +174,10 @@ end
 
 fn be_a(what)
     BeA.new(what)
+end
+
+fn be_empty
+    BeEmpty.new
 end
 
 fn print_summary()
