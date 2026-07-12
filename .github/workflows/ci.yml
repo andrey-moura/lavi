@@ -60,35 +60,6 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Install dependencies (Ubuntu)
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          sudo apt-get install -y build-essential ccache
-
-      - name: Install dependencies (Windows)
-        if: startsWith(matrix.os, 'windows')
-        run: |
-          choco install sccache -y
-
-      - name: Restore ccache
-        if: startsWith(matrix.os, 'ubuntu')
-        uses: actions/cache@v4
-        with:
-          path: /home/runner/.cache/ccache
-          key: ccache-${{ matrix.os }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ matrix.os }}-
-
-      - name: Restore sccache
-        if: startsWith(matrix.os, 'windows')
-        uses: actions/cache@v4
-        with:
-          path: |
-            C:\Users\runneradmin\AppData\Local\Mozilla\sccache\cache
-          key: sccache-${{ matrix.os }}-${{ github.sha }}
-          restore-keys: |
-            sccache-${{ matrix.os }}-
-
       - name: Display build folder (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
         run: |
@@ -98,7 +69,7 @@ jobs:
       - name: Configure CMake (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -B build .
+          cmake -DCMAKE_BUILD_TYPE=Release -B build .
         working-directory: lavi
 
       - name: Configure CMake (Windows)
@@ -111,21 +82,6 @@ jobs:
         run: |
           cmake --build build --config Release --parallel
         working-directory: lavi
-
-      - name: Show ccache stats (Ubuntu)
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          ccache -s
-
-      - name: Show sccache stats (Windows)
-        if: startsWith(matrix.os, 'windows')
-        run: |
-          sccache --show-stats
-
-      - name: Show ccache config (Ubuntu)
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          ccache --show-config
 
       - name: Install project (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
