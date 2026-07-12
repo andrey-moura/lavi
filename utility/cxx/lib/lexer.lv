@@ -9,6 +9,8 @@ namespace CXX
       source = f
 
       var classes = CXX::Tokens::Base.subclasses
+
+      out "Token types: ${classes}"
       
       // tokens = classes.map do (token_class)
       //   token_class.new
