@@ -254,9 +254,9 @@ static bool is_one_exactly_after_other(const lavi::lang::lexer::token& token, co
     return token.end.line == other.start.line && token.end.column == other.start.column;
 }
 
-static bool is_function_call(const lavi::lang::lexer::token& token, const lavi::lang::lexer& lexer)
+static bool is_function_call(const lavi::lang::parser::ast_node& node, const lavi::lang::lexer& lexer)
 {
-    if(token.type != lavi::lang::lexer::token_type::token_identifier) {
+    if(node.token().type != lavi::lang::lexer::token_type::token_identifier) {
         return false;
     }
     
@@ -266,9 +266,9 @@ static bool is_function_call(const lavi::lang::lexer::token& token, const lavi::
             && next_token.content == "(";
 }
 
-static bool is_no_parentheses_function_call(const lavi::lang::lexer::token& token, const lavi::lang::lexer& lexer)
+static bool is_no_parentheses_function_call(const lavi::lang::parser::ast_node& node, const lavi::lang::lexer& lexer)
 {
-    if(token.type != lavi::lang::lexer::token_type::token_identifier) {
+    if(node.token().type != lavi::lang::lexer::token_type::token_identifier) {
         return false;
     }
 
@@ -276,7 +276,7 @@ static bool is_no_parentheses_function_call(const lavi::lang::lexer::token& toke
 
     bool is_identifier_or_literal_or_yield = is_identifier_or_literal(next_token) || (next_token.type == lavi::lang::lexer::token_type::token_keyword && next_token.content == "yield");
 
-    if(is_identifier_or_literal_or_yield && is_on_same_line(token, next_token)) {
+    if(is_identifier_or_literal_or_yield && is_on_same_line(node.token(), next_token)) {
         return true;
     }
 
@@ -298,9 +298,9 @@ static bool is_no_parentheses_function_call(const lavi::lang::lexer::token& toke
     return false;
 }
 
-static bool is_any_function_call(const lavi::lang::lexer::token& token, const lavi::lang::lexer& lexer)
+static bool is_any_function_call(const lavi::lang::parser::ast_node& node, const lavi::lang::lexer& lexer)
 {
-    return is_function_call(token, lexer) || is_no_parentheses_function_call(token, lexer);
+    return is_function_call(node, lexer) || is_no_parentheses_function_call(node, lexer);
 }
 
 static void extract_fn_yield_block_if_exists(lavi::lang::parser::ast_node& node, lavi::lang::parser& parser, const lavi::lang::lexer::token& token, lavi::lang::lexer& lexer)
@@ -432,20 +432,69 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
     return last_node;
 }
 
+static lavi::lang::parser::ast_node identifier_or_literal_to_node(lavi::lang::lexer::token token)
+{
+    if(token.type == lavi::lang::lexer::token_type::token_identifier) {
+        return lavi::lang::parser::ast_node(std::move(token), lavi::lang::parser::ast_node_type::ast_node_declname);
+    } else if(token.type == lavi::lang::lexer::token_type::token_literal) {
+        return lavi::lang::parser::ast_node(std::move(token), lavi::lang::parser::ast_node_type::ast_node_valuedecl);
+    } else {
+        throw std::runtime_error(token.error_message_at_current_position("Expected identifier or literal"));
+    }
+}
+
 lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lavi::lang::lexer &lexer, bool chain, bool pair, std::vector<std::string_view> keyword)
 {
     const lavi::lang::lexer::token& token = lexer.see_next();
 
-    lavi::lang::lexer::token identifier_or_literal;
+    lavi::lang::parser::ast_node identifier_or_literal_node;
 
     switch(token.type) {
         case lavi::lang::lexer::token_type::token_literal:
         case lavi::lang::lexer::token_type::token_identifier: {
             auto possible_colon = lexer.see_next(1);
+
             if(pair && possible_colon.type == lavi::lang::lexer::token_type::token_delimiter && possible_colon.content == ":") {
                 return extract_pair(lexer);
             }
-            identifier_or_literal = std::move(lexer.next_token());
+
+            identifier_or_literal_node = identifier_or_literal_to_node(lexer.next_token());
+
+            if(is_any_function_call(identifier_or_literal_node, lexer)) {
+                ast_node fn_node(ast_node_type::ast_node_fn_call);
+                fn_node.add_child(std::move(identifier_or_literal_node));
+
+                if(auto next_token = lexer.see_next(); next_token.type == lavi::lang::lexer::token_type::token_delimiter && next_token.content == "(") {
+                    lexer.consume_token(); // Consume the '(' token
+
+                    if(auto next_token = lexer.see_next(); next_token.type == lavi::lang::lexer::token_type::token_delimiter && next_token.content == ")") {
+                        // No parameters, just a closing parenthesis
+                        // Consumes the ')' token
+                        lexer.consume_token();
+                    } else {
+                        ast_node params_node = extract_fn_call_params(lexer);
+                        fn_node.add_child(std::move(params_node));
+
+                        const auto& possible_closing = lexer.see_next();
+
+                        if(possible_closing.type == lavi::lang::lexer::token_type::token_delimiter && possible_closing.content == ")") {
+                            // Consume the ')' token
+                            lexer.consume_token();
+                        } else {
+                            throw std::runtime_error(possible_closing.error_message_at_current_position("Expected ')'"));
+                        }
+                    }
+                } else if (auto& next_token = lexer.see_next();
+                        (next_token.type == lavi::lang::lexer::token_type::token_identifier && next_token.content != "do") ||
+                        next_token.type == lavi::lang::lexer::token_type::token_literal ||
+                            (next_token.type == lavi::lang::lexer::token_type::token_keyword && next_token.content == "yield") ||
+                                (next_token.type == lavi::lang::lexer::token_type::token_operator && next_token.content == "[")) {
+                    // fn call with literal or identifier
+                    ast_node params_node = extract_fn_call_params(lexer);
+                    fn_node.add_child(std::move(params_node));
+                }
+                identifier_or_literal_node = std::move(fn_node);
+            }
             break;
         }
         case lavi::lang::lexer::token_type::token_operator:
@@ -478,24 +527,21 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lav
                     }
                 }
 
-                return array_node;
+                identifier_or_literal_node = std::move(array_node);
             } else if (token.content == "!") {
-                identifier_or_literal = std::move(lexer.next_token());
-
                 ast_node unary_op(ast_node_type::ast_node_fn_call);
-                unary_op.add_child(std::move(ast_node(std::move(identifier_or_literal), ast_node_type::ast_node_declname)));
+                unary_op.add_child(std::move(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname)));
 
                 ast_node object_node(ast_node_type::ast_node_fn_object);
                 object_node.add_child(parse_identifier_or_literal(lexer));
 
                 unary_op.add_child(std::move(object_node));
 
-                return unary_op;
+                identifier_or_literal_node = std::move(unary_op);
             } else if(token.content == "[]") {
                 // empty array declaration
-                ast_node array_node(ast_node_type::ast_node_arraydecl);
+                identifier_or_literal_node = ast_node(ast_node_type::ast_node_arraydecl);
                 lexer.consume_token(); // Consume the '[]' token
-                return array_node;
             }
             else {
                 throw std::runtime_error(token.error_message_at_current_position("Unexpected operator"));
@@ -541,9 +587,8 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lav
             } else if(token.content == "(") {
                 // Expressions like (1 + 2)
                 lexer.consume_token(); // Consume the '(' token
-                ast_node expression_node = parse_identifier_or_literal(lexer);
+                identifier_or_literal_node = parse_identifier_or_literal(lexer);
                 lexer.consume_token(); // Consume the ')' token
-                return chain_if_exists(expression_node, *this, lexer);
             }
             else {
                 throw std::runtime_error(token.error_message_at_current_position("Unexpected delimiter"));
@@ -553,64 +598,20 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lav
         case lavi::lang::lexer::token_type::token_keyword:
             if(keyword.size()) {
                 if(std::find(keyword.begin(), keyword.end(), token.content) != keyword.end()) {
-                    identifier_or_literal = std::move(lexer.next_token());
+                    identifier_or_literal_node = ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname);
                     break;
+                } else {
+                    // Go to default case
                 }
+            } else {
+                // Go to default case
             }
         default:
             throw std::runtime_error(token.error_message_at_current_position("Expected identifier or literal"));
             break;
     }
 
-    ast_node identifier_or_literal_node;
     const auto& next_token = lexer.see_next();
-
-    if(is_any_function_call(identifier_or_literal, lexer)) {
-        ast_node fn_node(ast_node_type::ast_node_fn_call);
-        fn_node.add_child(std::move(ast_node(std::move(identifier_or_literal), ast_node_type::ast_node_declname)));
-
-        if(next_token.type == lavi::lang::lexer::token_type::token_delimiter && next_token.content == "(") {
-            lexer.consume_token(); // Consume the '(' token
-
-            if(auto next_token = lexer.see_next(); next_token.type == lavi::lang::lexer::token_type::token_delimiter && next_token.content == ")") {
-                // No parameters, just a closing parenthesis
-                // Consumes the ')' token
-                lexer.consume_token();
-            } else {
-                ast_node params_node = extract_fn_call_params(lexer);
-                fn_node.add_child(std::move(params_node));
-
-                const auto& possible_closing = lexer.see_next();
-
-                if(possible_closing.type == lavi::lang::lexer::token_type::token_delimiter && possible_closing.content == ")") {
-                    // Consume the ')' token
-                    lexer.consume_token();
-                } else {
-                    throw std::runtime_error(possible_closing.error_message_at_current_position("Expected ')'"));
-                }
-            }
-        } else if (auto& next_token = lexer.see_next();
-                  (next_token.type == lavi::lang::lexer::token_type::token_identifier && next_token.content != "do") ||
-                  next_token.type == lavi::lang::lexer::token_type::token_literal ||
-                    (next_token.type == lavi::lang::lexer::token_type::token_keyword && next_token.content == "yield") ||
-                        (next_token.type == lavi::lang::lexer::token_type::token_operator && next_token.content == "[")) {
-            // fn call with literal or identifier
-            ast_node params_node = extract_fn_call_params(lexer);
-            fn_node.add_child(std::move(params_node));
-        }
-        identifier_or_literal_node = std::move(fn_node);
-    }
-    else {
-        ast_node_type node_type;
-    
-        if(identifier_or_literal.type == lavi::lang::lexer::token_type::token_literal) {
-            node_type = ast_node_type::ast_node_valuedecl;
-        } else {
-            node_type = ast_node_type::ast_node_declname;
-        }
-
-        identifier_or_literal_node = lavi::lang::parser::ast_node(std::move(identifier_or_literal), node_type);
-    }
 
     if(identifier_or_literal_node.token().type == lavi::lang::lexer::token_type::token_literal &&
         identifier_or_literal_node.token().kind == lavi::lang::lexer::token_kind::token_interpolated_string)
