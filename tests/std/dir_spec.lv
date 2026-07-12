@@ -1,0 +1,54 @@
+#include 'std/tests.lv'
+
+describe 'Dir' do
+  describe '#glob' do
+    context 'retrieving all files in a folder by extension' do
+      it 'returns the files' do
+        var dir = Dir.new('tests/fixtures/glob')
+        var files = dir.glob('*.txt')
+
+        expect(files).to eq(['tests/fixtures/glob/1.txt', 'tests/fixtures/glob/2.txt'].sort)
+      end
+      context 'when no files match the pattern' do
+        it 'returns an empty array' do
+          var dir = Dir.new('tests/fixtures/glob')
+          var files = dir.glob('*.md')
+
+          expect(files).to be_empty
+        end
+      end
+    end
+    context 'retrieving all entries in a folder' do
+      it 'returns the entries' do
+        var dir = Dir.new('tests/fixtures/glob')
+        var entries = dir.glob('*')
+        expect(entries.sort).to eq([
+          'tests/fixtures/glob/1.txt',
+          'tests/fixtures/glob/2.txt',
+          'tests/fixtures/glob/3.zip',
+          'tests/fixtures/glob/subfolder'
+        ])
+      end
+    end
+    context 'retrieving a single file' do
+      it 'returns the file' do
+        var dir = Dir.new('tests/fixtures/glob')
+        var files = dir.glob('1.txt')
+
+        expect(files).to eq(['tests/fixtures/glob/1.txt'])
+      end
+    end
+    context 'retrieving all files in a folder by extension recursively' do
+      it 'returns all files' do
+        var dir = Dir.new('tests/fixtures/glob')
+        var files = dir.glob('**/*.txt')
+
+        expect(files.sort).to eq([
+          'tests/fixtures/glob/1.txt',
+          'tests/fixtures/glob/2.txt',
+          'tests/fixtures/glob/subfolder/4.txt'
+        ])
+      end
+    end
+  end
+end
