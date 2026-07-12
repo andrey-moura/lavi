@@ -1,0 +1,40 @@
+#include 'std/tests'
+
+describe 'Path' do
+  describe 'operator==' do
+    context 'when two paths are equal' do
+      it 'returns true' do
+        var path1 = Path.new('tests/fixtures/glob/1.txt')
+        var path2 = Path.new('tests/fixtures/glob/1.txt')
+
+        expect(path1 == path2).to eq(true)
+      end
+    end
+    context 'when two paths are not equal' do
+      it 'returns false' do
+        var path1 = Path.new('tests/fixtures/glob/1.txt')
+        var path2 = Path.new('tests/fixtures/glob/2.txt')
+
+        expect(path1 == path2).to eq(false)
+      end
+    end
+  end
+  describe 'operator<' do
+    context 'when the first path is less than the second path' do
+      it 'returns true' do
+        var path1 = Path.new('tests/fixtures/glob/1.txt')
+        var path2 = Path.new('tests/fixtures/glob/2.txt')
+
+        expect(path1 < path2).to eq(true)
+      end
+    end
+    context 'when the first path is not less than the second path' do
+      it 'returns false' do
+        var path1 = Path.new('tests/fixtures/glob/2.txt')
+        var path2 = Path.new('tests/fixtures/glob/1.txt')
+
+        expect(path1 < path2).to eq(false)
+      end
+    end
+  end
+end

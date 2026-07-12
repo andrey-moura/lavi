@@ -79,6 +79,29 @@ void create_array_class()
         return item;
     });
 
+    lavi::lang::array_class->instance_functions["empty?"] = std::make_shared<lavi::lang::function>("empty?", [](lavi::lang::interpreter* interpreter) {
+        std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
+
+        bool is_empty = items.empty();
+
+        return lavi::lang::api::to_object(interpreter, is_empty);
+    });
+
+    lavi::lang::array_class->instance_functions["include?"] = std::make_shared<lavi::lang::function>("include?", std::initializer_list<std::string>{"item"}, [](lavi::lang::interpreter* interpreter) {
+        std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
+
+        auto& item = interpreter->current_context->positional_params[0];
+
+        for(auto& i : items) {
+            auto result = lavi::lang::api::call(interpreter, "==", item, { i });
+            if(lavi::lang::api::is_truthy(interpreter, result)) {
+                return lavi::lang::api::to_object(interpreter, true);
+            }
+        }
+
+        return lavi::lang::api::to_object(interpreter, false);
+    });
+
     lavi::lang::array_class->instance_functions["[]"] = std::make_shared<lavi::lang::function>("[]", std::initializer_list<std::string>{"index"}, [](lavi::lang::interpreter* interpreter) {
         std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
 
@@ -142,5 +165,17 @@ void create_array_class()
         }
 
         return interpreter->current_context->self->shared_from_this();
+    });
+
+    lavi::lang::array_class->instance_functions["sort"] = std::make_shared<lavi::lang::function>("sort", [](lavi::lang::interpreter* interpreter) {
+        std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
+        std::vector<std::shared_ptr<lavi::lang::object>> sorted_items = items;
+        std::sort(sorted_items.begin(), sorted_items.end(),
+            [interpreter](const std::shared_ptr<lavi::lang::object> & a, const std::shared_ptr<lavi::lang::object> & b) {
+                auto result = lavi::lang::api::call(interpreter, "<", a, { b });
+                return lavi::lang::api::is_truthy(interpreter, result);
+            });
+
+        return lavi::lang::api::to_object(interpreter, std::move(sorted_items));
     });
 }
