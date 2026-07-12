@@ -162,7 +162,7 @@ static std::shared_ptr<lavi::lang::klass> do_execute_classdecl(lavi::lang::inter
     auto klass = interpreter->find_class(class_name);
 
     if (!klass) {
-        for(auto& forward_declared_class : interpreter->current_context->forward_declarations) {
+        for(auto& forward_declared_class : interpreter->global_context->forward_declarations) {
             if(forward_declared_class.first == class_name) {
                 klass = forward_declared_class.second;
                 break;
@@ -181,15 +181,18 @@ static std::shared_ptr<lavi::lang::klass> do_execute_classdecl(lavi::lang::inter
     if (baseclass_node)
     {
         auto declname_node = baseclass_node->child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
-        auto base_class = interpreter->find_class(declname_node->token().content);
+
+        std::string base_class_name = interpreter->current_context->fully_qualified_name(declname_node->token().content);
+
+        auto base_class = interpreter->find_class(base_class_name);
 
         if(!base_class) {
-            auto forward_declared_class_it = interpreter->current_context->forward_declarations.find(declname_node->token().content);
-            if(forward_declared_class_it != interpreter->current_context->forward_declarations.end()) {
+            auto forward_declared_class_it = interpreter->global_context->forward_declarations.find(base_class_name);
+            if(forward_declared_class_it != interpreter->global_context->forward_declarations.end()) {
                 base_class = forward_declared_class_it->second;
             } else {
-                base_class = lavi::lang::klass::create(declname_node->token().content);
-                interpreter->current_context->forward_declarations.insert({declname_node->token().content, base_class});
+                base_class = lavi::lang::klass::create(base_class_name);
+                interpreter->global_context->forward_declarations.insert({base_class_name, base_class});
             }
         }
 
