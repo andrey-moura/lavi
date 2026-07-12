@@ -5,6 +5,7 @@
 #include <lavi/lang/interpreter.hpp>
 #include <lavi/lang/extension.hpp>
 #include <lavi/lang/api.hpp>
+#include <lavi/lang/exception.hpp>
 
 void create_path_class()
 {
@@ -50,12 +51,39 @@ void create_path_class()
         return interpreter->current_context->self->shared_from_this();
     });
 
+    lavi::lang::path_class->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {
+        std::filesystem::path& path = interpreter->current_context->self->as<std::filesystem::path>();
+
+        if(interpreter->current_context->positional_params[0]->klass == lavi::lang::path_class) {
+            return lavi::lang::api::to_object(interpreter, path == interpreter->current_context->positional_params[0]->as<std::filesystem::path>());
+        } else if(interpreter->current_context->positional_params[0]->klass == lavi::lang::string_class) {
+            return lavi::lang::api::to_object(interpreter, path == interpreter->current_context->positional_params[0]->as<std::string>());
+        }
+
+        return lavi::lang::api::to_object(interpreter, false);
+    });
+
     lavi::lang::path_class->instance_functions["/"] = std::make_shared<lavi::lang::function>("/", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {
         std::filesystem::path path = interpreter->current_context->self->as<std::filesystem::path>() / interpreter->current_context->positional_params[0]->as<std::string>();
         
         return lavi::lang::object::create(interpreter, lavi::lang::path_class, std::move(path));
     });
-    
+
+    lavi::lang::path_class->instance_functions["<"] = std::make_shared<lavi::lang::function>("<", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {
+        if(interpreter->current_context->positional_params[0]->klass != lavi::lang::path_class) {
+            throw lavi::lang::exception(
+                interpreter,
+                "Cannot compare Path with " + interpreter->current_context->positional_params[0]->klass->name,
+                lavi::lang::runtime_error_class
+            );
+        }
+
+        const std::filesystem::path& path = interpreter->current_context->self->as<std::filesystem::path>();
+        const std::filesystem::path& other_path = interpreter->current_context->positional_params[0]->as<std::filesystem::path>();
+        
+        return lavi::lang::api::to_object(interpreter, path < other_path);
+    });
+
     lavi::lang::path_class->functions["set_current"] = std::make_shared<lavi::lang::function>("set_current", std::initializer_list<std::string>{"path"}, [](lavi::lang::interpreter* interpreter) {
         std::filesystem::path path;
         std::shared_ptr<lavi::lang::object> path_object = interpreter->current_context->positional_params[0];
