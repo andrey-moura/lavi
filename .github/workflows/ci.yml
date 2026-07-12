@@ -104,7 +104,7 @@ jobs:
       - name: Configure CMake (Windows)
         if: startsWith(matrix.os, 'windows')
         run: |
-          cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -B build .
+          cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -B build .
         working-directory: lavi
 
       - name: Build project
