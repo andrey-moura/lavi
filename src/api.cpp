@@ -120,7 +120,12 @@ namespace lavi
 
                 std::shared_ptr<lavi::lang::object> ret = nullptr;
 
+                if(function->positional_params.size() != interpreter->current_context->positional_params.size()) {
+                    throw std::runtime_error("function '" + std::string(function_name) + "' expects " + std::to_string(function->positional_params.size()) + " positional parameters, but " + std::to_string(interpreter->current_context->positional_params.size()) + " were given");
+                }
+
                 if(function->block_ast.childrens().size()) {
+
                     for(size_t i = 0; i < function->positional_params.size(); i++) {
                         interpreter->current_context->variables[function->positional_params[i].name] = interpreter->current_context->positional_params[i];
                     }
