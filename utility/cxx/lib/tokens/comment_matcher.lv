@@ -1,0 +1,26 @@
+namespace CXX
+  namespace Tokens
+    // Matcher for comment tokens.
+    class CommentMatcher extends Matcher
+      fn match?(source)
+        return source.starts_with?("//") || source.starts_with?("/*")
+      end
+
+      fn extract(source)
+        if source.starts_with?('/*')
+          source.erase!(0, 2) // Remove the opening '/*'
+          var end_index = source.find('*/')
+          if end_index == -1
+            end_index = source.size
+          else
+            end_index += 2
+          end
+        end
+
+        var comment_content = source.slice!(0, end_index)
+
+        CXX::Token.new(:comment, comment_content)
+      end
+    end
+  end
+end

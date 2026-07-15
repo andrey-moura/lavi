@@ -20,4 +20,6 @@ debug "Tokenizing CXX file ${cxx_file_path}..."
 
 var lexer = CXX::Lexer.new(cxx_file)
 
-out lexer.tokens
+var tokens = lexer.tokens
+
+out "Tokens: ${tokens.size}"

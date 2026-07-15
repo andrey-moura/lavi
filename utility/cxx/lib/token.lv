@@ -1,7 +1,25 @@
 namespace CXX
   class Token
+    var content = null;
+
     enum Kind
-      eof
+      comment
+      preprocessor
+    end
+
+    fn init(k, c)
+      kind = k
+      content = c
+    end
+
+    fn to_string
+      var limited_content = content.to_string.slice(0, 25)
+
+      if limited_content.size < content.to_string.size
+        limited_content += "..."
+      end
+
+      return "${kind}(${limited_content.inspect})"
     end
   end
 end

@@ -1,0 +1,18 @@
+namespace CXX
+  namespace Tokens
+    // Base class for token matchers.
+    class PreprocessorMatcher extends Matcher
+      fn match?(source)
+        source.starts_with?("#")
+      end
+
+      fn extract(source)
+        var end_index = source.find("\n")
+        var content = source.slice!(0, end_index)
+
+        // out "Extracted preprocessor token: ${content.inspect}"
+        CXX::Token.new(:preprocessor, content)
+      end
+    end
+  end
+end
