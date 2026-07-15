@@ -71,6 +71,13 @@ void create_string_class()
         return lavi::lang::api::to_object(interpreter, std::move(std::string(1, value[index])));
     });
 
+    lavi::lang::string_class->instance_functions["+="] = std::make_shared<lavi::lang::function>("+=", std::initializer_list<std::string>{"what"}, [](lavi::lang::interpreter* interpreter) {
+        std::string& value = interpreter->current_context->self->as<std::string>();
+        const auto& params = interpreter->current_context->positional_params;
+        value += params[0]->as<std::string>();
+        return interpreter->current_context->self; 
+    });
+
         lavi::lang::string_class->instance_functions["present?"] = std::make_shared<lavi::lang::function>("present?", [](lavi::lang::interpreter* interpreter) {
             const std::string& value = interpreter->current_context->self->as<std::string>();
 
@@ -92,13 +99,26 @@ void create_string_class()
             return lavi::lang::object::instantiate(interpreter, lavi::lang::integer_class, (int32_t)pos);
         });
 
-        lavi::lang::string_class->instance_functions["substring"] = std::make_shared<lavi::lang::function>("substring", std::initializer_list<std::string>{"start", "size"}, [](lavi::lang::interpreter* interpreter) {
+        lavi::lang::string_class->instance_functions["slice"] = std::make_shared<lavi::lang::function>("substring", std::initializer_list<std::string>{"start", "size"}, [](lavi::lang::interpreter* interpreter) {
             const std::string& value = interpreter->current_context->self->as<std::string>();
             const auto& params = interpreter->current_context->positional_params;
             size_t start = params[0]->as<int32_t>();
             size_t size = params[1]->as<int32_t>();
 
             return lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, value.substr(start, size));
+        });
+
+        lavi::lang::string_class->instance_functions["slice!"] = std::make_shared<lavi::lang::function>("slice!", std::initializer_list<std::string>{"start", "size"}, [](lavi::lang::interpreter* interpreter) {
+            std::string& value = interpreter->current_context->self->as<std::string>();
+            const auto& params = interpreter->current_context->positional_params;
+            size_t start = params[0]->as<int32_t>();
+            size_t size = params[1]->as<int32_t>();
+
+            auto copy = value.substr(start, size);
+
+            value.erase(start, size);
+
+            return lavi::lang::api::to_object(interpreter, std::move(copy));
         });
 
         lavi::lang::string_class->instance_functions["to_lower_case!"] = std::make_shared<lavi::lang::function>("to_lower_case!", [](lavi::lang::interpreter* interpreter) {
