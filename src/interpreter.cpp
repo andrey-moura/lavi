@@ -523,13 +523,13 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
                     to_string.append("\":");
                     to_string.append(current_context->self->klass->name);
 
-                    what = "undefined function '" + std::string(function_name) + "' for " + to_string;
+                    what = "'" + std::string(function_name) + "' for " + to_string;
 
                     to_string.clear();
                 } else if(current_context->klass) {
-                    what = "undefined function '" + std::string(function_name) + "' for class '" + std::string(current_context->klass->name) + "'";
+                    what = "'" + std::string(function_name) + "' for class '" + std::string(current_context->klass->name) + "'";
                 } else {
-                    what = "undefined function '" + std::string(function_name) + "'";
+                    what = "'" + std::string(function_name) + "'";
                 }
 
                 auto extension = lavi::lang::extension::which_defines(function_name);
