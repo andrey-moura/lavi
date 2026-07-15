@@ -243,11 +243,7 @@ void create_string_class()
         lavi::lang::string_class->instance_functions["empty?"] = std::make_shared<lavi::lang::function>("empty?", [](lavi::lang::interpreter* interpreter) {
             const std::string& value = interpreter->current_context->self->as<std::string>();
 
-            if(value.empty()) {
-                return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
-            }
-
-            return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
+            return lavi::lang::api::to_object(interpreter, value.empty());
         });
 
         lavi::lang::string_class->instance_functions["include?"] = std::make_shared<lavi::lang::function>("include?", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
