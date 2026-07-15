@@ -7,7 +7,7 @@ namespace CXX
       end
 
       fn extract(source)
-        var end_index = source.find("\n")
+        var end_index = source.find(' ')
         var content = source.slice!(0, end_index)
 
         // out "Extracted preprocessor token: ${content.inspect}"

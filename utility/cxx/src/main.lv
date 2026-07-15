@@ -22,4 +22,4 @@ var lexer = CXX::Lexer.new(cxx_file)
 
 var tokens = lexer.tokens
 
-out "Tokens: ${tokens.size}"
+out "Tokens: ${tokens}"
