@@ -7,6 +7,10 @@
 void create_no_function_error_class()
 {
   lavi::lang::no_function_error_class = lavi::lang::klass::create_builtin("NoFunctionError");
+  lavi::lang::no_function_error_class->instance_functions["init"] = std::make_shared<lavi::lang::function>("init", std::initializer_list<std::string>{"message"}, [](lavi::lang::interpreter* interpreter) {
+    interpreter->current_context->self->variables["message"] = interpreter->current_context->positional_params[0];
+    return nullptr;
+  });
   lavi::lang::no_function_error_class->base = lavi::lang::exception_class;
 }
 
@@ -19,6 +23,10 @@ void create_runtime_error_class()
 void create_undefined_class_error_class()
 {
   lavi::lang::undefined_class_error_class = lavi::lang::klass::create_builtin("UndefinedClassError");
+  lavi::lang::undefined_class_error_class->instance_functions["init"] = std::make_shared<lavi::lang::function>("init", std::initializer_list<std::string>{"message"}, [](lavi::lang::interpreter* interpreter) {
+    interpreter->current_context->self->variables["message"] = interpreter->current_context->positional_params[0];
+    return nullptr;
+  });
   lavi::lang::undefined_class_error_class->base = lavi::lang::exception_class;
 }
 
