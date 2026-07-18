@@ -1,6 +1,30 @@
 #include 'std/tests'
 
 describe 'String' do
+  describe 'strip' do
+    context 'when the string has leading and trailing whitespace' do
+      it 'removes the whitespace from both ends of the string' do
+        var str = "\n\r\t hello world \n\r\t"
+        var stripped_str = str.strip
+
+        expect(stripped_str).to eq('hello world')
+      end
+    end
+    context 'when the string has no leading or trailing whitespace' do
+      it 'returns the original string' do
+        var str = 'hello world'
+        var stripped_str = str.strip
+
+        expect(stripped_str).to eq('hello world')
+      end
+    end
+    it 'does not modify the original string' do
+      var str = "\n\r\t hello world \n\r\t"
+      var stripped_str = str.strip
+
+      expect(str).to eq("\n\r\t hello world \n\r\t")
+    end
+  end
   describe 'operator<' do
     context 'when comparing two strings' do
       it 'returns true if the first string is less than the second string' do
