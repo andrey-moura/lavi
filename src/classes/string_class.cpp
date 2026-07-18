@@ -121,6 +121,51 @@ void create_string_class()
             return lavi::lang::api::to_object(interpreter, std::move(copy));
         });
 
+        lavi::lang::string_class->instance_functions["split"] = std::make_shared<lavi::lang::function>("split", std::initializer_list<std::string>{"delimiter"}, [](lavi::lang::interpreter* interpreter) {
+            const std::string& value = interpreter->current_context->self->as<std::string>();
+            const auto& params = interpreter->current_context->positional_params;
+            const std::string& delimiter = params[0]->as<std::string>();
+
+            std::vector<std::shared_ptr<lavi::lang::object>> result;
+            result.reserve(value.size() / 8); // Reserve some space for the result vector
+
+            std::string_view value_view(value);
+
+            const char* start = value_view.data();
+            const char* end = start;
+
+            while(value_view.size()) {
+                // First we find the first character that is the first character of the delimiter
+                while(value_view.size() && value_view.front() != delimiter.front()) {
+                    end++;
+                    value_view.remove_prefix(1);
+                }
+
+                if(!value_view.size()) {
+                    break;
+                }
+
+                if(value_view.starts_with(delimiter)) {
+                    std::string substring(start, end);
+                    result.push_back(lavi::lang::api::to_object(interpreter, std::move(substring)));
+                    value_view.remove_prefix(delimiter.size());
+                    start = value_view.data();
+                    end = start;
+                } else {
+                    end++;
+                    value_view.remove_prefix(1);
+                }
+            }
+
+            // Push the last substring if any
+            if(start != end) {
+                std::string substring(start, end);
+                result.push_back(lavi::lang::api::to_object(interpreter, std::move(substring)));
+            }
+
+            return lavi::lang::api::to_object(interpreter, std::move(result));
+        });
+
         lavi::lang::string_class->instance_functions["lower!"] = std::make_shared<lavi::lang::function>("to_lower_case!", [](lavi::lang::interpreter* interpreter) {
             std::string& value = interpreter->current_context->self->as<std::string>();
 
