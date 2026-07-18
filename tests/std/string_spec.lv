@@ -25,6 +25,32 @@ describe 'String' do
       expect(str).to eq("\n\r\t hello world \n\r\t")
     end
   end
+  describe 'lower!' do
+    it 'converts all characters in the string to lowercase in place' do
+      var str = 'HeLLo WoRLD'
+      str.lower!
+
+      expect(str).to eq('hello world')
+    end
+    it 'returns null' do
+      var str = 'HeLLo WoRLD'
+      expect(str.lower!).to eq(null)
+    end
+  end
+  describe 'lower' do
+    it 'converts all characters in the string to lowercase' do
+      var str = 'HeLLo WoRLD'
+      var lower_str = str.lower
+
+      expect(lower_str).to eq('hello world')
+    end
+    it 'does not modify the original string' do
+      var str = 'HeLLo WoRLD'
+      var lower_str = str.lower
+
+      expect(str).to eq('HeLLo WoRLD')
+    end
+  end
   describe 'operator<' do
     context 'when comparing two strings' do
       it 'returns true if the first string is less than the second string' do
