@@ -1,6 +1,28 @@
 #include 'std/tests'
 
 describe 'String' do
+  describe 'split' do
+    it 'splits a string into an array of substrings based on a delimiter' do
+      var str = 'Hello,World,This,Is,A,Test'
+      var result = str.split(',')
+
+      expect(result).to eq(['Hello', 'World', 'This', 'Is', 'A', 'Test'])
+    end
+    context 'when the delimiter is not found in the string' do
+      it 'returns an array containing the original string' do
+        var str = 'Hello World'
+        var result = str.split(',')
+
+        expect(result).to eq(['Hello World'])
+      end
+    end
+    it 'does not modify the original string' do
+      var str = 'Hello,World,This,Is,A,Test'
+      var result = str.split(',')
+
+      expect(str).to eq('Hello,World,This,Is,A,Test')
+    end
+  end
   describe 'strip' do
     context 'when the string has leading and trailing whitespace' do
       it 'removes the whitespace from both ends of the string' do
@@ -54,15 +76,15 @@ describe 'String' do
   describe 'operator<' do
     context 'when comparing two strings' do
       it 'returns true if the first string is less than the second string' do
-        var str1 = "apple"
-        var str2 = "banana"
+        var str1 = 'apple'
+        var str2 = 'banana'
 
         expect(str1 < str2).to eq(true)
       end
 
       it 'returns false if the first string is not less than the second string' do
-        var str1 = "banana"
-        var str2 = "apple"
+        var str1 = 'banana'
+        var str2 = 'apple'
 
         expect(str1 < str2).to eq(false)
       end
