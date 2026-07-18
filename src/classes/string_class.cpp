@@ -141,6 +141,26 @@ void create_string_class()
             return lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, value);
         });
 
+        lavi::lang::string_class->instance_functions["strip"] = std::make_shared<lavi::lang::function>("strip", [](lavi::lang::interpreter* interpreter) {
+            const std::string& value = interpreter->current_context->self->as<std::string>();
+            std::string result;
+            result.reserve(value.size());
+
+            std::string_view value_view(value);
+
+            while(value_view.size() && std::isspace(value_view.front())) {
+                value_view.remove_prefix(1);
+            }
+
+            while(value_view.size() && std::isspace(value_view.back())) {
+                value_view.remove_suffix(1);
+            }
+
+            result = std::string(value_view);
+
+            return lavi::lang::api::to_object(interpreter, std::move(result));
+        });
+
         lavi::lang::string_class->instance_functions["to_integer"] = std::make_shared<lavi::lang::function>("to_integer", [](lavi::lang::interpreter* interpreter) {
             std::string value = interpreter->current_context->self->as<std::string>();
 
