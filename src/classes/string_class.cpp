@@ -121,7 +121,7 @@ void create_string_class()
             return lavi::lang::api::to_object(interpreter, std::move(copy));
         });
 
-        lavi::lang::string_class->instance_functions["to_lower_case!"] = std::make_shared<lavi::lang::function>("to_lower_case!", [](lavi::lang::interpreter* interpreter) {
+        lavi::lang::string_class->instance_functions["lower!"] = std::make_shared<lavi::lang::function>("to_lower_case!", [](lavi::lang::interpreter* interpreter) {
             std::string& value = interpreter->current_context->self->as<std::string>();
 
             for(char & c : value) {
@@ -131,7 +131,7 @@ void create_string_class()
             return nullptr;
         });
 
-        lavi::lang::string_class->instance_functions["to_lower_case"] = std::make_shared<lavi::lang::function>("to_lower_case!", [](lavi::lang::interpreter* interpreter) {
+        lavi::lang::string_class->instance_functions["lower"] = std::make_shared<lavi::lang::function>("to_lower_case!", [](lavi::lang::interpreter* interpreter) {
             std::string value = interpreter->current_context->self->as<std::string>();
 
             for(char & c : value) {
