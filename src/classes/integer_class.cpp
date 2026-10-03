@@ -40,5 +40,24 @@ void create_integer_class()
         return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
     });
 
+    lavi::lang::integer_class->instance_functions["times"] = std::make_shared<lavi::lang::function>("times", [](lavi::lang::interpreter* interpreter) {
+        int value = interpreter->current_context->self->as<int>();
+
+        if(value <= 0) {
+            return nullptr;
+        }
+
+        auto iterator_object = lavi::lang::api::to_object(interpreter, 0);
+
+        for(int i = 0; i < value; i++) {
+
+            lavi::lang::api::yield(interpreter, { iterator_object });
+
+            iterator_object->set_native(i + 1);
+        }
+
+        return nullptr;
+    });
+
     lavi::lang::add_operators<int>(lavi::lang::integer_class);
 }
