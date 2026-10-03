@@ -1,3 +1,4 @@
+#include <array>
 #include <iostream>
 
 #include "andy/console.hpp"
@@ -1035,38 +1036,51 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_throw(const
 
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute(const lavi::lang::parser::ast_node& source_code)
 {
-    static auto executors = std::map<lavi::lang::parser::ast_node_type, std::shared_ptr<lavi::lang::object>(lavi::lang::interpreter::*)(const lavi::lang::parser::ast_node&)>{
-        { lavi::lang::parser::ast_node_type::ast_node_classdecl,           &lavi::lang::interpreter::execute_classdecl           },
-        { lavi::lang::parser::ast_node_type::ast_node_context,             &lavi::lang::interpreter::execute_context             },
-        { lavi::lang::parser::ast_node_type::ast_node_fn_return,           &lavi::lang::interpreter::execute_fn_return           },
-        { lavi::lang::parser::ast_node_type::ast_node_fn_decl,             &lavi::lang::interpreter::execute_fn_decl             },
-        { lavi::lang::parser::ast_node_type::ast_node_valuedecl,           &lavi::lang::interpreter::execute_valuedecl           },
-        { lavi::lang::parser::ast_node_type::ast_node_fn_call,             &lavi::lang::interpreter::execute_fn_call             },
-        { lavi::lang::parser::ast_node_type::ast_node_interpolated_string, &lavi::lang::interpreter::execute_interpolated_string },
-        { lavi::lang::parser::ast_node_type::ast_node_arraydecl,           &lavi::lang::interpreter::execute_arraydecl           },
-        { lavi::lang::parser::ast_node_type::ast_node_hashdecl,            &lavi::lang::interpreter::execute_hashdecl            },
-        { lavi::lang::parser::ast_node_type::ast_node_vardecl,             &lavi::lang::interpreter::execute_vardecl             },
-        { lavi::lang::parser::ast_node_type::ast_node_declname,            &lavi::lang::interpreter::execute_declname            },
-        { lavi::lang::parser::ast_node_type::ast_node_conditional,         &lavi::lang::interpreter::execute_conditional         },
-        { lavi::lang::parser::ast_node_type::ast_node_while,               &lavi::lang::interpreter::execute_while               },
-        { lavi::lang::parser::ast_node_type::ast_node_for,                 &lavi::lang::interpreter::execute_for                 },
-        { lavi::lang::parser::ast_node_type::ast_node_break,               &lavi::lang::interpreter::execute_break               },
-        { lavi::lang::parser::ast_node_type::ast_node_condition,           &lavi::lang::interpreter::execute_condition           },
-        { lavi::lang::parser::ast_node_type::ast_node_else,                &lavi::lang::interpreter::execute_else                },
-        { lavi::lang::parser::ast_node_type::ast_node_yield,               &lavi::lang::interpreter::execute_yield               },
-        { lavi::lang::parser::ast_node_type::ast_node_try,                 &lavi::lang::interpreter::execute_try                 },
-        { lavi::lang::parser::ast_node_type::ast_node_throw,               &lavi::lang::interpreter::execute_throw               }
-    };
+    using executor_fn = std::shared_ptr<lavi::lang::object>(lavi::lang::interpreter::*)(const lavi::lang::parser::ast_node&);
+    constexpr size_t executor_count = static_cast<size_t>(lavi::lang::parser::ast_node_type::ast_node_type_max);
 
-    auto it = executors.find(source_code.type());
+    // Dense enum-indexed dispatch table. O(1) lookup vs log(n) std::map.
+    static const auto executors = [] {
+        std::array<executor_fn, executor_count> table{};
 
-    if(it == executors.end()) {
+        auto set = [&](lavi::lang::parser::ast_node_type type, executor_fn fn) {
+            table[static_cast<size_t>(type)] = fn;
+        };
+
+        set(lavi::lang::parser::ast_node_type::ast_node_classdecl,           &lavi::lang::interpreter::execute_classdecl);
+        set(lavi::lang::parser::ast_node_type::ast_node_context,             &lavi::lang::interpreter::execute_context);
+        set(lavi::lang::parser::ast_node_type::ast_node_fn_return,           &lavi::lang::interpreter::execute_fn_return);
+        set(lavi::lang::parser::ast_node_type::ast_node_fn_decl,             &lavi::lang::interpreter::execute_fn_decl);
+        set(lavi::lang::parser::ast_node_type::ast_node_valuedecl,           &lavi::lang::interpreter::execute_valuedecl);
+        set(lavi::lang::parser::ast_node_type::ast_node_fn_call,             &lavi::lang::interpreter::execute_fn_call);
+        set(lavi::lang::parser::ast_node_type::ast_node_interpolated_string, &lavi::lang::interpreter::execute_interpolated_string);
+        set(lavi::lang::parser::ast_node_type::ast_node_arraydecl,           &lavi::lang::interpreter::execute_arraydecl);
+        set(lavi::lang::parser::ast_node_type::ast_node_hashdecl,            &lavi::lang::interpreter::execute_hashdecl);
+        set(lavi::lang::parser::ast_node_type::ast_node_vardecl,             &lavi::lang::interpreter::execute_vardecl);
+        set(lavi::lang::parser::ast_node_type::ast_node_declname,            &lavi::lang::interpreter::execute_declname);
+        set(lavi::lang::parser::ast_node_type::ast_node_conditional,         &lavi::lang::interpreter::execute_conditional);
+        set(lavi::lang::parser::ast_node_type::ast_node_while,               &lavi::lang::interpreter::execute_while);
+        set(lavi::lang::parser::ast_node_type::ast_node_for,                 &lavi::lang::interpreter::execute_for);
+        set(lavi::lang::parser::ast_node_type::ast_node_break,               &lavi::lang::interpreter::execute_break);
+        set(lavi::lang::parser::ast_node_type::ast_node_condition,           &lavi::lang::interpreter::execute_condition);
+        set(lavi::lang::parser::ast_node_type::ast_node_else,                &lavi::lang::interpreter::execute_else);
+        set(lavi::lang::parser::ast_node_type::ast_node_yield,               &lavi::lang::interpreter::execute_yield);
+        set(lavi::lang::parser::ast_node_type::ast_node_try,                 &lavi::lang::interpreter::execute_try);
+        set(lavi::lang::parser::ast_node_type::ast_node_throw,               &lavi::lang::interpreter::execute_throw);
+
+        return table;
+    }();
+
+    const size_t type_index = static_cast<size_t>(source_code.type());
+    const executor_fn executor = type_index < executor_count ? executors[type_index] : nullptr;
+
+    if(!executor) {
         lavi::lang::error::internal("No executor found for node type " + std::to_string(static_cast<int>(source_code.type())));
     }
 
     size_t context_stack_size_before = stack.size();
 
-    auto ret = (this->*it->second)(source_code);
+    auto ret = (this->*executor)(source_code);
 
     if(stack.size() != context_stack_size_before && source_code.type() != lavi::lang::parser::ast_node_type::ast_node_try) {
         lavi::lang::error::internal("Node of type '{}' corrupted the context stack by pushing and popping an inconsistent number of contexts", (int)source_code.type());

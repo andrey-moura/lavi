@@ -85,7 +85,9 @@ namespace lavi
                 ast_node_try,
                 ast_node_catch,
 
-                ast_node_enum
+                ast_node_enum,
+
+                ast_node_type_max
             };
             class ast_node
             {
