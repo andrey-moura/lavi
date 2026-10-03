@@ -13,13 +13,38 @@ fn greet(name)
 end
 
 describe 'functions' do
-  context 'when defining a function with parameters' do
+  context 'with parameters' do
     it 'allows calling the function with arguments and returning a value' do
       expect(add(2, 3)).to eq(5)
       expect(add(-1, 1)).to eq(0)
     end
-  end
+    context 'reassigned inside the function' do
+      it 'does not affect the original variable outside the function' do
+        var x = 10
+        fn change_value(val)
+          val = 5
+          return val
+        end
 
+        var result = change_value(x)
+        expect(result).to eq(5)
+        expect(x).to eq(10)
+      end
+    end
+    context 'changed inside the function' do
+      it 'affects the original variable outside the function' do
+        var x = 10
+        fn change_value(val)
+          val += 5
+          return val
+        end
+
+        var result = change_value(x)
+        expect(result).to eq(15)
+        expect(x).to eq(15)
+      end
+    end
+  end
   context 'when using arithmetic and comparison inside a function' do
     it 'supports modulo and equality operations in return expressions' do
       expect(is_even(4)).to eq(true)

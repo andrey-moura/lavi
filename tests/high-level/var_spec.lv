@@ -8,11 +8,30 @@ describe 'var' do
     end
   end
 
-  context 'when reassigning a variable' do
+  context 'reassigned' do
     it 'updates the stored value' do
       var x = 5
       x = 20
       expect(x).to eq(20)
+    end
+  end
+
+  context 'assigned to another variable' do
+    it 'copies the value, not the reference' do
+      var a = 15
+      var b = a
+      b = 30
+      expect(a).to eq(15)
+      expect(b).to eq(30)
+    end
+    describe 'changes on the original variable' do
+      it 'does not affect the copied variable' do
+        var a = 15
+        var b = a
+        a += 50
+        expect(a).to eq(65)
+        expect(b).to eq(15)
+      end
     end
   end
 
