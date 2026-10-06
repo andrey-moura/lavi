@@ -750,6 +750,9 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_conditional
         auto context = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context);
 
         ret = execute(*context);
+    } else if(source_code.type() == lavi::lang::parser::ast_node_type::ast_node_conditional_modifier) {
+        // Conditional modifier does not return the value of the line when the condition is false
+        return nullptr;
     } else {
         auto e = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_else);
         if(!e) {
@@ -1047,26 +1050,27 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute(const lavi:
             table[static_cast<size_t>(type)] = fn;
         };
 
-        set(lavi::lang::parser::ast_node_type::ast_node_classdecl,           &lavi::lang::interpreter::execute_classdecl);
-        set(lavi::lang::parser::ast_node_type::ast_node_context,             &lavi::lang::interpreter::execute_context);
-        set(lavi::lang::parser::ast_node_type::ast_node_fn_return,           &lavi::lang::interpreter::execute_fn_return);
-        set(lavi::lang::parser::ast_node_type::ast_node_fn_decl,             &lavi::lang::interpreter::execute_fn_decl);
-        set(lavi::lang::parser::ast_node_type::ast_node_valuedecl,           &lavi::lang::interpreter::execute_valuedecl);
-        set(lavi::lang::parser::ast_node_type::ast_node_fn_call,             &lavi::lang::interpreter::execute_fn_call);
-        set(lavi::lang::parser::ast_node_type::ast_node_interpolated_string, &lavi::lang::interpreter::execute_interpolated_string);
-        set(lavi::lang::parser::ast_node_type::ast_node_arraydecl,           &lavi::lang::interpreter::execute_arraydecl);
-        set(lavi::lang::parser::ast_node_type::ast_node_hashdecl,            &lavi::lang::interpreter::execute_hashdecl);
-        set(lavi::lang::parser::ast_node_type::ast_node_vardecl,             &lavi::lang::interpreter::execute_vardecl);
-        set(lavi::lang::parser::ast_node_type::ast_node_declname,            &lavi::lang::interpreter::execute_declname);
-        set(lavi::lang::parser::ast_node_type::ast_node_conditional,         &lavi::lang::interpreter::execute_conditional);
-        set(lavi::lang::parser::ast_node_type::ast_node_while,               &lavi::lang::interpreter::execute_while);
-        set(lavi::lang::parser::ast_node_type::ast_node_for,                 &lavi::lang::interpreter::execute_for);
-        set(lavi::lang::parser::ast_node_type::ast_node_break,               &lavi::lang::interpreter::execute_break);
-        set(lavi::lang::parser::ast_node_type::ast_node_condition,           &lavi::lang::interpreter::execute_condition);
-        set(lavi::lang::parser::ast_node_type::ast_node_else,                &lavi::lang::interpreter::execute_else);
-        set(lavi::lang::parser::ast_node_type::ast_node_yield,               &lavi::lang::interpreter::execute_yield);
-        set(lavi::lang::parser::ast_node_type::ast_node_try,                 &lavi::lang::interpreter::execute_try);
-        set(lavi::lang::parser::ast_node_type::ast_node_throw,               &lavi::lang::interpreter::execute_throw);
+        set(lavi::lang::parser::ast_node_type::ast_node_classdecl,            &lavi::lang::interpreter::execute_classdecl);
+        set(lavi::lang::parser::ast_node_type::ast_node_context,              &lavi::lang::interpreter::execute_context);
+        set(lavi::lang::parser::ast_node_type::ast_node_fn_return,            &lavi::lang::interpreter::execute_fn_return);
+        set(lavi::lang::parser::ast_node_type::ast_node_fn_decl,              &lavi::lang::interpreter::execute_fn_decl);
+        set(lavi::lang::parser::ast_node_type::ast_node_valuedecl,            &lavi::lang::interpreter::execute_valuedecl);
+        set(lavi::lang::parser::ast_node_type::ast_node_fn_call,              &lavi::lang::interpreter::execute_fn_call);
+        set(lavi::lang::parser::ast_node_type::ast_node_interpolated_string,  &lavi::lang::interpreter::execute_interpolated_string);
+        set(lavi::lang::parser::ast_node_type::ast_node_arraydecl,            &lavi::lang::interpreter::execute_arraydecl);
+        set(lavi::lang::parser::ast_node_type::ast_node_hashdecl,             &lavi::lang::interpreter::execute_hashdecl);
+        set(lavi::lang::parser::ast_node_type::ast_node_vardecl,              &lavi::lang::interpreter::execute_vardecl);
+        set(lavi::lang::parser::ast_node_type::ast_node_declname,             &lavi::lang::interpreter::execute_declname);
+        set(lavi::lang::parser::ast_node_type::ast_node_conditional,          &lavi::lang::interpreter::execute_conditional);
+        set(lavi::lang::parser::ast_node_type::ast_node_conditional_modifier, &lavi::lang::interpreter::execute_conditional);
+        set(lavi::lang::parser::ast_node_type::ast_node_while,                &lavi::lang::interpreter::execute_while);
+        set(lavi::lang::parser::ast_node_type::ast_node_for,                  &lavi::lang::interpreter::execute_for);
+        set(lavi::lang::parser::ast_node_type::ast_node_break,                &lavi::lang::interpreter::execute_break);
+        set(lavi::lang::parser::ast_node_type::ast_node_condition,            &lavi::lang::interpreter::execute_condition);
+        set(lavi::lang::parser::ast_node_type::ast_node_else,                 &lavi::lang::interpreter::execute_else);
+        set(lavi::lang::parser::ast_node_type::ast_node_yield,                &lavi::lang::interpreter::execute_yield);
+        set(lavi::lang::parser::ast_node_type::ast_node_try,                  &lavi::lang::interpreter::execute_try);
+        set(lavi::lang::parser::ast_node_type::ast_node_throw,                &lavi::lang::interpreter::execute_throw);
 
         return table;
     }();

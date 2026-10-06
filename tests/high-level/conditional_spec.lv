@@ -1,7 +1,7 @@
 #include 'std/tests'
 
 describe 'conditional expressions' do
-  context 'if' do
+  describe 'if' do
     it 'executes the body when condition is true' do
       var result = null
       if true
@@ -35,9 +35,61 @@ describe 'conditional expressions' do
       end
       expect(result).to eq('executed')
     end
+
+    context 'when used as a line modifier' do
+      context 'of an assignment' do
+        it 'executes the assignment when condition is true' do
+          var result = 'no'
+          result = 'yes' if true
+          expect(result).to eq('yes')
+        end
+
+        it 'skips the assignment when condition is false' do
+          var result = 'no'
+          result = 'yes' if false
+          expect(result).to eq('no')
+        end
+      end
+
+      context 'of function call' do
+        fn throw_error_when_called
+          throw 'error'
+        end
+        it 'executes the function call when condition is true' do
+          var error_thrown = false
+          try
+            throw_error_when_called if true
+          catch(Exception e)
+            error_thrown = e
+          end
+          expect(error_thrown.message).to eq('error')
+        end
+
+        it 'skips the function call when condition is false' do
+          var result = 'no'
+          throw_error_when_called if false
+        end
+      end
+
+      context 'of a return statement' do
+        it 'executes the return when condition is true' do
+          fn return_yes_if_true
+            return 'yes' if true
+          end
+          expect(return_yes_if_true).to eq('yes')
+        end
+
+        it 'skips the return when condition is false' do
+          fn return_yes_if_false
+            return 'yes' if false
+          end
+          expect(return_yes_if_false).to eq(null)
+        end
+      end
+    end
   end
 
-  context 'else' do
+  describe 'else' do
     it 'executes the else branch when condition is false' do
       var result = null
       if false
@@ -102,7 +154,7 @@ describe 'conditional expressions' do
     end
   end
 
-  context 'unless' do
+  describe 'unless' do
     it 'executes the body when condition is false' do
       var result = null
       unless false
@@ -146,6 +198,52 @@ describe 'conditional expressions' do
         result = 'fallback'
       end
       expect(result).to eq('executed')
+    end
+
+    context 'when used as a line modifier' do
+      context 'of an assignment' do
+        it 'does not execute the assignment when the condition is true' do
+          var result = 'initial'
+          result = 'changed' unless true
+          expect(result).to eq('initial')
+        end
+        it 'executes the assignment when the condition is false' do
+          var result = 'initial'
+          result = 'changed' unless false
+          expect(result).to eq('changed')
+        end
+      end
+      context 'of a method call' do
+        fn throw_error_when_called
+          throw 'error'
+        end
+        it 'does not execute the method when the condition is true' do
+          throw_error_when_called unless true
+        end
+        it 'executes the method when the condition is false' do
+          var error_thrown = false
+          try
+            throw_error_when_called unless false
+          catch(Exception e)
+            error_thrown = e
+          end
+          expect(error_thrown.message).to eq('error')
+        end
+      end
+      context 'of a return statement' do
+        it 'does not execute the return when the condition is true' do
+          fn return_yes_unless_true
+            return 'yes' unless true
+          end
+          expect(return_yes_unless_true).to eq(null)
+        end
+        it 'executes the return when the condition is false' do
+          fn return_yes_unless_false
+            return 'yes' unless false
+          end
+          expect(return_yes_unless_false).to eq('yes')
+        end
+      end
     end
   end
 end

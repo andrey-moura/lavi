@@ -337,6 +337,33 @@ static void extract_fn_yield_block_if_exists(lavi::lang::parser::ast_node& node,
     }
 }
 
+void apply_line_modifier_if_exists(lavi::lang::parser::ast_node& node, lavi::lang::parser& parser, lavi::lang::lexer& lexer)
+{
+    const auto& previous_token = lexer.see_previous();
+    const lavi::lang::lexer::token& next_token = lexer.see_next();
+
+    if(!is_on_same_line(previous_token, next_token)) {
+        return;
+    }
+
+    if(next_token.type != lavi::lang::lexer::token_type::token_keyword || (next_token.content != "if" && next_token.content != "unless")) {
+        return;
+    }
+
+    lavi::lang::parser::ast_node modifier_node(lavi::lang::parser::ast_node_type::ast_node_conditional_modifier);
+    modifier_node.add_child(lavi::lang::parser::ast_node(std::move(lexer.next_token()), lavi::lang::parser::ast_node_type::ast_node_decltype));
+
+    lavi::lang::parser::ast_node condition_node(lavi::lang::parser::ast_node_type::ast_node_condition);
+    condition_node.add_child(std::move(parser.parse_identifier_or_literal(lexer)));
+    modifier_node.add_child(std::move(condition_node));
+
+    lavi::lang::parser::ast_node context_node(lavi::lang::parser::ast_node_type::ast_node_context);
+    context_node.add_child(std::move(node));
+    modifier_node.add_child(std::move(context_node));
+
+    node = std::move(modifier_node);
+}
+
 static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node& node, lavi::lang::parser& parser, lavi::lang::lexer& lexer)
 {
     // if(chained_nodes.size() == 0) {
@@ -428,6 +455,10 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
 
     extract_fn_yield_block_if_exists(last_node, parser, last_node.token(), lexer);
 
+    if(last_node.type() == lavi::lang::parser::ast_node_type::ast_node_fn_call || last_node.type() == lavi::lang::parser::ast_node_type::ast_node_declname) {
+        apply_line_modifier_if_exists(last_node, parser, lexer);
+    }
+
     return last_node;
 }
 
@@ -493,6 +524,7 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lav
                     fn_node.add_child(std::move(params_node));
                 }
                 identifier_or_literal_node = std::move(fn_node);
+                apply_line_modifier_if_exists(identifier_or_literal_node, *this, lexer);
             }
             break;
         }
@@ -681,7 +713,17 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword(lavi::lang::lexer
         throw std::runtime_error(token.error_message_at_current_position("Unexpected keyword"));
     }
 
-    return (this->*keyword_parser->second)(lexer);
+    auto node = (this->*keyword_parser->second)(lexer);
+
+    bool keyword_allows_line_modifier = token.content == "return" ||
+                                        token.content == "break" ||
+                                        token.content == "yield";
+
+    if(keyword_allows_line_modifier) {
+        apply_line_modifier_if_exists(node, *this, lexer);
+    }
+
+    return node;
 }
 
 lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_class(lavi::lang::lexer &lexer) {
@@ -835,11 +877,13 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_return(lavi::lang
         return return_node; // No return value, just return the return node
     }
 
-    if(possible_return_value.type == lexer::token_type::token_keyword) {
+    if(possible_return_value.type == lexer::token_type::token_keyword && possible_return_value.content != "if" && possible_return_value.content != "unless") {
         throw std::runtime_error(possible_return_value.error_message_at_current_position("Unexpected keyword after 'return'"));
     }
 
-    return_node.add_child(std::move(parse_identifier_or_literal(lexer)));
+    if(possible_return_value.type != lexer::token_type::token_keyword) {
+        return_node.add_child(std::move(parse_identifier_or_literal(lexer)));
+    }
 
     return return_node;
 }
