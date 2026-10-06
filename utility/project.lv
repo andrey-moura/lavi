@@ -30,12 +30,13 @@ fn new
   var root_dir = Dir.current.path / project_name
 
   ['native', 'lib', 'src'].each do (folder)
+    out folder
   end
 
+  out "Project '${project_name}' created at '${root_dir}'"
 end
 
 fn run
-
   var project_file = Dir.current.path / 'package.yaml'
 
   throw RuntimeError.new('Could not find package.yaml in current directory') unless project_file.exists?
