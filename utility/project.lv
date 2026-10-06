@@ -26,6 +26,12 @@ fn new
   return help unless project_name.present?
 
   Dir.create(project_name) unless Dir.exists?(project_name)
+
+  // var root_dir = Dir.current.path / project_name
+
+  ['native', 'lib', 'src'].each do (folder)
+  end
+
 end
 
 fn run
