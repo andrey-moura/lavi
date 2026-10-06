@@ -27,7 +27,7 @@ fn new
 
   Dir.create(project_name) unless Dir.exists?(project_name)
 
-  // var root_dir = Dir.current.path / project_name
+  var root_dir = Dir.current.path / project_name
 
   ['native', 'lib', 'src'].each do (folder)
   end
