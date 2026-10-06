@@ -248,7 +248,7 @@ namespace lavi
                  bool chain = true,
                  bool pair = true,
                  std::vector<std::string_view> keyword = {},
-                 bool line_modifier = false
+                 bool line_modifier = true
             );
         // Parsers functions
         protected:
