@@ -279,9 +279,13 @@ static bool is_no_parentheses_function_call(const lavi::lang::parser::ast_node& 
 
     auto& next_token = lexer.see_next();
 
+    if(!is_on_same_line(node.token(), next_token)) {
+        return false;
+    }
+
     bool is_identifier_or_literal_or_yield = is_identifier_or_literal(next_token) || (next_token.type == lavi::lang::lexer::token_type::token_keyword && next_token.content == "yield");
 
-    if(is_identifier_or_literal_or_yield && is_on_same_line(node.token(), next_token)) {
+    if(is_identifier_or_literal_or_yield) {
         return true;
     }
 
