@@ -455,10 +455,6 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
 
     extract_fn_yield_block_if_exists(last_node, parser, last_node.token(), lexer);
 
-    if(last_node.type() == lavi::lang::parser::ast_node_type::ast_node_fn_call || last_node.type() == lavi::lang::parser::ast_node_type::ast_node_declname) {
-        apply_line_modifier_if_exists(last_node, parser, lexer);
-    }
-
     return last_node;
 }
 
@@ -473,7 +469,13 @@ static lavi::lang::parser::ast_node identifier_or_literal_to_node(lavi::lang::le
     }
 }
 
-lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lavi::lang::lexer &lexer, bool chain, bool pair, std::vector<std::string_view> keyword)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(
+    lavi::lang::lexer &lexer,
+    bool chain,
+    bool pair,
+    std::vector<std::string_view> keyword,
+    bool line_modifier
+)
 {
     const lavi::lang::lexer::token& token = lexer.see_next();
 
@@ -682,7 +684,17 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lav
         return identifier_or_literal_node;
     }
 
-    return chain_if_exists(identifier_or_literal_node, *this, lexer);
+    identifier_or_literal_node = chain_if_exists(identifier_or_literal_node, *this, lexer);
+
+    if(!line_modifier) {
+        return identifier_or_literal_node;
+    }
+
+    if(identifier_or_literal_node.type() == lavi::lang::parser::ast_node_type::ast_node_fn_call || identifier_or_literal_node.type() == lavi::lang::parser::ast_node_type::ast_node_declname) {
+        apply_line_modifier_if_exists(identifier_or_literal_node, *this, lexer);
+    }
+
+    return identifier_or_literal_node;
 }
 
 lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword(lavi::lang::lexer &lexer)
@@ -882,7 +894,7 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_return(lavi::lang
     }
 
     if(possible_return_value.type != lexer::token_type::token_keyword) {
-        return_node.add_child(std::move(parse_identifier_or_literal(lexer)));
+        return_node.add_child(std::move(parse_identifier_or_literal(lexer, true, true, {}, false)));
     }
 
     return return_node;

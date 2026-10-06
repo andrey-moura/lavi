@@ -113,7 +113,8 @@
     ],
     "cmake.debugConfig": {
         "args": [
-            "examples/minimal.lv"
+            "project",
+            "new"
         ],
         "cwd": "${workspaceFolder}",
         "visualizerFile": "${workspaceFolder}/natvis.xml",
