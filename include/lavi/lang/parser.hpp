@@ -71,6 +71,7 @@ namespace lavi
                 ast_node_declstatic,
 
                 ast_node_conditional,
+                ast_node_conditional_modifier,
                 ast_node_while,
                 ast_node_for,
                 ast_node_for_start,
