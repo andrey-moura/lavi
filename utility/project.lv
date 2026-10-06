@@ -24,6 +24,8 @@ fn new
   var project_name = __args__[3]
 
   return help unless project_name.present?
+
+  Dir.create(project_name) unless Dir.exists?(project_name)
 end
 
 fn run
