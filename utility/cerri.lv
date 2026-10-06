@@ -1,24 +1,30 @@
 import :yaml
 
 fn help
-  out "Usage: lavi cerri <command> [<args>]\n"
-  out "These are the available Cerri commands:\n"
+  out "Usage: lavi project <command> [<args>]\n"
+  out "These are the available project commands:\n"
   out '  run:'
-  out "    The 'lavi cerri run' command executes a Cerri project."
-  out '    It requires all source files configured in the package.yml'
-  out "    and then executes the entry point defined in the package.yml.\n"
+  out "    The 'lavi project run' command executes a project."
+  out '    It requires all source files configured in the package.yaml'
+  out "    and then executes the entry point defined in the package.yaml.\n"
   out "  help:"
-  out "    The 'lavi cerri help' command shows this message."
+  out "    The 'lavi project help' command shows this message."
 end
 
 fn run
+out '1'
+
   var project_file = Dir.current.path / 'package.yaml'
+out '2'
 
   unless project_file.exists?
+  out '3'
     throw RuntimeError.new('Could not find package.yaml in current directory')
   end
+out '3'
 
   var project = YAML.parse(project_file)
+out '4'
 
   if project.load_paths.present?
     var folder = Dir.new(project.load_paths)
@@ -26,6 +32,7 @@ fn run
       require file
     end
   end
+out '5'
 
   unless project.entry.present?
     throw RuntimeError.new('Missing main entry point in package.yaml')
