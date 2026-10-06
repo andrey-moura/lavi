@@ -12,6 +12,8 @@ fn help
   out "    and then executes the entry point defined in the package.yaml.\n"
   out "  help:"
   out "    The 'lavi project help' command shows this message."
+
+  return 1
 end
 
 fn error(what)
@@ -21,24 +23,14 @@ end
 fn new
   var project_name = __args__[3]
 
-  unless project_name.present?
-    help
-    return 1
-  end
-
-  unless File.exists?(project_name)
-    error "Directory '${project_name}' does not exist."
-    return 1
-  end
+  return help unless project_name.present?
 end
 
 fn run
 
   var project_file = Dir.current.path / 'package.yaml'
 
-  unless project_file.exists?
-    throw RuntimeError.new('Could not find package.yaml in current directory')
-  end
+  throw RuntimeError.new('Could not find package.yaml in current directory') unless project_file.exists?
 
   var project = YAML.parse(project_file)
 
@@ -48,10 +40,8 @@ fn run
       require file
     end
   end
-
-  unless project.entry.present?
-    throw RuntimeError.new('Missing main entry point in package.yaml')
-  end
+  
+  throw RuntimeError.new('Missing main entry point in package.yaml') unless project.entry.present?
 
   require project.entry
 end
