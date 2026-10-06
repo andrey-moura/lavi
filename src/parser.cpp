@@ -75,6 +75,12 @@ lavi::lang::parser::ast_node parser::parse_node(lavi::lang::lexer &lexer)
 
     switch (token.type)
     {
+    case lavi::lang::lexer::token_type::token_operator:
+        if(token.content == "[") {
+            return parse_identifier_or_literal(lexer);
+        }
+        // If the operator is not '[', we raise an error on the end of parse_node
+        break;
     case lavi::lang::lexer::token_type::token_comment:
         // Ignore the comment and return the next node
         lexer.consume_token();
