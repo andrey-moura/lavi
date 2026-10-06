@@ -3,12 +3,33 @@ import :yaml
 fn help
   out "Usage: lavi project <command> [<args>]\n"
   out "These are the available project commands:\n"
+  out "  new:"
+  out "    The 'lavi project new <project_name>' command creates a new project."
+  out ''
   out '  run:'
   out "    The 'lavi project run' command executes a project."
   out '    It requires all source files configured in the package.yaml'
   out "    and then executes the entry point defined in the package.yaml.\n"
   out "  help:"
   out "    The 'lavi project help' command shows this message."
+end
+
+fn error(what)
+  out "\x1b[31m${what}\x1b[0m"
+end
+
+fn new
+  var project_name = __args__[3]
+
+  unless project_name.present?
+    help
+    return 1
+  end
+
+  unless File.exists?(project_name)
+    error "Directory '${project_name}' does not exist."
+    return 1
+  end
 end
 
 fn run
