@@ -366,6 +366,10 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
                 lavi::lang::parser::ast_node next_node = parser.parse_identifier_or_literal(lexer, false, true, { "class" });
                 chained_nodes.push_back(std::move(next_node));
             } else {
+                if(!is_on_same_line(node.token(), next_token)) {
+                    break;
+                }
+
                 lavi::lang::parser::ast_node operator_node(lavi::lang::parser::ast_node_type::ast_node_fn_call);
                 lavi::lang::lexer::token& operator_token = lexer.next_token();
 
