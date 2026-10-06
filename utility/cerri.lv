@@ -12,19 +12,14 @@ fn help
 end
 
 fn run
-out '1'
 
   var project_file = Dir.current.path / 'package.yaml'
-out '2'
 
   unless project_file.exists?
-  out '3'
     throw RuntimeError.new('Could not find package.yaml in current directory')
   end
-out '3'
 
   var project = YAML.parse(project_file)
-out '4'
 
   if project.load_paths.present?
     var folder = Dir.new(project.load_paths)
@@ -32,7 +27,6 @@ out '4'
       require file
     end
   end
-out '5'
 
   unless project.entry.present?
     throw RuntimeError.new('Missing main entry point in package.yaml')
