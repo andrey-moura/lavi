@@ -265,10 +265,11 @@ static bool is_on_same_line(const lavi::lang::parser::ast_node& node, const lavi
             node_start = declname_child->token().start;
         }
         break;
-        case lavi::lang::parser::ast_node_type::ast_node_declname:
-            node_start = node.token().start;
-        break;
+        case lavi::lang::parser::ast_node_type::ast_node_fn_return:
         case lavi::lang::parser::ast_node_type::ast_node_valuedecl:
+        case lavi::lang::parser::ast_node_type::ast_node_declname:
+        case lavi::lang::parser::ast_node_type::ast_node_break:
+        case lavi::lang::parser::ast_node_type::ast_node_yield:
             node_start = node.token().start;
         break;
         default:
