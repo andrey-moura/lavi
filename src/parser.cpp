@@ -1053,9 +1053,7 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_while(lavi::lang:
 
 lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_break(lavi::lang::lexer &lexer)
 {
-    ast_node break_node(ast_node_type::ast_node_break);
-    break_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
-
+    ast_node break_node(std::move(lexer.next_token()), ast_node_type::ast_node_break);
     return break_node;
 }
 
