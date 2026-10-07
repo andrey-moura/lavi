@@ -9,6 +9,7 @@
 #include <lavi/lang/object.hpp>
 #include <lavi/lang/class.hpp>
 #include <lavi/lang/function.hpp>
+#include <lavi/lang/error.hpp>
 
 using namespace lavi;
 using namespace lang;
@@ -249,9 +250,33 @@ static bool is_identifier_or_literal(const lavi::lang::lexer::token& token)
            token.type == lavi::lang::lexer::token_type::token_literal;
 }
 
-static bool is_on_same_line(const lavi::lang::lexer::token& token, const lavi::lang::lexer::token& other)
+static bool is_on_same_line(const lavi::lang::parser::ast_node& node, const lavi::lang::lexer::token& other)
 {
-    return token.start.line == other.start.line;
+    lavi::lang::lexer::token_position node_start;
+
+    switch(node.type()) {
+        case lavi::lang::parser::ast_node_type::ast_node_fn_call: {
+            auto declname_child = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
+
+            if(!declname_child) {
+                lavi::lang::error::internal("Expected declname child in is_on_same_line");
+            }
+
+            node_start = declname_child->token().start;
+        }
+        break;
+        case lavi::lang::parser::ast_node_type::ast_node_declname:
+            node_start = node.token().start;
+        break;
+        case lavi::lang::parser::ast_node_type::ast_node_valuedecl:
+            node_start = node.token().start;
+        break;
+        default:
+            lavi::lang::error::internal("Unexpected node type {} in is_on_same_line", (int)node.type());
+        break;
+    }
+
+    return node_start.line == other.start.line;
 }
 
 static bool is_one_exactly_after_other(const lavi::lang::lexer::token& token, const lavi::lang::lexer::token& other)
@@ -279,9 +304,13 @@ static bool is_no_parentheses_function_call(const lavi::lang::parser::ast_node& 
 
     auto& next_token = lexer.see_next();
 
+    if(!is_on_same_line(node, next_token)) {
+        return false;
+    }
+
     bool is_identifier_or_literal_or_yield = is_identifier_or_literal(next_token) || (next_token.type == lavi::lang::lexer::token_type::token_keyword && next_token.content == "yield");
 
-    if(is_identifier_or_literal_or_yield && is_on_same_line(node.token(), next_token)) {
+    if(is_identifier_or_literal_or_yield) {
         return true;
     }
 
@@ -398,6 +427,10 @@ static lavi::lang::parser::ast_node chain_if_exists(
                 lavi::lang::parser::ast_node next_node = parser.parse_identifier_or_literal(lexer, false, true, { "class" });
                 chained_nodes.push_back(std::move(next_node));
             } else {
+                if(!is_on_same_line(node, next_token)) {
+                    break;
+                }
+
                 lavi::lang::parser::ast_node operator_node(lavi::lang::parser::ast_node_type::ast_node_fn_call);
                 lavi::lang::lexer::token& operator_token = lexer.next_token();
 
