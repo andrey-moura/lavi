@@ -265,10 +265,11 @@ static bool is_on_same_line(const lavi::lang::parser::ast_node& node, const lavi
             node_start = declname_child->token().start;
         }
         break;
-        case lavi::lang::parser::ast_node_type::ast_node_declname:
-            node_start = node.token().start;
-        break;
+        case lavi::lang::parser::ast_node_type::ast_node_fn_return:
         case lavi::lang::parser::ast_node_type::ast_node_valuedecl:
+        case lavi::lang::parser::ast_node_type::ast_node_declname:
+        case lavi::lang::parser::ast_node_type::ast_node_break:
+        case lavi::lang::parser::ast_node_type::ast_node_yield:
             node_start = node.token().start;
         break;
         default:
@@ -374,10 +375,9 @@ static void extract_fn_yield_block_if_exists(lavi::lang::parser::ast_node& node,
 
 void apply_line_modifier_if_exists(lavi::lang::parser::ast_node& node, lavi::lang::parser& parser, lavi::lang::lexer& lexer)
 {
-    const auto& previous_token = lexer.see_previous();
     const lavi::lang::lexer::token& next_token = lexer.see_next();
 
-    if(!is_on_same_line(previous_token, next_token)) {
+    if(!is_on_same_line(node, next_token)) {
         return;
     }
 
@@ -1054,9 +1054,7 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_while(lavi::lang:
 
 lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_break(lavi::lang::lexer &lexer)
 {
-    ast_node break_node(ast_node_type::ast_node_break);
-    break_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
-
+    ast_node break_node(std::move(lexer.next_token()), ast_node_type::ast_node_break);
     return break_node;
 }
 
