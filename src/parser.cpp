@@ -374,10 +374,9 @@ static void extract_fn_yield_block_if_exists(lavi::lang::parser::ast_node& node,
 
 void apply_line_modifier_if_exists(lavi::lang::parser::ast_node& node, lavi::lang::parser& parser, lavi::lang::lexer& lexer)
 {
-    const auto& previous_token = lexer.see_previous();
     const lavi::lang::lexer::token& next_token = lexer.see_next();
 
-    if(!is_on_same_line(previous_token, next_token)) {
+    if(!is_on_same_line(node, next_token)) {
         return;
     }
 
