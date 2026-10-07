@@ -25,15 +25,20 @@ fn new
 
   return help unless project_name.present?
 
-  Dir.create(project_name) unless Dir.exists?(project_name)
+  Dir.create(project_name)
 
   var root_dir = Dir.current.path / project_name
 
   ['native', 'lib', 'src'].each do (folder)
-    out folder
-  end
+    var folder_path = root_dir / folder
+    Dir.create(folder_path)
 
-  out "Project '${project_name}' created at '${root_dir}'"
+    next if folder == 'src'
+
+    var keep_file_path = folder_path / '.keep'
+
+    // File.create(keep_file_path) unless folder == 'src' && File.exists?(keep_file_path)
+  end
 end
 
 fn run
