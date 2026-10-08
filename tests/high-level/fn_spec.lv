@@ -12,6 +12,8 @@ fn greet(name)
   return 'Hello, ' + name + '!'
 end
 
+var global_x = 10
+
 describe 'functions' do
   context 'when defining a function with parameters' do
     it 'allows calling the function with arguments and returning a value' do
@@ -92,6 +94,21 @@ describe 'functions' do
       end
       declare_class
       expect(Foo.new.x).to eq(42)
+    end
+  end
+
+  context 'defined inside a class' do
+    context 'with the same name as a variable in the global scope' do
+      it 'prefers the inner function over the outer variable' do
+        class MyClass
+          fn global_x
+            return 20
+          end
+        end
+
+        expect(MyClass.new.global_x).to eq(20)
+        expect(global_x).to eq(10)
+      end
     end
   end
 end
