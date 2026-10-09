@@ -13,7 +13,20 @@ describe 'yield' do
 
       expect(value).to eq('yielded value')
     end
-    context 'when parameters are given' do
+    context 'when a parameter is given' do
+      it 'yields to the block with the parameter' do
+        fn evaluate_yield_with_param
+          yield 1
+        end
+
+        var result = evaluate_yield_with_param do (a)
+          a
+        end
+
+        expect(result).to eq(1)
+      end
+    end
+    context 'when multiple parameters are given' do
       it 'yields to the block with the parameters' do
         fn evaluate_yield_with_params
           yield(1, 2)

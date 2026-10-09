@@ -269,6 +269,7 @@ static bool is_on_same_line(const lavi::lang::parser::ast_node& node, const lavi
         case lavi::lang::parser::ast_node_type::ast_node_valuedecl:
         case lavi::lang::parser::ast_node_type::ast_node_declname:
         case lavi::lang::parser::ast_node_type::ast_node_break:
+        case lavi::lang::parser::ast_node_type::ast_node_next:
         case lavi::lang::parser::ast_node_type::ast_node_yield:
             node_start = node.token().start;
         break;
@@ -741,21 +742,22 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword(lavi::lang::lexer
     const lavi::lang::lexer::token& token = lexer.see_next();
 
     static std::map<std::string_view, lavi::lang::parser::ast_node(lavi::lang::parser::*)(lavi::lang::lexer&)> keyword_parsers = {
-        { "class",      &lavi::lang::parser::parse_keyword_class    },
-        { "var",       &lavi::lang::parser::parse_keyword_var       },
-        { "fn" ,       &lavi::lang::parser::parse_keyword_function  },
-        { "return",    &lavi::lang::parser::parse_keyword_return    },
-        { "if",        &lavi::lang::parser::parse_keyword_if        },
-        { "unless",    &lavi::lang::parser::parse_keyword_if        },
-        { "loop",      &lavi::lang::parser::parse_keyword_loop      },
-        { "namespace", &lavi::lang::parser::parse_keyword_namespace },
-        { "break",     &lavi::lang::parser::parse_keyword_break     },
-        { "static",    &lavi::lang::parser::parse_keyword_static    },
-        { "yield",     &lavi::lang::parser::parse_keyword_yield     },
-        { "within",    &lavi::lang::parser::parse_keyword_within    },
-        { "throw",     &lavi::lang::parser::parse_keyword_throw     },
-        { "try",       &lavi::lang::parser::parse_keyword_try       },
-        { "enum",      &lavi::lang::parser::parse_keyword_enum      },
+        { "class",      &lavi::lang::parser::parse_keyword_class        },
+        { "var",       &lavi::lang::parser::parse_keyword_var           },
+        { "fn" ,       &lavi::lang::parser::parse_keyword_function      },
+        { "return",    &lavi::lang::parser::parse_keyword_return        },
+        { "if",        &lavi::lang::parser::parse_keyword_if            },
+        { "unless",    &lavi::lang::parser::parse_keyword_if            },
+        { "loop",      &lavi::lang::parser::parse_keyword_loop          },
+        { "namespace", &lavi::lang::parser::parse_keyword_namespace     },
+        { "break",     &lavi::lang::parser::parse_keyword_loop_control, },
+        { "next",      &lavi::lang::parser::parse_keyword_loop_control, },
+        { "static",    &lavi::lang::parser::parse_keyword_static        },
+        { "yield",     &lavi::lang::parser::parse_keyword_yield         },
+        { "within",    &lavi::lang::parser::parse_keyword_within        },
+        { "throw",     &lavi::lang::parser::parse_keyword_throw         },
+        { "try",       &lavi::lang::parser::parse_keyword_try           },
+        { "enum",      &lavi::lang::parser::parse_keyword_enum          },
     };
 
     auto keyword_parser = keyword_parsers.find(token.content);
@@ -765,14 +767,6 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword(lavi::lang::lexer
     }
 
     auto node = (this->*keyword_parser->second)(lexer);
-
-    bool keyword_allows_line_modifier = token.content == "return" ||
-                                        token.content == "break" ||
-                                        token.content == "yield";
-
-    if(keyword_allows_line_modifier) {
-        apply_line_modifier_if_exists(node, *this, lexer);
-    }
 
     return node;
 }
@@ -936,6 +930,8 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_return(lavi::lang
         return_node.add_child(std::move(parse_identifier_or_literal(lexer, true, true, {}, false)));
     }
 
+    apply_line_modifier_if_exists(return_node, *this, lexer);
+
     return return_node;
 }
 
@@ -1052,10 +1048,20 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_while(lavi::lang:
     return while_node;
 }
 
-lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_break(lavi::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_loop_control(lavi::lang::lexer &lexer)
 {
-    ast_node break_node(std::move(lexer.next_token()), ast_node_type::ast_node_break);
-    return break_node;
+    ast_node control_node;
+    if(lexer.see_next().content == "break") {
+        control_node = ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_break);
+    } else if(lexer.see_next().content == "next") {
+        control_node = ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_next);
+    } else {
+        lavi::lang::error::internal("Expected 'break' or 'next', got {}", lexer.see_next().content);
+    }
+
+    apply_line_modifier_if_exists(control_node, *this, lexer);
+
+    return control_node;
 }
 
 lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_static(lavi::lang::lexer &lexer)

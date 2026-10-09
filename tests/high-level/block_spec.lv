@@ -1,0 +1,22 @@
+#include 'std/tests.lv'
+
+describe 'block' do
+  context 'when is break' do
+    it 'stop the execution' do
+      break
+      throw RuntimeError.new('Should not reach here')
+    end
+  end
+  context 'when is next' do
+    it 'skips to the next iteration' do
+      fn count_until_next
+        yield 5
+        yield 7
+      end
+      var count = count_until_next do (value)
+        out value
+      end
+      expect(count).to eq(7)
+    end
+  end
+end
