@@ -1,0 +1,10 @@
+#include 'std/tests.lv'
+
+describe 'Random' do
+  describe '.integer' do
+    it 'returns an integer' do
+      var result = Random.integer
+      expect(result).to be_a(Integer)
+    end
+  end
+end
