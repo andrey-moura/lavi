@@ -1,0 +1,17 @@
+#include 'std/tests.lv'
+
+describe 'File' do
+  describe '#exists?' do
+    context 'when the file exists' do
+      it 'returns true' do
+        expect(File.exists?(__file__)).to eq(true)
+      end
+    end
+
+    context 'when the file does not exist' do
+      it 'returns false' do
+        expect(File.exists?('non_existing_file.txt')).to eq(false)
+      end
+    end
+  end
+end
