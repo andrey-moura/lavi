@@ -21,7 +21,7 @@ void create_false_class()
     });
     
         lavi::lang::false_class->instance_functions["!"] = std::make_shared<lavi::lang::function>("!", [](lavi::lang::interpreter* interpreter) {
-                return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
+                return lavi::lang::api::to_object(interpreter, true);
     });
     
         lavi::lang::false_class->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
