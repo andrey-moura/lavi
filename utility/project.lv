@@ -41,7 +41,7 @@ fn new
 
     var keep_file_path = folder_path / '.keep'
 
-    File.create(keep_file_path) unless folder == 'src' && File.exists?(keep_file_path)
+    File.create(keep_file_path) unless File.exists?(keep_file_path)
   end
 end
 
