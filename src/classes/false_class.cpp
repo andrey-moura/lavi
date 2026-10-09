@@ -8,7 +8,7 @@ void create_false_class()
     lavi::lang::false_class = lavi::lang::klass::create_builtin("False");
 
         lavi::lang::false_class->instance_functions["present?"] = std::make_shared<lavi::lang::function>("present?", [](lavi::lang::interpreter* interpreter) {
-                return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
+                return lavi::lang::api::to_object(interpreter, false);
     });
 
         lavi::lang::false_class->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
