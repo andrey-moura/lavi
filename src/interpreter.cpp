@@ -730,7 +730,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_interpolate
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_vardecl(const lavi::lang::parser::ast_node& source_code)
 {
     std::string_view var_name = source_code.decname();
-    std::shared_ptr<lavi::lang::object> value = std::make_shared<lavi::lang::object>(lavi::lang::null_class);
+    std::shared_ptr<lavi::lang::object> value = lavi::lang::object::instantiate(this, lavi::lang::null_class);
     current_context->variables[std::string(var_name)] = value;
 
     if(auto fn_call = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_fn_call)) {
@@ -831,7 +831,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_return(c
                 current_context->self ? current_context->self->shared_from_this() : nullptr
             );
         } else {
-            return std::make_shared<lavi::lang::object>(lavi::lang::null_class);
+            return lavi::lang::object::instantiate(this, lavi::lang::null_class);
         }
         return nullptr;
 }
@@ -896,7 +896,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_yield(const
                 auto& param_call = fn_params_call_node->childrens()[i];
                 value = execute(param_call);
             } else {
-                value = std::make_shared<lavi::lang::object>(lavi::lang::null_class);
+                value = lavi::lang::object::instantiate(this, lavi::lang::null_class);
             }
 
             current_context->variables[param_definition.token().content] = value;
