@@ -132,7 +132,7 @@ void create_array_class()
                     return result;
                 }
             }
-            return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
+            return lavi::lang::api::to_object(interpreter, true);
         });
 
     lavi::lang::array_class->instance_functions["each"] = std::make_shared<lavi::lang::function>("each", [](lavi::lang::interpreter* interpreter) {

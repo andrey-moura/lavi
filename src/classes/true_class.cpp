@@ -12,15 +12,15 @@ void create_true_class()
     });
 
         lavi::lang::true_class->instance_functions["present?"] = std::make_shared<lavi::lang::function>("present?", [](lavi::lang::interpreter* interpreter) {
-                return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
+                return lavi::lang::api::to_object(interpreter, true);
     });
     
-        lavi::lang::true_class->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
-                return interpreter->current_context->positional_params[0]->klass == lavi::lang::true_class ? std::make_shared<lavi::lang::object>(lavi::lang::true_class) : std::make_shared<lavi::lang::object>(lavi::lang::false_class);
+    lavi::lang::true_class->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
+        return lavi::lang::api::to_object(interpreter, interpreter->current_context->positional_params[0]->klass == lavi::lang::true_class);
     });
     
         lavi::lang::true_class->instance_functions["||"] = std::make_shared<lavi::lang::function>("||", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
-                return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
+                return lavi::lang::api::to_object(interpreter, true);
     });
     
         lavi::lang::true_class->instance_functions["!"] = std::make_shared<lavi::lang::function>("!", [](lavi::lang::interpreter* interpreter) {
