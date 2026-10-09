@@ -928,22 +928,22 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_declname(co
         return nullptr;
     };
 
-    std::shared_ptr<lavi::lang::object> ret = nullptr;
+    std::shared_ptr<lavi::lang::object> ret = try_find_in_context(current_context);
 
-    // Walk the lexical_parent chain (starting from the current context) to find the variable.
-    for(auto ctx = current_context; ctx != nullptr; ctx = ctx->lexical_parent) {
-        ret = try_find_in_context(ctx);
-        if(ret != nullptr) {
-            break;
+    if (ret == nullptr && source_code.fn_object() == nullptr) {
+        // Walk the lexical_parent chain (starting from the current context) to find the variable.
+        for(auto ctx = current_context->lexical_parent; ctx != nullptr; ctx = ctx->lexical_parent) {
+            ret = try_find_in_context(ctx);
+            if(ret != nullptr) {
+                break;
+            }
+        }
+
+        // Always check the global context as a fallback.
+        if(ret == nullptr && current_context != global_context) {
+            ret = try_find_in_context(global_context);
         }
     }
-
-    // Always check the global context as a fallback.
-    if(ret == nullptr && current_context != global_context) {
-        ret = try_find_in_context(global_context);
-    }
-
-    // Fallback to a function call
 
     pop_context_from_node_object_if_any(this, source_code);
 
@@ -951,6 +951,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_declname(co
         return ret;
     }
 
+    // Fallback to a function call
     return execute_fn_call(source_code);
 
     throw std::runtime_error("'" + std::string(name) + "' is undefined");
