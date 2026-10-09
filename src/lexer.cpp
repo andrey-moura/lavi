@@ -53,6 +53,7 @@ const static std::vector<std::string_view> keywords_lookup = {
     "if",
     "loop",
     "namespace",
+    "next",
     "return",
     "static",
     "throw",

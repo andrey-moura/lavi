@@ -272,6 +272,11 @@ static std::shared_ptr<lavi::lang::klass> do_execute_classdecl(lavi::lang::inter
     return klass;
 }
 
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_unit(const lavi::lang::parser::ast_node& source_code)
+{
+    return execute_inline(source_code);
+}
+
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_classdecl(const lavi::lang::parser::ast_node& source_code)
 {
     auto klass = do_execute_classdecl(this, source_code);
@@ -629,12 +634,16 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
         for(auto& [name, value] : current_context->named_params) {
             current_context->variables[name] = value;
         }
+
+        const lavi::lang::parser::ast_node* block;
         
         if(method_to_call->block_ast.type() == lavi::lang::parser::ast_node_type::ast_node_context) {
-            ret = execute_all(method_to_call->block_ast);
+            block = &method_to_call->block_ast;
         } else {
-            ret = execute(*method_to_call->block_ast.block());
+            block = method_to_call->block_ast.block();
         }
+
+        ret = execute_inline(*block);
     } else if(method_to_call->native_function) {
         ret = method_to_call->native_function(this);
     }
@@ -648,8 +657,6 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
             }
         }
     }
-
-    // Todo: Use the current_context.return_value and current_context.has_returned to handle returns
 
     pop_context();
 
@@ -749,7 +756,10 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_conditional
     if(truthy == match_codition) {
         auto context = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context);
 
-        ret = execute(*context);
+        for(auto& child : context->childrens()) {
+            // Execute each instruction inlined within the context
+            ret = execute(child);
+        }
     } else if(source_code.type() == lavi::lang::parser::ast_node_type::ast_node_conditional_modifier) {
         // Conditional modifier does not return the value of the line when the condition is false
         return nullptr;
@@ -771,50 +781,47 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_while(const
     bool match_condition = source_code.decl_type() == "until";
 
     while(lavi::lang::api::is_truthy(this, execute(*source_code.condition())) != match_condition) {
-        if(current_context->self) {
-            push_context_with_object(current_context->self->shared_from_this());
-        } else {
-            push_block_context();
-        }
         execute(*source_code.context());
 
-        if(current_context->has_returned) {
-            return current_context->return_value;
+        if(current_context->did_break) {
+            break;
         }
-        pop_context();
     }
 
     return nullptr;
 }
 
-std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_break(const lavi::lang::parser::ast_node& source_code)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_loop_control(const lavi::lang::parser::ast_node& source_code)
 {
-        current_context->has_returned = true;
-        return nullptr;
+    if(source_code.token().content == "break") {
+        current_context->did_break = true;
+    } else if(source_code.token().content == "next") {
+        current_context->did_next = true;
+    }
+    return nullptr;
 }
 
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_context(const lavi::lang::parser::ast_node& source_code)
 {
-    if(source_code.childrens().size() == 0) {
-        return nullptr;
+    std::shared_ptr<lavi::lang::object> ret = nullptr;
+
+    if(current_context->self) {
+        push_context_with_object(current_context->self->shared_from_this());
+    } else {
+        push_block_context();
     }
 
-    if(source_code.childrens().size() > 1) {
-        if(source_code.childrens().front().type() == lavi::lang::parser::ast_node_type::ast_node_fn_object) {
-            auto* fn_object = source_code.childrens().data();
-            std::shared_ptr<lavi::lang::object> context_object = node_to_object(
-                fn_object->childrens().front(),
-                current_context->self ? current_context->self->klass : nullptr,
-                current_context->self ? current_context->self->shared_from_this() : nullptr
-            );
-            push_context_with_object(context_object);
-            auto ret = execute_all(source_code.childrens().begin() + 1, source_code.childrens().end());
-            pop_context();
-            return ret;
-        }
+    ret = execute_inline(source_code);
+
+    bool did_break = current_context->did_break;
+
+    pop_context();
+
+    if(did_break) {
+        current_context->did_break = true;
     }
 
-    return execute_all(source_code);
+    return ret;
 }
 
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_condition(const lavi::lang::parser::ast_node& source_code)
@@ -824,16 +831,20 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_condition(c
 
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_return(const lavi::lang::parser::ast_node& source_code)
 {
-        if(source_code.childrens().size()) {
-            return node_to_object(
-                source_code.childrens().front(),
-                current_context->self ? current_context->self->klass : nullptr,
-                current_context->self ? current_context->self->shared_from_this() : nullptr
-            );
-        } else {
-            return lavi::lang::object::instantiate(this, lavi::lang::null_class);
-        }
-        return nullptr;
+    if(source_code.childrens().size()) {
+        auto ret = node_to_object(
+            source_code.childrens().front(),
+            current_context->self ? current_context->self->klass : nullptr,
+            current_context->self ? current_context->self->shared_from_this() : nullptr
+        );
+
+        current_context->did_return = true;
+        current_context->return_value = ret;
+
+        return ret;
+    }
+
+    return nullptr;
 }
 
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_for(const lavi::lang::parser::ast_node& source_code)
@@ -854,7 +865,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_for(const l
 
     while(current < max) {
         push_block_context();
-        execute_all(*source_code.context());
+        execute_inline(*source_code.context());
         pop_context();
         current++;
     }
@@ -903,8 +914,21 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_yield(const
         }
     }
 
-    std::shared_ptr<lavi::lang::object> ret = execute(*block->block());
+    bool did_break = false;
+
+    std::shared_ptr<lavi::lang::object> ret = execute_inline(*block->block());
+
+    if(current_context->did_break) {
+        did_break = true;
+    }
+
     pop_context();
+
+    if(did_break) {
+        current_context->did_return = true;
+        current_context->return_value = nullptr;
+    }
+
     return ret;
 }
 
@@ -960,7 +984,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_declname(co
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_else(const lavi::lang::parser::ast_node& source_code)
 {
     auto context = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context);
-    return execute_all(*context);
+    return execute_inline(*context);
 }
 
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_try(const lavi::lang::parser::ast_node& source_code)
@@ -1051,6 +1075,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute(const lavi:
             table[static_cast<size_t>(type)] = fn;
         };
 
+        set(lavi::lang::parser::ast_node_type::ast_node_unit,                 &lavi::lang::interpreter::execute_unit);
         set(lavi::lang::parser::ast_node_type::ast_node_classdecl,            &lavi::lang::interpreter::execute_classdecl);
         set(lavi::lang::parser::ast_node_type::ast_node_context,              &lavi::lang::interpreter::execute_context);
         set(lavi::lang::parser::ast_node_type::ast_node_fn_return,            &lavi::lang::interpreter::execute_fn_return);
@@ -1066,8 +1091,9 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute(const lavi:
         set(lavi::lang::parser::ast_node_type::ast_node_conditional_modifier, &lavi::lang::interpreter::execute_conditional);
         set(lavi::lang::parser::ast_node_type::ast_node_while,                &lavi::lang::interpreter::execute_while);
         set(lavi::lang::parser::ast_node_type::ast_node_for,                  &lavi::lang::interpreter::execute_for);
-        set(lavi::lang::parser::ast_node_type::ast_node_break,                &lavi::lang::interpreter::execute_break);
         set(lavi::lang::parser::ast_node_type::ast_node_condition,            &lavi::lang::interpreter::execute_condition);
+        set(lavi::lang::parser::ast_node_type::ast_node_break,                &lavi::lang::interpreter::execute_loop_control);
+        set(lavi::lang::parser::ast_node_type::ast_node_next,                 &lavi::lang::interpreter::execute_loop_control);
         set(lavi::lang::parser::ast_node_type::ast_node_else,                 &lavi::lang::interpreter::execute_else);
         set(lavi::lang::parser::ast_node_type::ast_node_yield,                &lavi::lang::interpreter::execute_yield);
         set(lavi::lang::parser::ast_node_type::ast_node_try,                  &lavi::lang::interpreter::execute_try);
@@ -1094,38 +1120,19 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute(const lavi:
 
     return ret;
 }
-
-std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_all(
-    std::vector<lavi::lang::parser::ast_node>::const_iterator begin,
-    std::vector<lavi::lang::parser::ast_node>::const_iterator end
-)
+std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_inline(const lavi::lang::parser::ast_node& source_code)
 {
-    std::shared_ptr<lavi::lang::object> result = nullptr;
+    std::shared_ptr<lavi::lang::object> ret = nullptr;
 
-    for(auto it = begin; it != end; it++) {
-        const lavi::lang::parser::ast_node& node = *it;
+    for(auto& child : source_code.childrens()) {
+        ret = execute(child);
 
-        if(node.type() == lavi::lang::parser::ast_node_type::ast_node_undefined && node.token().type == lavi::lang::lexer::token_type::token_eof) {
+        if(current_context->did_next || current_context->did_break || current_context->did_return) {
             break;
-        }
-
-        result = execute(node);
-
-        if(it->type() == lavi::lang::parser::ast_node_type::ast_node_fn_return) {
-            current_context->has_returned = true;
-            current_context->return_value = result;
-            return result;
-        } else if(current_context->has_returned) {
-            return current_context->return_value;
         }
     }
 
-    return result;
-}
-
-std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_all(const lavi::lang::parser::ast_node& source_code)
-{
-    return execute_all(source_code.childrens().begin(), source_code.childrens().end());
+    return ret;
 }
 
 void lavi::lang::interpreter::init()

@@ -7,8 +7,8 @@ end
 
 class EQ
     var expected = null
-    fn init(value)
-        expected = value
+    fn init(value3)
+        expected = value3
     end
 
     fn match(actual)
@@ -22,8 +22,8 @@ end
 
 class Include
     var expected = null
-    fn init(value)
-        expected = value
+    fn init(value4)
+        expected = value4
     end
 
     fn match(actual)
@@ -37,8 +37,8 @@ end
 
 class EndsWith
     var expected = null
-    fn init(value)
-        expected = value
+    fn init(value5)
+        expected = value5
     end
 
     fn match(actual)
@@ -52,8 +52,8 @@ end
 
 class BeA
     var expected = null
-    fn init(value)
-        expected = value
+    fn init(value6)
+        expected = value6
     end
 
     fn match(actual)
@@ -77,12 +77,12 @@ end
 
 class Expect
     var actual = null
-    fn init(value)
-        actual = value
+    fn init(value1)
+        actual = value1
     end
 
-    fn to(matcher)
-        matcher.match(actual)
+    fn to(matcher1)
+        matcher1.match(actual)
     end
 end
 
@@ -158,8 +158,8 @@ fn include(what)
     Include.new(what)
 end
 
-fn expect(value)
-    Expect.new(value)
+fn expect(value2)
+    Expect.new(value2)
 end
 
 fn ends_with(what)
