@@ -914,8 +914,21 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_yield(const
         }
     }
 
-    std::shared_ptr<lavi::lang::object> ret = execute(*block->block());
+    bool did_break = false;
+
+    std::shared_ptr<lavi::lang::object> ret = execute_inline(*block->block());
+
+    if(current_context->did_break) {
+        did_break = true;
+    }
+
     pop_context();
+
+    if(did_break) {
+        current_context->did_return = true;
+        current_context->return_value = nullptr;
+    }
+
     return ret;
 }
 

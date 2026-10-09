@@ -16,14 +16,14 @@ describe 'yield' do
     context 'when a parameter is given' do
       it 'yields to the block with the parameter' do
         fn evaluate_yield_with_param
-          yield 1
+          yield 7
         end
 
         var result = evaluate_yield_with_param do (a)
           a
         end
 
-        expect(result).to eq(1)
+        expect(result).to eq(7)
       end
     end
     context 'when multiple parameters are given' do
