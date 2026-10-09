@@ -35,11 +35,8 @@ namespace lavi
             /// @brief Exeuctes a syntax tree into the interpreter. Note that if the code has while loops with no exit condition, this method will never return.
             /// @param klass The syntax tree to exeuctes. All its childs (not recursively) will be executed.
             std::shared_ptr<lavi::lang::object> execute(const lavi::lang::parser::ast_node& source_code);
-            std::shared_ptr<lavi::lang::object> execute_all(
-                std::vector<lavi::lang::parser::ast_node>::const_iterator begin,
-                std::vector<lavi::lang::parser::ast_node>::const_iterator end
-            );
-            std::shared_ptr<lavi::lang::object> execute_all(const lavi::lang::parser::ast_node& source_code);
+            std::shared_ptr<lavi::lang::object> execute_inline(const lavi::lang::parser::ast_node& source_code);
+            std::shared_ptr<lavi::lang::object> execute_unit(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_context(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_classdecl(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_classdecl_base(const lavi::lang::parser::ast_node& source_code);
@@ -63,7 +60,7 @@ namespace lavi
             std::shared_ptr<lavi::lang::object> execute_for_start(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_for_step(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_for_end(const lavi::lang::parser::ast_node& source_code);
-            std::shared_ptr<lavi::lang::object> execute_break(const lavi::lang::parser::ast_node& source_code);
+            std::shared_ptr<lavi::lang::object> execute_loop_control(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_else(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_condition(const lavi::lang::parser::ast_node& source_code);
             std::shared_ptr<lavi::lang::object> execute_yield(const lavi::lang::parser::ast_node& source_code);

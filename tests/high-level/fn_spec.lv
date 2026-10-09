@@ -55,10 +55,10 @@ describe 'functions' do
       fn f
         var x = 123
         return x
-        x = 456 
+        456
       end
 
-      expect(f()).to eq(123)
+      expect(f).to eq(123)
     end
   end
 
