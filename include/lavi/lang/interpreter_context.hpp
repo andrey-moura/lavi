@@ -22,7 +22,10 @@ namespace lavi
             
             const lavi::lang::parser::ast_node* given_block = nullptr;
 
-            bool has_returned = false;
+            bool did_break = false;
+            bool did_next = false;
+            bool did_return = false;
+
             bool catching_exception = false;
             std::shared_ptr<lavi::lang::object> return_value;
             bool is_block_context = false;
