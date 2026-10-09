@@ -29,6 +29,20 @@ describe 'loop' do
     it 'collects numbers from 0 to 9' do
       expect(count_up_to(10)).to eq([0,1,2,3,4,5,6,7,8,9])
     end
+    context 'with next' do
+      it 'skips the current iteration when next is used' do
+        var result = []
+        var i = 0
+
+        loop while i < 5
+          i += 1
+          next if i == 3
+          result.push(i)
+        end
+
+        expect(result).to eq([1,2,4,5])
+      end
+    end
   end
 
   context 'when using until' do

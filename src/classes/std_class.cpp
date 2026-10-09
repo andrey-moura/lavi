@@ -110,7 +110,7 @@ void create_std_class()
 
         const auto& ast = lavi::lang::api::load(interpreter, file_path_str, code);
 
-        auto ret = interpreter->execute_all(ast);
+        auto ret = interpreter->execute(ast);
 
         interpreter->pop_context();
 

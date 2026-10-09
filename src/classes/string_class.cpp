@@ -65,7 +65,7 @@ void create_string_class()
         int index = params[0]->as<int>();
 
         if(index < 0 || (size_t)index >= value.size()) {
-            return std::make_shared<lavi::lang::object>(lavi::lang::null_class);
+            return lavi::lang::object::instantiate(interpreter, lavi::lang::null_class);
         }
 
         return lavi::lang::api::to_object(interpreter, std::move(std::string(1, value[index])));
@@ -209,14 +209,14 @@ void create_string_class()
         lavi::lang::string_class->instance_functions["to_integer"] = std::make_shared<lavi::lang::function>("to_integer", [](lavi::lang::interpreter* interpreter) {
             std::string value = interpreter->current_context->self->as<std::string>();
 
-            if(value.empty()) return std::make_shared<lavi::lang::object>(lavi::lang::null_class);
+            if(value.empty()) return lavi::lang::object::instantiate(interpreter, lavi::lang::null_class);
 
-            if(!isdigit(value[0])) return std::make_shared<lavi::lang::object>(lavi::lang::null_class);
+            if(!isdigit(value[0])) return lavi::lang::object::instantiate(interpreter, lavi::lang::null_class);
 
             size_t pos = 0;
             int result = std::stoi(value, &pos);
 
-            if(pos != value.size()) return std::make_shared<lavi::lang::object>(lavi::lang::null_class);
+            if(pos != value.size()) return lavi::lang::object::instantiate(interpreter, lavi::lang::null_class);
 
             return lavi::lang::object::instantiate(interpreter, lavi::lang::integer_class, result);
         });

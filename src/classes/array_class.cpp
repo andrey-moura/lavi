@@ -46,7 +46,7 @@ void create_array_class()
             std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
 
             if(items.empty()) {
-                return std::make_shared<lavi::lang::object>(lavi::lang::null_class);
+                return lavi::lang::object::instantiate(interpreter, lavi::lang::null_class);
             }
 
             return items.front();
@@ -77,7 +77,7 @@ void create_array_class()
         std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
 
         if(items.empty()) {
-            return std::make_shared<lavi::lang::object>(lavi::lang::null_class);
+            return lavi::lang::object::instantiate(interpreter, lavi::lang::null_class);
         }
 
             auto item = items.back();

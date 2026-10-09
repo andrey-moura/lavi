@@ -52,7 +52,7 @@ namespace lavi
                 }
 
                 interpreter->input_file_path = path;
-                std::shared_ptr<lavi::lang::object> ret = interpreter->execute_all(root_node);
+                std::shared_ptr<lavi::lang::object> ret = interpreter->execute(root_node);
         
                 return ret;
             }
@@ -133,12 +133,16 @@ namespace lavi
                     for(auto& [name, value] : interpreter->current_context->named_params) {
                         interpreter->current_context->variables[name] = value;
                     }
-                    
+
+                    const lavi::lang::parser::ast_node* block;
+
                     if(function->block_ast.type() == lavi::lang::parser::ast_node_type::ast_node_context) {
-                        ret = interpreter->execute_all(function->block_ast);
+                        block = &function->block_ast;
                     } else {
-                        ret = interpreter->execute(*function->block_ast.block());
+                        block = function->block_ast.block();
                     }
+
+                    ret = interpreter->execute_inline(*block);
                 } else if(function->native_function) {
                     ret = function->native_function(interpreter);
                 }

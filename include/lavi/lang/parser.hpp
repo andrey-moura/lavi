@@ -78,6 +78,7 @@ namespace lavi
                 ast_node_for_step,
                 ast_node_for_end,
                 ast_node_break,
+                ast_node_next,
                 ast_node_else,
                 ast_node_condition,
                 ast_node_yield,
@@ -278,7 +279,7 @@ namespace lavi
             lavi::lang::parser::ast_node parse_keyword_loop(lavi::lang::lexer& lexer);
             lavi::lang::parser::ast_node parse_keyword_for(lavi::lang::lexer& lexer);
             lavi::lang::parser::ast_node parse_keyword_while(lavi::lang::lexer& lexer);
-            lavi::lang::parser::ast_node parse_keyword_break(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_loop_control(lavi::lang::lexer& lexer);
             lavi::lang::parser::ast_node parse_keyword_static(lavi::lang::lexer& lexer);
             lavi::lang::parser::ast_node parse_keyword_yield(lavi::lang::lexer& lexer);
             lavi::lang::parser::ast_node parse_keyword_within(lavi::lang::lexer& lexer);
