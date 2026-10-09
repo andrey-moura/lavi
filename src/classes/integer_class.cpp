@@ -15,7 +15,7 @@ void create_integer_class()
             return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
         }
 
-        return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
+        return lavi::lang::api::to_object(interpreter, true);
     });
 
     lavi::lang::integer_class->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
@@ -37,7 +37,7 @@ void create_integer_class()
             return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
         }
 
-        return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
+        return lavi::lang::api::to_object(interpreter, true);
     });
 
     lavi::lang::integer_class->instance_functions["times"] = std::make_shared<lavi::lang::function>("times", [](lavi::lang::interpreter* interpreter) {

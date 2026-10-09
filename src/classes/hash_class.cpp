@@ -14,7 +14,7 @@ void create_hash_class()
                 return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
             }
 
-            return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
+            return lavi::lang::api::to_object(interpreter, true);
         });
 
         lavi::lang::hash_class->instance_functions["[]"] = std::make_shared<lavi::lang::function>("[]", std::initializer_list<std::string>{"key"}, [](lavi::lang::interpreter* interpreter) {
