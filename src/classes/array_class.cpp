@@ -120,11 +120,11 @@ void create_array_class()
     lavi::lang::array_class->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
             std::vector<std::shared_ptr<lavi::lang::object>>& items = interpreter->current_context->self->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
             if(interpreter->current_context->positional_params[0]->klass != lavi::lang::array_class) {
-                return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
+                return lavi::lang::api::to_object(interpreter, false);
             }
             auto& other_items = interpreter->current_context->positional_params[0]->as<std::vector<std::shared_ptr<lavi::lang::object>>>();
             if(items.size() != other_items.size()) {
-                return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
+                return lavi::lang::api::to_object(interpreter, false);
             }
             for(size_t i = 0; i < other_items.size(); ++i) {
                 auto result = lavi::lang::api::call(interpreter, "==", items[i], { other_items[i] });

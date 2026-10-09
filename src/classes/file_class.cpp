@@ -22,7 +22,7 @@ void create_file_class()
             if(std::filesystem::exists(path) && std::filesystem::is_regular_file(path)) {
                 return lavi::lang::api::to_object(interpreter, true);
             } else {
-                return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
+                return lavi::lang::api::to_object(interpreter, false);
             }
         });
 

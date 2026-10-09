@@ -16,7 +16,7 @@ void create_true_class()
     });
     
         lavi::lang::true_class->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
-                return interpreter->current_context->positional_params[0]->klass == lavi::lang::true_class ? lavi::lang::api::to_object(interpreter, true) : std::make_shared<lavi::lang::object>(lavi::lang::false_class);
+                return interpreter->current_context->positional_params[0]->klass == lavi::lang::true_class ? lavi::lang::api::to_object(interpreter, true) : lavi::lang::api::to_object(interpreter, false);
     });
     
         lavi::lang::true_class->instance_functions["||"] = std::make_shared<lavi::lang::function>("||", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
@@ -24,7 +24,7 @@ void create_true_class()
     });
     
         lavi::lang::true_class->instance_functions["!"] = std::make_shared<lavi::lang::function>("!", [](lavi::lang::interpreter* interpreter) {
-                return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
+                return lavi::lang::api::to_object(interpreter, false);
     });
     
     lavi::lang::true_class->instance_functions["&&"] = std::make_shared<lavi::lang::function>("&&", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
