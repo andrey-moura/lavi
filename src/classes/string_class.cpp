@@ -85,7 +85,7 @@ void create_string_class()
                 return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
             }
 
-            return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
+            return lavi::lang::api::to_object(interpreter, true);
         });
 
         lavi::lang::string_class->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {
@@ -262,7 +262,7 @@ void create_string_class()
             const std::string& other = interpreter->current_context->positional_params[0]->as<std::string>();
 
             if(value != other) {
-                return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
+                return lavi::lang::api::to_object(interpreter, true);
             }
 
             return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
@@ -316,7 +316,7 @@ void create_string_class()
             const std::string& other = interpreter->current_context->positional_params[0]->as<std::string>();
 
             if(value.find(other) != std::string::npos) {
-                return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
+                return lavi::lang::api::to_object(interpreter, true);
             }
 
             return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
