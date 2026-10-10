@@ -24,6 +24,7 @@ extern void create_true_class();
 extern void create_function_class();
 extern void create_exception_class();
 extern void create_std_class();
+extern void create_random_class();
 extern void create_high_resolution_time_class();
 
 // Define global classes
@@ -54,6 +55,7 @@ namespace lavi
     std::shared_ptr<lavi::lang::klass> no_function_error_class;
     std::shared_ptr<lavi::lang::klass> runtime_error_class;
     std::shared_ptr<lavi::lang::klass> undefined_class_error_class;
+    std::shared_ptr<lavi::lang::klass> random_class;
   }
 }
 
@@ -80,6 +82,7 @@ void lavi::lang::klass::create_builtin_classes()
     // Some of the one which are named should be moved to here soon.
     create_directory_class();
     create_std_class();
+    create_random_class();
     create_high_resolution_time_class();
 }
 

@@ -1,9 +1,2 @@
 // Output 'Hello, World!'
-class Test
-    fn test(what)
-        out what
-        end
-end
-
-var test = Test.new
-test.test('Hello, World!')
+out "Hello, World!"

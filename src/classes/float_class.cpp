@@ -11,7 +11,7 @@ void create_float_class()
             float i = interpreter->current_context->self->as<float>();
             
             if(i == 0) {
-                return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
+                return lavi::lang::api::to_object(interpreter, false);
             }
 
             return lavi::lang::api::to_object(interpreter, true);

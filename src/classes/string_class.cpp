@@ -82,7 +82,7 @@ void create_string_class()
             const std::string& value = interpreter->current_context->self->as<std::string>();
 
             if(value.empty()) {
-                return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
+                return lavi::lang::api::to_object(interpreter, false);
             }
 
             return lavi::lang::api::to_object(interpreter, true);
@@ -265,7 +265,7 @@ void create_string_class()
                 return lavi::lang::api::to_object(interpreter, true);
             }
 
-            return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
+            return lavi::lang::api::to_object(interpreter, false);
         });
 
         lavi::lang::string_class->instance_functions["+"] = std::make_shared<lavi::lang::function>("+", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
@@ -319,7 +319,7 @@ void create_string_class()
                 return lavi::lang::api::to_object(interpreter, true);
             }
 
-            return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
+            return lavi::lang::api::to_object(interpreter, false);
         });
 
         lavi::lang::string_class->instance_functions["capitalize!"] = std::make_shared<lavi::lang::function>("capitalize!", [](lavi::lang::interpreter* interpreter) {

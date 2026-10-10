@@ -12,7 +12,7 @@ void create_integer_class()
         int i = interpreter->current_context->self->as<int>();
         
         if(i == 0) {
-            return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
+            return lavi::lang::api::to_object(interpreter, false);
         }
 
         return lavi::lang::api::to_object(interpreter, true);
@@ -34,7 +34,7 @@ void create_integer_class()
         int value = interpreter->current_context->self->as<int>();
 
         if(value == 0) {
-            return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
+            return lavi::lang::api::to_object(interpreter, false);
         }
 
         return lavi::lang::api::to_object(interpreter, true);

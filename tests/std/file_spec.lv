@@ -1,0 +1,25 @@
+#include 'std/tests.lv'
+
+describe 'File' do
+  describe '.exists?' do
+    context 'when the file exists' do
+      it 'returns true' do
+        expect(File.exists?(__file__)).to eq(true)
+      end
+    end
+
+    context 'when the file does not exist' do
+      it 'returns false' do
+        expect(File.exists?('non_existing_file.txt')).to eq(false)
+      end
+    end
+  end
+  describe '.create' do
+    it 'creates a new file' do
+      var seed = Random.integer
+      expect(File.exists?("${seed}.txt")).to eq(false)
+      File.create("${seed}.txt")
+      expect(File.exists?("${seed}.txt")).to eq(true)
+    end
+  end
+end
