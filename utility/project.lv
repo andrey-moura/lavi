@@ -20,6 +20,12 @@ fn error(what)
   out "\x1b[31m${what}\x1b[0m"
 end
 
+fn generate_file(path, content)
+  return if File.exists?(path)
+
+  File.create(path).write(content)
+end
+
 fn new
   var project_name = __args__[3]
 
