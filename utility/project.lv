@@ -39,16 +39,15 @@ fn new
     var folder_path = root_dir / folder
     Dir.create(folder_path)
 
-    out "Folder: ${folder_path}"
-
     next if folder == 'src'
   
-    out "Creating .keep file in: ${folder_path}"
-
     var keep_file_path = folder_path / '.keep'
 
     File.create(keep_file_path) unless File.exists?(keep_file_path)
   end
+
+  generate_file(root_dir / 'package.yaml', "entry: src/main.lv\nload_paths: lib\ncmake_paths: native/*\n")
+  generate_file(root_dir / 'src' / 'main.lv', "out 'Hello, World!'\n")
 end
 
 fn run
