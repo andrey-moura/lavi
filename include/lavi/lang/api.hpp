@@ -4,6 +4,7 @@
 
 #include <lavi/lang/lang.hpp>
 #include <lavi/lang/interpreter.hpp>
+#include <lavi/lang/file.hpp>
 #include <lavi/lang/config.hpp>
 #include <lavi/lang/function.hpp>
 
@@ -140,6 +141,10 @@ namespace lavi
                  } else if constexpr(std::is_same_v<T, std::nullptr_t>) {
                     return lavi::lang::object::instantiate(interpreter, lavi::lang::null_class);
                  }
+                else if constexpr(std::is_same_v<T, lavi::lang::file>) {
+                    auto obj = lavi::lang::object::instantiate(interpreter, lavi::lang::file_class, std::move(value));
+                    return obj;
+                }
                 else {
                     throw std::runtime_error("Unsupported type for to_object: " + std::string(typeid(T).name()));
                 }

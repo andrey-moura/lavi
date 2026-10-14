@@ -1,0 +1,23 @@
+#include 'std/tests'
+
+describe 'HighResolutionTime' do
+  describe '.now' do
+    it 'returns a HighResolutionTime object' do
+      var result = HighResolutionTime.now
+      expect(result).to be_a(HighResolutionTime)
+    end
+    it 'increments over time' do
+      var time1 = HighResolutionTime.now
+      var time2 = HighResolutionTime.now
+      expect(time2 > time1).to eq(true)
+    end
+  end
+  describe '#operator-' do
+    it 'returns a HighResolutionTime::Duration object' do
+      var time1 = HighResolutionTime.now
+      var time2 = HighResolutionTime.now
+      var duration = time1 - time2
+      expect(duration).to be_a(HighResolutionTime::Duration)
+    end
+  end
+end

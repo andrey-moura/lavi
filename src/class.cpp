@@ -24,6 +24,8 @@ extern void create_true_class();
 extern void create_function_class();
 extern void create_exception_class();
 extern void create_std_class();
+extern void create_random_class();
+extern void create_high_resolution_time_class();
 
 // Define global classes
 namespace lavi
@@ -53,6 +55,7 @@ namespace lavi
     std::shared_ptr<lavi::lang::klass> no_function_error_class;
     std::shared_ptr<lavi::lang::klass> runtime_error_class;
     std::shared_ptr<lavi::lang::klass> undefined_class_error_class;
+    std::shared_ptr<lavi::lang::klass> random_class;
   }
 }
 
@@ -79,6 +82,8 @@ void lavi::lang::klass::create_builtin_classes()
     // Some of the one which are named should be moved to here soon.
     create_directory_class();
     create_std_class();
+    create_random_class();
+    create_high_resolution_time_class();
 }
 
 lavi::lang::klass::klass(std::string_view __name, std::vector<lavi::lang::function> __methods)
@@ -130,7 +135,7 @@ std::shared_ptr<lavi::lang::klass> lavi::lang::klass::create(std::string_view na
             auto other_object = interpreter->current_context->positional_params[0];
             auto other_class = other_object->as<std::shared_ptr<lavi::lang::klass>>();
 
-            return lavi::lang::api::to_object(interpreter, lavi::lang::api::is_a(interpreter, interpreter->current_context->self, klass));
+            return lavi::lang::api::to_object(interpreter, lavi::lang::api::is_a(interpreter, interpreter->current_context->self, other_class));
         });
     }
 
@@ -173,6 +178,21 @@ std::shared_ptr<lavi::lang::klass> lavi::lang::klass::create(std::string_view na
         });
     }
 
+    auto eq_function = klass->functions.find("==");
+
+    if(eq_function == klass->functions.end()) {
+        klass->functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{ "other" }, [klass](lavi::lang::interpreter* interpreter) {
+            if(interpreter->current_context->positional_params[0]->klass != lavi::lang::class_class) {
+                return lavi::lang::api::to_object(interpreter, false);
+            }
+
+            return lavi::lang::api::to_object(
+                interpreter,
+                interpreter->current_context->positional_params[0]->as<std::shared_ptr<lavi::lang::klass>>() == interpreter->current_context->klass
+            );
+        });
+    }
+
     auto eq_instance_function = klass->instance_functions.find("==");
 
     if(eq_instance_function == klass->instance_functions.end()) {
@@ -182,6 +202,33 @@ std::shared_ptr<lavi::lang::klass> lavi::lang::klass::create(std::string_view na
 
             // Default equality: compare the pointers of the objects
             return lavi::lang::api::to_object(interpreter, object == other_object);
+        });
+    }
+
+    auto ne_instance_function = klass->instance_functions.find("!=");
+
+    if(ne_instance_function == klass->instance_functions.end()) {
+        klass->instance_functions["!="] = std::make_shared<lavi::lang::function>("!=", std::initializer_list<std::string>{ "other" }, [klass](lavi::lang::interpreter* interpreter) {
+            auto object = interpreter->current_context->self.get();
+            auto other_object = interpreter->current_context->positional_params[0].get();
+
+            // Default inequality: compare the pointers of the objects
+            return lavi::lang::api::to_object(interpreter, object != other_object);
+        });
+    }
+
+    auto ne_function = klass->functions.find("!=");
+
+    if(ne_function == klass->functions.end()) {
+        klass->functions["!="] = std::make_shared<lavi::lang::function>("!=", std::initializer_list<std::string>{ "other" }, [klass](lavi::lang::interpreter* interpreter) {
+            if(interpreter->current_context->positional_params[0]->klass != lavi::lang::class_class) {
+                return lavi::lang::api::to_object(interpreter, true);
+            }
+
+            return lavi::lang::api::to_object(
+                interpreter,
+                interpreter->current_context->positional_params[0]->as<std::shared_ptr<lavi::lang::klass>>() != interpreter->current_context->klass
+            );
         });
     }
 
@@ -223,21 +270,6 @@ std::shared_ptr<lavi::lang::klass> lavi::lang::klass::create(std::string_view na
     if(name_function == klass->functions.end()) {
         klass->functions["name"] = std::make_shared<lavi::lang::function>("name", [klass](lavi::lang::interpreter* interpreter) {
             return lavi::lang::api::to_object(interpreter, klass->name);
-        });
-    }
-
-    auto eq_function = klass->functions.find("==");
-
-    if(eq_function == klass->functions.end()) {
-        klass->functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{ "other" }, [klass](lavi::lang::interpreter* interpreter) {
-            if(interpreter->current_context->positional_params[0]->klass != lavi::lang::class_class) {
-                return lavi::lang::api::to_object(interpreter, false);
-            }
-
-            return lavi::lang::api::to_object(
-                interpreter,
-                interpreter->current_context->positional_params[0]->as<std::shared_ptr<lavi::lang::klass>>() == interpreter->current_context->klass
-            );
         });
     }
 

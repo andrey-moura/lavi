@@ -1,0 +1,27 @@
+#include 'std/tests.lv'
+
+describe 'String Interpolation' do
+  it 'interpolates variables correctly' do
+    var name = "World"
+    var greeting = "Hello, ${name}!"
+    expect(greeting).to eq("Hello, World!")
+  end
+  it 'does not interpolate variables inside single quotes' do
+    var greeting = 'Hello, ${name}!'
+    expect(greeting).to eq('Hello, ${name}!')
+  end
+  context 'with multiple variables' do
+    it 'interpolates multiple variables correctly' do
+      var first_name = "John"
+      var last_name = "Doe"
+      var greeting = "Hello, ${first_name} ${last_name}!"
+      expect(greeting).to eq("Hello, John Doe!")
+    end
+  end
+  context 'with escaped dollar signs' do
+    it 'does not try to interpolate variables with double dollar signs' do
+      var greeting = "Hello, \${name}!"
+      expect(greeting).to eq('Hello, ${name}!')
+    end
+  end
+end

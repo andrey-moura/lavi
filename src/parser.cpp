@@ -9,6 +9,7 @@
 #include <lavi/lang/object.hpp>
 #include <lavi/lang/class.hpp>
 #include <lavi/lang/function.hpp>
+#include <lavi/lang/error.hpp>
 
 using namespace lavi;
 using namespace lang;
@@ -75,6 +76,12 @@ lavi::lang::parser::ast_node parser::parse_node(lavi::lang::lexer &lexer)
 
     switch (token.type)
     {
+    case lavi::lang::lexer::token_type::token_operator:
+        if(token.content == "[") {
+            return parse_identifier_or_literal(lexer);
+        }
+        // If the operator is not '[', we raise an error on the end of parse_node
+        break;
     case lavi::lang::lexer::token_type::token_comment:
         // Ignore the comment and return the next node
         lexer.consume_token();
@@ -243,9 +250,36 @@ static bool is_identifier_or_literal(const lavi::lang::lexer::token& token)
            token.type == lavi::lang::lexer::token_type::token_literal;
 }
 
-static bool is_on_same_line(const lavi::lang::lexer::token& token, const lavi::lang::lexer::token& other)
+static bool is_on_same_line(const lavi::lang::parser::ast_node& node, const lavi::lang::lexer::token& other)
 {
-    return token.start.line == other.start.line;
+    lavi::lang::lexer::token_position node_start;
+
+    switch(node.type()) {
+        case lavi::lang::parser::ast_node_type::ast_node_fn_call: {
+            auto declname_child = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
+
+            if(!declname_child) {
+                lavi::lang::error::internal("Expected declname child in is_on_same_line");
+            }
+
+            node_start = declname_child->token().start;
+        }
+        break;
+        case lavi::lang::parser::ast_node_type::ast_node_fn_return:
+        case lavi::lang::parser::ast_node_type::ast_node_valuedecl:
+        case lavi::lang::parser::ast_node_type::ast_node_declname:
+        case lavi::lang::parser::ast_node_type::ast_node_break:
+        case lavi::lang::parser::ast_node_type::ast_node_next:
+        case lavi::lang::parser::ast_node_type::ast_node_yield:
+        case lavi::lang::parser::ast_node_type::ast_node_throw:
+            node_start = node.token().start;
+        break;
+        default:
+            lavi::lang::error::internal("Unexpected node type {} in is_on_same_line", (int)node.type());
+        break;
+    }
+
+    return node_start.line == other.start.line;
 }
 
 static bool is_one_exactly_after_other(const lavi::lang::lexer::token& token, const lavi::lang::lexer::token& other)
@@ -273,9 +307,13 @@ static bool is_no_parentheses_function_call(const lavi::lang::parser::ast_node& 
 
     auto& next_token = lexer.see_next();
 
+    if(!is_on_same_line(node, next_token)) {
+        return false;
+    }
+
     bool is_identifier_or_literal_or_yield = is_identifier_or_literal(next_token) || (next_token.type == lavi::lang::lexer::token_type::token_keyword && next_token.content == "yield");
 
-    if(is_identifier_or_literal_or_yield && is_on_same_line(node.token(), next_token)) {
+    if(is_identifier_or_literal_or_yield) {
         return true;
     }
 
@@ -337,7 +375,71 @@ static void extract_fn_yield_block_if_exists(lavi::lang::parser::ast_node& node,
     }
 }
 
-static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node& node, lavi::lang::parser& parser, lavi::lang::lexer& lexer)
+void apply_line_modifier_if_exists(lavi::lang::parser::ast_node& node, lavi::lang::parser& parser, lavi::lang::lexer& lexer)
+{
+    const lavi::lang::lexer::token& next_token = lexer.see_next();
+
+    if(!is_on_same_line(node, next_token)) {
+        return;
+    }
+
+    if(next_token.type != lavi::lang::lexer::token_type::token_keyword || (next_token.content != "if" && next_token.content != "unless")) {
+        return;
+    }
+
+    lavi::lang::parser::ast_node modifier_node(lavi::lang::parser::ast_node_type::ast_node_conditional_modifier);
+    modifier_node.add_child(lavi::lang::parser::ast_node(std::move(lexer.next_token()), lavi::lang::parser::ast_node_type::ast_node_decltype));
+
+    lavi::lang::parser::ast_node condition_node(lavi::lang::parser::ast_node_type::ast_node_condition);
+    condition_node.add_child(std::move(parser.parse_identifier_or_literal(lexer)));
+    modifier_node.add_child(std::move(condition_node));
+
+    lavi::lang::parser::ast_node context_node(lavi::lang::parser::ast_node_type::ast_node_context);
+    context_node.add_child(std::move(node));
+    modifier_node.add_child(std::move(context_node));
+
+    node = std::move(modifier_node);
+}
+
+// Precedence used for the operand of unary operators, like '!'. It is higher than any binary operator.
+static constexpr int unary_operator_precedence = 100;
+
+static int binary_operator_precedence(std::string_view op)
+{
+    static const std::map<std::string_view, int> precedences = {
+        { "=",  1 }, { "+=", 1 }, { "-=", 1 }, { "*=", 1 }, { "/=", 1 }, { "%=", 1 },
+        { "||", 2 },
+        { "&&", 3 },
+        { "==", 4 }, { "!=", 4 },
+        { "<",  5 }, { "<=", 5 }, { ">",  5 }, { ">=", 5 },
+        { "<<", 6 }, { ">>", 6 },
+        { "+",  7 }, { "-",  7 },
+        { "*",  8 }, { "/",  8 }, { "%",  8 },
+        { "^",  9 },
+    };
+
+    auto it = precedences.find(op);
+
+    if(it == precedences.end()) {
+        return 6;
+    }
+
+    return it->second;
+}
+
+static bool is_right_associative_operator(std::string_view op)
+{
+    // Assignments (a = b = c) and power (2 ^ 3 ^ 2) are evaluated from right to left
+    return binary_operator_precedence(op) == 1 || op == "^";
+}
+
+static lavi::lang::parser::ast_node chain_if_exists(
+    lavi::lang::parser::ast_node& node,
+    lavi::lang::parser& parser,
+    lavi::lang::lexer& lexer,
+    bool line_modifier = true,
+    int min_precedence = 0
+)
 {
     // if(chained_nodes.size() == 0) {
         extract_fn_yield_block_if_exists(node, parser, node.token(), lexer);
@@ -360,6 +462,19 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
                 lavi::lang::parser::ast_node next_node = parser.parse_identifier_or_literal(lexer, false, true, { "class" });
                 chained_nodes.push_back(std::move(next_node));
             } else {
+                if(!is_on_same_line(node, next_token)) {
+                    break;
+                }
+
+                bool is_postfix = next_token.content == "[" || next_token.content == "++" || next_token.content == "--";
+                int precedence = is_postfix ? 0 : binary_operator_precedence(next_token.content);
+
+                if(!is_postfix && precedence <= min_precedence) {
+                    // The operator binds weaker than the one we are the right operand of. Let the caller handle it,
+                    // so 'a / b / c' is parsed as '(a / b) / c' and 'a * b + c' as '(a * b) + c'.
+                    break;
+                }
+
                 lavi::lang::parser::ast_node operator_node(lavi::lang::parser::ast_node_type::ast_node_fn_call);
                 lavi::lang::lexer::token& operator_token = lexer.next_token();
 
@@ -373,7 +488,13 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
 
                 // ++ and -- are unary operators
                 if(operator_token.content != "++" && operator_token.content != "--") {
-                    lavi::lang::parser::ast_node right_node = parser.parse_identifier_or_literal(lexer);
+                    int right_min_precedence = 0;
+
+                    if(!is_postfix) {
+                        right_min_precedence = is_right_associative_operator(operator_token.content) ? precedence - 1 : precedence;
+                    }
+
+                    lavi::lang::parser::ast_node right_node = parser.parse_identifier_or_literal(lexer, true, true, {}, true, right_min_precedence);
 
                     lavi::lang::parser::ast_node params_node(lavi::lang::parser::ast_node_type::ast_node_fn_params);
                     params_node.add_child(std::move(right_node));
@@ -428,6 +549,10 @@ static lavi::lang::parser::ast_node chain_if_exists(lavi::lang::parser::ast_node
 
     extract_fn_yield_block_if_exists(last_node, parser, last_node.token(), lexer);
 
+    if(line_modifier && (last_node.type() == lavi::lang::parser::ast_node_type::ast_node_fn_call || last_node.type() == lavi::lang::parser::ast_node_type::ast_node_declname)) {
+        apply_line_modifier_if_exists(last_node, parser, lexer);
+    }
+
     return last_node;
 }
 
@@ -442,7 +567,14 @@ static lavi::lang::parser::ast_node identifier_or_literal_to_node(lavi::lang::le
     }
 }
 
-lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lavi::lang::lexer &lexer, bool chain, bool pair, std::vector<std::string_view> keyword)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(
+    lavi::lang::lexer &lexer,
+    bool chain,
+    bool pair,
+    std::vector<std::string_view> keyword,
+    bool line_modifier,
+    int min_precedence
+)
 {
     const lavi::lang::lexer::token& token = lexer.see_next();
 
@@ -532,7 +664,7 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lav
                 unary_op.add_child(std::move(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname)));
 
                 ast_node object_node(ast_node_type::ast_node_fn_object);
-                object_node.add_child(parse_identifier_or_literal(lexer));
+                object_node.add_child(parse_identifier_or_literal(lexer, true, true, {}, true, unary_operator_precedence));
 
                 unary_op.add_child(std::move(object_node));
 
@@ -650,7 +782,9 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(lav
         return identifier_or_literal_node;
     }
 
-    return chain_if_exists(identifier_or_literal_node, *this, lexer);
+    identifier_or_literal_node = chain_if_exists(identifier_or_literal_node, *this, lexer, line_modifier, min_precedence);
+
+    return identifier_or_literal_node;
 }
 
 lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword(lavi::lang::lexer &lexer)
@@ -658,21 +792,22 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword(lavi::lang::lexer
     const lavi::lang::lexer::token& token = lexer.see_next();
 
     static std::map<std::string_view, lavi::lang::parser::ast_node(lavi::lang::parser::*)(lavi::lang::lexer&)> keyword_parsers = {
-        { "class",      &lavi::lang::parser::parse_keyword_class    },
-        { "var",       &lavi::lang::parser::parse_keyword_var       },
-        { "fn" ,       &lavi::lang::parser::parse_keyword_function  },
-        { "return",    &lavi::lang::parser::parse_keyword_return    },
-        { "if",        &lavi::lang::parser::parse_keyword_if        },
-        { "unless",    &lavi::lang::parser::parse_keyword_if        },
-        { "loop",      &lavi::lang::parser::parse_keyword_loop      },
-        { "namespace", &lavi::lang::parser::parse_keyword_namespace },
-        { "break",     &lavi::lang::parser::parse_keyword_break     },
-        { "static",    &lavi::lang::parser::parse_keyword_static    },
-        { "yield",     &lavi::lang::parser::parse_keyword_yield     },
-        { "within",    &lavi::lang::parser::parse_keyword_within    },
-        { "throw",     &lavi::lang::parser::parse_keyword_throw     },
-        { "try",       &lavi::lang::parser::parse_keyword_try       },
-        { "enum",      &lavi::lang::parser::parse_keyword_enum      },
+        { "class",      &lavi::lang::parser::parse_keyword_class        },
+        { "var",       &lavi::lang::parser::parse_keyword_var           },
+        { "fn" ,       &lavi::lang::parser::parse_keyword_function      },
+        { "return",    &lavi::lang::parser::parse_keyword_return        },
+        { "if",        &lavi::lang::parser::parse_keyword_if            },
+        { "unless",    &lavi::lang::parser::parse_keyword_if            },
+        { "loop",      &lavi::lang::parser::parse_keyword_loop          },
+        { "namespace", &lavi::lang::parser::parse_keyword_namespace     },
+        { "break",     &lavi::lang::parser::parse_keyword_loop_control, },
+        { "next",      &lavi::lang::parser::parse_keyword_loop_control, },
+        { "static",    &lavi::lang::parser::parse_keyword_static        },
+        { "yield",     &lavi::lang::parser::parse_keyword_yield         },
+        { "within",    &lavi::lang::parser::parse_keyword_within        },
+        { "throw",     &lavi::lang::parser::parse_keyword_throw         },
+        { "try",       &lavi::lang::parser::parse_keyword_try           },
+        { "enum",      &lavi::lang::parser::parse_keyword_enum          },
     };
 
     auto keyword_parser = keyword_parsers.find(token.content);
@@ -681,7 +816,9 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword(lavi::lang::lexer
         throw std::runtime_error(token.error_message_at_current_position("Unexpected keyword"));
     }
 
-    return (this->*keyword_parser->second)(lexer);
+    auto node = (this->*keyword_parser->second)(lexer);
+
+    return node;
 }
 
 lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_class(lavi::lang::lexer &lexer) {
@@ -835,11 +972,15 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_return(lavi::lang
         return return_node; // No return value, just return the return node
     }
 
-    if(possible_return_value.type == lexer::token_type::token_keyword) {
+    if(possible_return_value.type == lexer::token_type::token_keyword && possible_return_value.content != "if" && possible_return_value.content != "unless") {
         throw std::runtime_error(possible_return_value.error_message_at_current_position("Unexpected keyword after 'return'"));
     }
 
-    return_node.add_child(std::move(parse_identifier_or_literal(lexer)));
+    if(possible_return_value.type != lexer::token_type::token_keyword) {
+        return_node.add_child(std::move(parse_identifier_or_literal(lexer, true, true, {}, false)));
+    }
+
+    apply_line_modifier_if_exists(return_node, *this, lexer);
 
     return return_node;
 }
@@ -957,12 +1098,20 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_while(lavi::lang:
     return while_node;
 }
 
-lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_break(lavi::lang::lexer &lexer)
+lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_loop_control(lavi::lang::lexer &lexer)
 {
-    ast_node break_node(ast_node_type::ast_node_break);
-    break_node.add_child(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_decltype));
+    ast_node control_node;
+    if(lexer.see_next().content == "break") {
+        control_node = ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_break);
+    } else if(lexer.see_next().content == "next") {
+        control_node = ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_next);
+    } else {
+        lavi::lang::error::internal("Expected 'break' or 'next', got {}", lexer.see_next().content);
+    }
 
-    return break_node;
+    apply_line_modifier_if_exists(control_node, *this, lexer);
+
+    return control_node;
 }
 
 lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_static(lavi::lang::lexer &lexer)
@@ -1021,8 +1170,10 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_throw(lavi::lang:
     // throw [object_to_throw]
 
     lavi::lang::parser::ast_node node(std::move(lexer.next_token()), ast_node_type::ast_node_throw);
-    auto next_node = parse_identifier_or_literal(lexer);
+    auto next_node = parse_identifier_or_literal(lexer, true, true, {}, false);
     node.add_child(std::move(next_node));
+
+    apply_line_modifier_if_exists(node, *this, lexer);
 
     return node;
 }

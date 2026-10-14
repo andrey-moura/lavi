@@ -11,10 +11,10 @@ void create_double_class()
             double i = interpreter->current_context->self->as<double>();
             
             if(i == 0) {
-                return std::make_shared<lavi::lang::object>(lavi::lang::false_class);
+                return lavi::lang::api::to_object(interpreter, false);
             }
 
-            return std::make_shared<lavi::lang::object>(lavi::lang::true_class);
+            return lavi::lang::api::to_object(interpreter, true);
         });
 
         lavi::lang::double_class->instance_functions["to_string"] = std::make_shared<lavi::lang::function>("to_string", [](lavi::lang::interpreter* interpreter) {

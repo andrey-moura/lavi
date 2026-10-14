@@ -53,6 +53,7 @@ const static std::vector<std::string_view> keywords_lookup = {
     "if",
     "loop",
     "namespace",
+    "next",
     "return",
     "static",
     "throw",
@@ -365,6 +366,8 @@ char unescape(lavi::lang::lexer& lexer)
             return '\t';
         case 'v':
             return '\v';
+        case '$':
+            return '$';
         case 'x': {
             // Hexadecimal escape sequence
             int value = 0;

@@ -111,9 +111,10 @@
     ],
     "cmake.debugConfig": {
         "args": [
-            "examples/minimal.lv"
+            "project",
+            "run"
         ],
-        "cwd": "${workspaceFolder}",
+        "cwd": "/home/andrey/Moonslate/lavi-engine-core/",
         "visualizerFile": "${workspaceFolder}/natvis.xml",
         "showDisplayString": true,
         "type": "lldb",

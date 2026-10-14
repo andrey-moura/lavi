@@ -51,6 +51,7 @@ add_library(lavi-lang
     ${CMAKE_CURRENT_LIST_DIR}/src/yaml.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/hash.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/exception.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/file.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/interpreter_context.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/std_class.cpp
@@ -72,6 +73,7 @@ add_library(lavi-lang
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/true_class.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/exception_class.cpp
     ${CMAKE_CURRENT_LIST_DIR}/src/classes/random_class.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/src/classes/high_resolution_time.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/modules/andy-tests/src/andy-tests.cpp
     

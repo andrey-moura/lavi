@@ -52,7 +52,7 @@ namespace lavi
                 }
 
                 interpreter->input_file_path = path;
-                std::shared_ptr<lavi::lang::object> ret = interpreter->execute_all(root_node);
+                std::shared_ptr<lavi::lang::object> ret = interpreter->execute(root_node);
         
                 return ret;
             }
@@ -120,7 +120,12 @@ namespace lavi
 
                 std::shared_ptr<lavi::lang::object> ret = nullptr;
 
+                if(function->positional_params.size() != interpreter->current_context->positional_params.size()) {
+                    throw std::runtime_error("function '" + std::string(function_name) + "' expects " + std::to_string(function->positional_params.size()) + " positional parameters, but " + std::to_string(interpreter->current_context->positional_params.size()) + " were given");
+                }
+
                 if(function->block_ast.childrens().size()) {
+
                     for(size_t i = 0; i < function->positional_params.size(); i++) {
                         interpreter->current_context->variables[function->positional_params[i].name] = interpreter->current_context->positional_params[i];
                     }
@@ -128,12 +133,16 @@ namespace lavi
                     for(auto& [name, value] : interpreter->current_context->named_params) {
                         interpreter->current_context->variables[name] = value;
                     }
-                    
+
+                    const lavi::lang::parser::ast_node* block;
+
                     if(function->block_ast.type() == lavi::lang::parser::ast_node_type::ast_node_context) {
-                        ret = interpreter->execute_all(function->block_ast);
+                        block = &function->block_ast;
                     } else {
-                        ret = interpreter->execute(*function->block_ast.block());
+                        block = function->block_ast.block();
                     }
+
+                    ret = interpreter->execute_inline(*block);
                 } else if(function->native_function) {
                     ret = function->native_function(interpreter);
                 }
