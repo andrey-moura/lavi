@@ -135,7 +135,7 @@ std::shared_ptr<lavi::lang::klass> lavi::lang::klass::create(std::string_view na
             auto other_object = interpreter->current_context->positional_params[0];
             auto other_class = other_object->as<std::shared_ptr<lavi::lang::klass>>();
 
-            return lavi::lang::api::to_object(interpreter, lavi::lang::api::is_a(interpreter, interpreter->current_context->self, klass));
+            return lavi::lang::api::to_object(interpreter, lavi::lang::api::is_a(interpreter, interpreter->current_context->self, other_class));
         });
     }
 
