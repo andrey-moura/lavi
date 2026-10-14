@@ -1,6 +1,14 @@
 #include 'std/tests.lv'
 
 describe 'File' do
+  describe '#write' do
+    it 'writes content to a file' do
+      var seed = Random.integer
+      File.create("${seed}.txt").write("Hello, World!")
+      var content = File.read("${seed}.txt")
+      expect(content).to eq("Hello, World!")
+    end
+  end
   describe '.exists?' do
     context 'when the file exists' do
       it 'returns true' do
@@ -20,6 +28,18 @@ describe 'File' do
       expect(File.exists?("${seed}.txt")).to eq(false)
       File.create("${seed}.txt")
       expect(File.exists?("${seed}.txt")).to eq(true)
+    end
+    it 'returns a file object' do
+      var seed = Random.integer
+      var file = File.create("${seed}.txt")
+      expect(file).to be_a(File)
+      expect(File.exists?("${seed}.txt")).to eq(true)
+    end
+  end
+  describe '.read' do
+    it 'reads the content of a file' do
+      var content = File.read('tests/fixtures/1.txt')
+      expect(content).to eq('1')
     end
   end
 end
