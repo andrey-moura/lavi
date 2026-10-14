@@ -271,6 +271,7 @@ static bool is_on_same_line(const lavi::lang::parser::ast_node& node, const lavi
         case lavi::lang::parser::ast_node_type::ast_node_break:
         case lavi::lang::parser::ast_node_type::ast_node_next:
         case lavi::lang::parser::ast_node_type::ast_node_yield:
+        case lavi::lang::parser::ast_node_type::ast_node_throw:
             node_start = node.token().start;
         break;
         default:
@@ -1169,8 +1170,10 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_keyword_throw(lavi::lang:
     // throw [object_to_throw]
 
     lavi::lang::parser::ast_node node(std::move(lexer.next_token()), ast_node_type::ast_node_throw);
-    auto next_node = parse_identifier_or_literal(lexer);
+    auto next_node = parse_identifier_or_literal(lexer, true, true, {}, false);
     node.add_child(std::move(next_node));
+
+    apply_line_modifier_if_exists(node, *this, lexer);
 
     return node;
 }
