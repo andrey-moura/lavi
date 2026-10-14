@@ -1,0 +1,15 @@
+#include 'std/tests.lv'
+
+var value_which_should_be_1 = 1
+
+fn function_which_returns_1
+  return
+  value_which_should_be_1 = 2
+end
+
+describe 'Return statement' do
+  it 'stops the function execution' do
+    function_which_returns_1
+    expect(value_which_should_be_1).to eq(1)
+  end
+end

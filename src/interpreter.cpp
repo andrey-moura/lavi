@@ -831,20 +831,20 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_condition(c
 
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_return(const lavi::lang::parser::ast_node& source_code)
 {
+    std::shared_ptr<lavi::lang::object> ret = nullptr;
+
     if(source_code.childrens().size()) {
-        auto ret = node_to_object(
+        ret = node_to_object(
             source_code.childrens().front(),
             current_context->self ? current_context->self->klass : nullptr,
             current_context->self ? current_context->self->shared_from_this() : nullptr
         );
-
-        current_context->did_return = true;
-        current_context->return_value = ret;
-
-        return ret;
     }
+    
+    current_context->did_return = true;
+    current_context->return_value = ret;
 
-    return nullptr;
+    return ret;
 }
 
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_for(const lavi::lang::parser::ast_node& source_code)
