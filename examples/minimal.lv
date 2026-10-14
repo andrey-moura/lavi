@@ -1,2 +1,5 @@
 // Output 'Hello, World!'
-out 'Hello, World!'
+var path = Dir.current.path
+var new_path = path / "new_folder" / "new_file.txt"
+
+out new_path
