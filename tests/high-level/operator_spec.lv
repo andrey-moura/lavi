@@ -1,0 +1,80 @@
+#include 'std/tests'
+
+describe 'operators' do
+  context 'when chaining operators with the same precedence' do
+    it 'evaluates subtraction from left to right' do
+      expect(10 - 4 - 3).to eq(3)
+    end
+
+    it 'evaluates division from left to right' do
+      expect(100 / 10 / 2).to eq(5)
+    end
+
+    it 'evaluates mixed addition and subtraction from left to right' do
+      expect(10 - 2 + 3).to eq(11)
+    end
+
+    it 'evaluates mixed multiplication and division from left to right' do
+      expect(12 / 2 * 3).to eq(18)
+    end
+  end
+
+  context 'when chaining operators with different precedence' do
+    it 'evaluates multiplication before addition' do
+      expect(2 * 3 + 1).to eq(7)
+      expect(1 + 2 * 3).to eq(7)
+    end
+
+    it 'evaluates division before subtraction' do
+      expect(10 - 6 / 2).to eq(7)
+      expect(6 / 2 - 1).to eq(2)
+    end
+
+    it 'evaluates arithmetic before comparison' do
+      expect(1 + 1 == 2).to eq(true)
+      expect(2 == 1 + 1).to eq(true)
+      expect(2 * 3 < 2 + 3).to eq(false)
+    end
+
+    it 'evaluates comparison before logical operators' do
+      expect(1 == 1 && 2 == 2).to eq(true)
+      expect(1 == 2 || 2 == 2).to eq(true)
+    end
+
+    it 'evaluates && before ||' do
+      expect(true || false && false).to eq(true)
+      expect(false && false || true).to eq(true)
+    end
+  end
+
+  context 'when using parentheses' do
+    it 'overrides the precedence' do
+      expect((1 + 2) * 3).to eq(9)
+      expect(2 * (3 + 1)).to eq(8)
+      expect(10 - (4 - 3)).to eq(9)
+    end
+  end
+
+  context 'when using member access in operands' do
+    it 'binds the member access tighter than the operator' do
+      var items = [1, 2, 3]
+      expect(items.size * 2 + 1).to eq(7)
+      expect(1 + items.size * 2).to eq(7)
+    end
+  end
+
+  context 'when using the unary not operator' do
+    it 'binds tighter than binary operators' do
+      expect(!false == true).to eq(true)
+      expect(!true && false).to eq(false)
+    end
+  end
+
+  context 'when assigning an expression' do
+    it 'evaluates the whole right side before assigning' do
+      var x = 0
+      x = 10 - 4 - 3
+      expect(x).to eq(3)
+    end
+  end
+end
