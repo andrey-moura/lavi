@@ -243,13 +243,16 @@ namespace lavi
             /// @param chain Whether to allow chaining function calls and member accesses.
             /// @param keyword Whether a keyword can be parsed as an identifier. This is useful when we can have something like obj.class
             /// @param pair Whether to allow parsing a pair.
+            /// @param line_modifier Whether to apply a line modifier (if/unless) at the end of the expression, like `out x if y`.
+            /// @param min_precedence Binary operators with precedence lower or equal to this are not chained, they are left to the caller.
             /// @return The identifier or literal node.
             lavi::lang::parser::ast_node parse_identifier_or_literal(
                 lavi::lang::lexer& lexer,
                  bool chain = true,
                  bool pair = true,
                  std::vector<std::string_view> keyword = {},
-                 bool line_modifier = true
+                 bool line_modifier = true,
+                 int min_precedence = 0
             );
         // Parsers functions
         protected:

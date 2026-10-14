@@ -37,4 +37,13 @@ describe 'Path' do
       end
     end
   end
+  describe 'operator/' do
+    context 'when chaining multiple segments' do
+      it 'joins them from left to right' do
+        var path = Path.new('tests') / 'fixtures' / 'glob'
+
+        expect(path == Path.new('tests/fixtures/glob')).to eq(true)
+      end
+    end
+  end
 end

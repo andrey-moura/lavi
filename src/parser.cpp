@@ -400,11 +400,44 @@ void apply_line_modifier_if_exists(lavi::lang::parser::ast_node& node, lavi::lan
     node = std::move(modifier_node);
 }
 
+// Precedence used for the operand of unary operators, like '!'. It is higher than any binary operator.
+static constexpr int unary_operator_precedence = 100;
+
+static int binary_operator_precedence(std::string_view op)
+{
+    static const std::map<std::string_view, int> precedences = {
+        { "=",  1 }, { "+=", 1 }, { "-=", 1 }, { "*=", 1 }, { "/=", 1 }, { "%=", 1 },
+        { "||", 2 },
+        { "&&", 3 },
+        { "==", 4 }, { "!=", 4 },
+        { "<",  5 }, { "<=", 5 }, { ">",  5 }, { ">=", 5 },
+        { "<<", 6 }, { ">>", 6 },
+        { "+",  7 }, { "-",  7 },
+        { "*",  8 }, { "/",  8 }, { "%",  8 },
+        { "^",  9 },
+    };
+
+    auto it = precedences.find(op);
+
+    if(it == precedences.end()) {
+        return 6;
+    }
+
+    return it->second;
+}
+
+static bool is_right_associative_operator(std::string_view op)
+{
+    // Assignments (a = b = c) and power (2 ^ 3 ^ 2) are evaluated from right to left
+    return binary_operator_precedence(op) == 1 || op == "^";
+}
+
 static lavi::lang::parser::ast_node chain_if_exists(
     lavi::lang::parser::ast_node& node,
     lavi::lang::parser& parser,
     lavi::lang::lexer& lexer,
-    bool line_modifier = true
+    bool line_modifier = true,
+    int min_precedence = 0
 )
 {
     // if(chained_nodes.size() == 0) {
@@ -432,6 +465,15 @@ static lavi::lang::parser::ast_node chain_if_exists(
                     break;
                 }
 
+                bool is_postfix = next_token.content == "[" || next_token.content == "++" || next_token.content == "--";
+                int precedence = is_postfix ? 0 : binary_operator_precedence(next_token.content);
+
+                if(!is_postfix && precedence <= min_precedence) {
+                    // The operator binds weaker than the one we are the right operand of. Let the caller handle it,
+                    // so 'a / b / c' is parsed as '(a / b) / c' and 'a * b + c' as '(a * b) + c'.
+                    break;
+                }
+
                 lavi::lang::parser::ast_node operator_node(lavi::lang::parser::ast_node_type::ast_node_fn_call);
                 lavi::lang::lexer::token& operator_token = lexer.next_token();
 
@@ -445,7 +487,13 @@ static lavi::lang::parser::ast_node chain_if_exists(
 
                 // ++ and -- are unary operators
                 if(operator_token.content != "++" && operator_token.content != "--") {
-                    lavi::lang::parser::ast_node right_node = parser.parse_identifier_or_literal(lexer);
+                    int right_min_precedence = 0;
+
+                    if(!is_postfix) {
+                        right_min_precedence = is_right_associative_operator(operator_token.content) ? precedence - 1 : precedence;
+                    }
+
+                    lavi::lang::parser::ast_node right_node = parser.parse_identifier_or_literal(lexer, true, true, {}, true, right_min_precedence);
 
                     lavi::lang::parser::ast_node params_node(lavi::lang::parser::ast_node_type::ast_node_fn_params);
                     params_node.add_child(std::move(right_node));
@@ -523,7 +571,8 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(
     bool chain,
     bool pair,
     std::vector<std::string_view> keyword,
-    bool line_modifier
+    bool line_modifier,
+    int min_precedence
 )
 {
     const lavi::lang::lexer::token& token = lexer.see_next();
@@ -614,7 +663,7 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(
                 unary_op.add_child(std::move(ast_node(std::move(lexer.next_token()), ast_node_type::ast_node_declname)));
 
                 ast_node object_node(ast_node_type::ast_node_fn_object);
-                object_node.add_child(parse_identifier_or_literal(lexer));
+                object_node.add_child(parse_identifier_or_literal(lexer, true, true, {}, true, unary_operator_precedence));
 
                 unary_op.add_child(std::move(object_node));
 
@@ -732,7 +781,7 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(
         return identifier_or_literal_node;
     }
 
-    identifier_or_literal_node = chain_if_exists(identifier_or_literal_node, *this, lexer, line_modifier);
+    identifier_or_literal_node = chain_if_exists(identifier_or_literal_node, *this, lexer, line_modifier, min_precedence);
 
     return identifier_or_literal_node;
 }
