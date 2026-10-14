@@ -48,7 +48,7 @@ fn new
 
   generate_file(root_dir / 'package.yaml', "entry: src/main.lv\nload_paths: lib\ncmake_paths: native/*\n")
   generate_file(root_dir / 'src' / 'main.lv', "out 'Hello, World!'\n")
-  generate_file(root_dir / 'CMakeLists.txt', "cmake_minimum_required(VERSION 3.10)\n\nset(CMAKE_CXX_STANDARD 20)\n\nproject(${project_name})\n\nfile(GLOB_RECURSE NATIVE_CMAKE_FILES \"${CMAKE_SOURCE_DIR}/native/*.cmake\")\nforeach(FILE ${NATIVE_CMAKE_FILES})\n    include(${FILE})\nendforeach()\n")
+  generate_file(root_dir / 'CMakeLists.txt', "cmake_minimum_required(VERSION 3.10)\n\nset(CMAKE_CXX_STANDARD 20)\n\nproject(${project_name})\n\nfile(GLOB_RECURSE NATIVE_CMAKE_FILES \"\${CMAKE_SOURCE_DIR}/native/*.cmake\")\n\nforeach(FILE \${NATIVE_CMAKE_FILES})\n    include(\${FILE})\nendforeach()\n")
 end
 
 fn run
