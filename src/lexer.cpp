@@ -366,6 +366,8 @@ char unescape(lavi::lang::lexer& lexer)
             return '\t';
         case 'v':
             return '\v';
+        case '$':
+            return '$';
         case 'x': {
             // Hexadecimal escape sequence
             int value = 0;
