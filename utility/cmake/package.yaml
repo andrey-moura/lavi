@@ -1,0 +1,2 @@
+load_paths: lib
+entry: src/main.lv
