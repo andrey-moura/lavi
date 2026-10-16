@@ -346,4 +346,29 @@ void create_string_class()
 
     return nullptr;
   });
+
+  // Character class predicates. They return true when the string is not empty and every character belongs to the class.
+  auto add_character_class_predicate = [](const char* name, int(*predicate)(int)) {
+    lavi::lang::string_class->instance_functions[name] = std::make_shared<lavi::lang::function>(name, [predicate](lavi::lang::interpreter* interpreter) {
+      const std::string& value = interpreter->current_context->self->as<std::string>();
+
+      if(value.empty()) {
+        return lavi::lang::api::to_object(interpreter, false);
+      }
+
+      for(char c : value) {
+        if(!predicate((unsigned char)c)) {
+          return lavi::lang::api::to_object(interpreter, false);
+        }
+      }
+
+      return lavi::lang::api::to_object(interpreter, true);
+    });
+  };
+
+  add_character_class_predicate("alpha?", std::isalpha);
+  add_character_class_predicate("digit?", std::isdigit);
+  add_character_class_predicate("xdigit?", std::isxdigit);
+  add_character_class_predicate("alnum?", std::isalnum);
+  add_character_class_predicate("space?", std::isspace);
 }
