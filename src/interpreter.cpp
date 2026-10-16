@@ -756,10 +756,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_conditional
     if(truthy == match_codition) {
         auto context = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context);
 
-        for(auto& child : context->childrens()) {
-            // Execute each instruction inlined within the context
-            ret = execute(child);
-        }
+        return execute_inline(*context);
     } else if(source_code.type() == lavi::lang::parser::ast_node_type::ast_node_conditional_modifier) {
         // Conditional modifier does not return the value of the line when the condition is false
         return nullptr;
