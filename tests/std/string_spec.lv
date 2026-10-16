@@ -18,4 +18,9 @@ describe 'String' do
       end
     end
   end
+  describe 'front' do
+    it 'returns null for an empty string' do
+      expect(''.front).to eq(null)
+    end
+  end
 end
