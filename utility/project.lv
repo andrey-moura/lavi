@@ -7,7 +7,8 @@ fn help
   out "    The 'lavi project new <project_name>' command creates a new project."
   out ''
   out '  run:'
-  out "    The 'lavi project run' command executes a project."
+  out "    The 'lavi project run [<project_path>]' command executes a project."
+  out '    If <project_path> is not given, the current directory is used.'
   out '    It requires all source files configured in the package.yaml'
   out "    and then executes the entry point defined in the package.yaml.\n"
   out "  help:"
@@ -52,14 +53,21 @@ fn new
 end
 
 fn run
-  var project_file = Dir.current.path / 'package.yaml'
+  var root_dir = Dir.current.path
+  var project_path = __args__[3]
 
-  throw RuntimeError.new('Could not find package.yaml in current directory') unless project_file.exists?
+  if project_path.present?
+    root_dir = Path.new(project_path)
+  end
+
+  var project_file = root_dir / 'package.yaml'
+
+  throw RuntimeError.new("Could not find package.yaml in ${root_dir}") unless project_file.exists?
 
   var project = YAML.parse(project_file)
 
   if project.load_paths.present?
-    var folder = Dir.new(project.load_paths)
+    var folder = Dir.new((root_dir / project.load_paths).to_string)
     folder.glob('*.lv').each do (file)
       require file
     end
@@ -67,7 +75,7 @@ fn run
   
   throw RuntimeError.new('Missing main entry point in package.yaml') unless project.entry.present?
 
-  require project.entry
+  require root_dir / project.entry
 end
 
 if __args__.size < 3
