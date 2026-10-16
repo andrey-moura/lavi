@@ -1,0 +1,94 @@
+import :yaml
+
+fn help
+  out "Usage: lavi project <command> [<args>]\n"
+  out "These are the available project commands:\n"
+  out "  new:"
+  out "    The 'lavi project new <project_name>' command creates a new project."
+  out ''
+  out '  run:'
+  out "    The 'lavi project run [<project_path>]' command executes a project."
+  out '    If <project_path> is not given, the current directory is used.'
+  out '    It requires all source files configured in the package.yaml'
+  out "    and then executes the entry point defined in the package.yaml.\n"
+  out "  help:"
+  out "    The 'lavi project help' command shows this message."
+
+  return 1
+end
+
+fn error(what)
+  out "\x1b[31m${what}\x1b[0m"
+end
+
+fn generate_file(path, content)
+  return if File.exists?(path)
+
+  File.create(path).write(content)
+end
+
+fn new
+  var project_name = __args__[3]
+
+  return help unless project_name.present?
+
+  Dir.create(project_name)
+
+  var root_dir = Dir.current.path / project_name
+
+  ['native', 'lib', 'src'].each do (folder)
+    var folder_path = root_dir / folder
+    Dir.create(folder_path)
+
+    next if folder == 'src'
+  
+    var keep_file_path = folder_path / '.keep'
+
+    File.create(keep_file_path) unless File.exists?(keep_file_path)
+  end
+
+  generate_file(root_dir / 'package.yaml', "entry: src/main.lv\nload_paths: lib\ncmake_paths: native/*\n")
+  generate_file(root_dir / 'src' / 'main.lv', "out 'Hello, World!'\n")
+  generate_file(root_dir / 'CMakeLists.txt', "cmake_minimum_required(VERSION 3.10)\n\nset(CMAKE_CXX_STANDARD 20)\n\nproject(${project_name})\n\nfile(GLOB_RECURSE NATIVE_CMAKE_FILES \"\${CMAKE_SOURCE_DIR}/native/*.cmake\")\n\nforeach(FILE \${NATIVE_CMAKE_FILES})\n    include(\${FILE})\nendforeach()\n")
+end
+
+fn run
+  var root_dir = Dir.current.path
+  var project_path = __args__[3]
+
+  if project_path.present?
+    root_dir = Path.new(project_path)
+  end
+
+  var project_file = root_dir / 'package.yaml'
+
+  throw RuntimeError.new("Could not find package.yaml in ${root_dir}") unless project_file.exists?
+
+  var project = YAML.parse(project_file)
+
+  if project.load_paths.present?
+    var folder = Dir.new((root_dir / project.load_paths).to_string)
+    folder.glob('*.lv').each do (file)
+      require file
+    end
+  end
+  
+  throw RuntimeError.new('Missing main entry point in package.yaml') unless project.entry.present?
+
+  require root_dir / project.entry
+end
+
+if __args__.size < 3
+  help
+  return 1
+end
+
+var command = __args__[2]
+
+if respond_to?(command)
+  send(command)
+else
+  out "Unknown command: ${command}"
+  help
+  return 1
+end

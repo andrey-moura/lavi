@@ -1,39 +1,88 @@
 #include 'std/tests'
 
 fn count_up_to(limit)
-    var i = 0
-    var result = []
+  var i = 0
+  var result = []
 
-    loop while i < limit
-        result.push(i)
-        i += 1
-    end
+  loop while i < limit
+    result.push(i)
+    i += 1
+  end
 
-    return result
+  return result
 end
 
 fn count_down_from(start)
-    var i = start
-    var result = []
+  var i = start
+  var result = []
 
-    loop until i == 0
-        result.push(i)
-        i -= 1
-    end
+  loop until i == 0
+    result.push(i)
+    i -= 1
+  end
 
-    return result
+  return result
 end
 
 describe 'loop' do
-    context 'when using while' do
-        it 'should collect numbers from 0 to 9' do
-            expect(count_up_to(10)).to eq([0,1,2,3,4,5,6,7,8,9])
+  context 'when using while' do
+    it 'collects numbers from 0 to 9' do
+      expect(count_up_to(10)).to eq([0,1,2,3,4,5,6,7,8,9])
+    end
+    context 'with next' do
+      it 'skips the current iteration when next is used' do
+        var result = []
+        var i = 0
+
+        loop while i < 5
+          i += 1
+          next if i == 3
+          result.push(i)
         end
+
+        expect(result).to eq([1,2,4,5])
+      end
+    end
+  end
+
+  context 'when using until' do
+    it 'counts down from a number until zero' do
+      expect(count_down_from(5)).to eq([5,4,3,2,1])
+    end
+  end
+end
+describe 'loop control inside conditionals' do
+  it 'does not run the remaining lines of an if after next' do
+    var result = []
+    var i = 0
+
+    loop while i < 3
+      i += 1
+      if i == 2
+        next
+        result.push(-1)
+      end
+      result.push(i)
     end
 
-    context 'when using until' do
-        it 'should count down from a number until zero' do
-            expect(count_down_from(5)).to eq([5,4,3,2,1])
-        end
+    expect(result).to eq([1,3])
+  end
+end
+
+class LoopCounter
+  fn count_to(limit)
+    var i = 0
+
+    loop while i < limit
+      i += 1
     end
+
+    return i
+  end
+end
+
+describe 'loop inside a method' do
+  it 'can read and update the method local variables' do
+    expect(LoopCounter.new.count_to(3)).to eq(3)
+  end
 end

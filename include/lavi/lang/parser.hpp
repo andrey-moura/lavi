@@ -71,12 +71,14 @@ namespace lavi
                 ast_node_declstatic,
 
                 ast_node_conditional,
+                ast_node_conditional_modifier,
                 ast_node_while,
                 ast_node_for,
                 ast_node_for_start,
                 ast_node_for_step,
                 ast_node_for_end,
                 ast_node_break,
+                ast_node_next,
                 ast_node_else,
                 ast_node_condition,
                 ast_node_yield,
@@ -85,7 +87,9 @@ namespace lavi
                 ast_node_try,
                 ast_node_catch,
 
-                ast_node_enum
+                ast_node_enum,
+
+                ast_node_type_max
             };
             class ast_node
             {
@@ -239,9 +243,17 @@ namespace lavi
             /// @param chain Whether to allow chaining function calls and member accesses.
             /// @param keyword Whether a keyword can be parsed as an identifier. This is useful when we can have something like obj.class
             /// @param pair Whether to allow parsing a pair.
+            /// @param line_modifier Whether to apply a line modifier (if/unless) at the end of the expression, like `out x if y`.
             /// @param min_precedence Binary operators with precedence lower or equal to this are not chained, they are left to the caller.
             /// @return The identifier or literal node.
-            lavi::lang::parser::ast_node parse_identifier_or_literal(lavi::lang::lexer& lexer, bool chain = true, bool pair = true, std::vector<std::string_view> keyword = {}, int min_precedence = 0);
+            lavi::lang::parser::ast_node parse_identifier_or_literal(
+                lavi::lang::lexer& lexer,
+                 bool chain = true,
+                 bool pair = true,
+                 std::vector<std::string_view> keyword = {},
+                 bool line_modifier = true,
+                 int min_precedence = 0
+            );
         // Parsers functions
         protected:
             /// @brief Parse a keyword.
@@ -270,7 +282,7 @@ namespace lavi
             lavi::lang::parser::ast_node parse_keyword_loop(lavi::lang::lexer& lexer);
             lavi::lang::parser::ast_node parse_keyword_for(lavi::lang::lexer& lexer);
             lavi::lang::parser::ast_node parse_keyword_while(lavi::lang::lexer& lexer);
-            lavi::lang::parser::ast_node parse_keyword_break(lavi::lang::lexer& lexer);
+            lavi::lang::parser::ast_node parse_keyword_loop_control(lavi::lang::lexer& lexer);
             lavi::lang::parser::ast_node parse_keyword_static(lavi::lang::lexer& lexer);
             lavi::lang::parser::ast_node parse_keyword_yield(lavi::lang::lexer& lexer);
             lavi::lang::parser::ast_node parse_keyword_within(lavi::lang::lexer& lexer);

@@ -1,0 +1,84 @@
+#include 'std/tests'
+
+describe 'try' do
+  it 'catches exceptions derived from the catcher type' do
+    var caught = null
+
+    try
+      var value = null
+      value.undefined_function
+    catch(Exception e)
+      caught = e
+    end
+
+    expect(caught != null).to eq(true)
+  end
+end
+
+class EqualityProbe
+end
+
+describe 'default equality' do
+  it 'compares objects by identity' do
+    var probe = EqualityProbe.new
+
+    expect(probe == probe).to eq(true)
+    expect(probe == EqualityProbe.new).to eq(false)
+    expect(probe == null).to eq(false)
+  end
+end
+
+describe 'hash literal' do
+  it 'accepts delimiters as string keys' do
+    var hash = { "{": 1, "}": 2, ",": 3 }
+
+    expect(hash["}"]).to eq(2)
+  end
+  it 'compares missing keys with null' do
+    var hash = { "a": 1 }
+
+    expect(hash["b"] == null).to eq(true)
+  end
+end
+
+fn return_inside_try
+  try
+    return 'from try'
+  catch(e)
+  end
+  return 'after try'
+end
+
+fn return_inside_catch
+  try
+    throw 'error'
+  catch(e)
+    return 'from catch'
+  end
+  return 'after try'
+end
+
+describe 'control flow inside try' do
+  it 'returns from the function inside the try body' do
+    expect(return_inside_try).to eq('from try')
+  end
+  it 'returns from the function inside the catch body' do
+    expect(return_inside_catch).to eq('from catch')
+  end
+  it 'stops the loop with break and skips with next' do
+    var result = []
+    var i = 0
+
+    loop while i < 5
+      i += 1
+      try
+        next if i == 2
+        break if i == 4
+      catch(e)
+      end
+      result.push(i)
+    end
+
+    expect(result).to eq([1, 3])
+  end
+end
