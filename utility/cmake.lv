@@ -1,1 +1,1 @@
-system('lavi project run utility/cmake')
+system("lavi project run ${__dir__}/cmake")
