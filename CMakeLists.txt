@@ -162,34 +162,34 @@ install(DIRECTORY include/lavi DESTINATION include)
 install(DIRECTORY std DESTINATION include/lavi)
 install(DIRECTORY utility DESTINATION src/lavi)
 
-install(EXPORT lavi-langTargets
-    FILE lavi-langTargets.cmake
-    NAMESPACE lavi-lang::
-    DESTINATION lib/cmake/lavi-lang
+install(EXPORT LaviTargets
+    FILE LaviTargets.cmake
+    NAMESPACE Lavi::
+    DESTINATION lib/cmake/Lavi
 )
 
 include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
-    ${CMAKE_BINARY_DIR}/lavi-langConfigVersion.cmake
+    ${CMAKE_BINARY_DIR}/LaviConfigVersion.cmake
     VERSION ${LAVILANG_PROJECT_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 
 configure_file(
     ${CMAKE_SOURCE_DIR}/cmake/lavi-langConfig.cmake.in
-    ${CMAKE_BINARY_DIR}/lavi-langConfig.cmake
+    ${CMAKE_BINARY_DIR}/LaviConfig.cmake
     @ONLY
 )
 
 install(FILES
-    ${CMAKE_BINARY_DIR}/lavi-langConfig.cmake
-    ${CMAKE_BINARY_DIR}/lavi-langConfigVersion.cmake
-    DESTINATION lib/cmake/lavi-lang
+    ${CMAKE_BINARY_DIR}/LaviConfig.cmake
+    ${CMAKE_BINARY_DIR}/LaviConfigVersion.cmake
+    DESTINATION lib/cmake/Lavi
 )
 
 install(TARGETS lavi-lang
-    EXPORT lavi-langTargets
+    EXPORT LaviTargets
 )
 
 andy_tests_configure(lavi)
