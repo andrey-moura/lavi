@@ -1,1 +1,2 @@
 out 'Hello, from CMake!'
+out "We are at ${Dir.current}"
