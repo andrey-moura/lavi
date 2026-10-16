@@ -107,6 +107,10 @@ void create_array_class()
 
         auto index = interpreter->current_context->positional_params[0]->as<int>();
 
+        if(index < 0 || index >= static_cast<int>(items.size())) {
+            return lavi::lang::api::to_object(interpreter, nullptr);
+        }
+
         return items[index];
     });
 
