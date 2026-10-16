@@ -1,0 +1,6 @@
+#!/bin/sh
+
+mkdir release-build
+cmake -DCMAKE_BUILD_TYPE=Release -B release-build .
+cmake --build release-build --config Release --parallel
+sudo cmake --install release-build --config Release
