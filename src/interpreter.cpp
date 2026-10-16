@@ -590,7 +590,11 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
         if(current_context->positional_params.size() < method_to_call->positional_params.size()) {
             for(size_t i = current_context->positional_params.size(); i < method_to_call->positional_params.size(); i++) {
                 if(!method_to_call->positional_params[i].default_value_node.is_undefined()) {
-                    current_context->positional_params.push_back(execute(method_to_call->positional_params[i].default_value_node.childrens().front()));
+                    current_context->positional_params.push_back(node_to_object(
+                        method_to_call->positional_params[i].default_value_node,
+                        current_context->klass,
+                        current_context->self ? current_context->self->shared_from_this() : nullptr
+                    ));
                     continue;
                 }
                 // Found 1 or more missing positional parameters without default values, throw an error.
