@@ -5,6 +5,10 @@ namespace CXX
       fn match?(source)
         return source.empty?
       end
+
+      fn extract(source)
+        CXX::Token.new(:end_of_file, '')
+      end
     end
   end
 end

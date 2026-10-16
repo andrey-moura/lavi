@@ -1,0 +1,60 @@
+namespace CXX
+  namespace Tokens
+    // Matcher for integer and floating point literals (decimal, hex, octal and binary, with suffixes
+    // and digit separators).
+    class NumberMatcher extends Matcher
+      fn match?(source)
+        var c = source.front
+
+        return true if digit?(c)
+        return c == '.' && digit?(source[1])
+      end
+
+      fn extract(source)
+        var size = 0
+
+        // Follows the pp-number grammar: digits, identifier characters, '.', digit separators and
+        // exponent signs.
+        loop while true
+          var c = source[size]
+
+          if exponent?(c) && sign?(source[size + 1])
+            size += 2
+          else if identifier_char?(c) || c == '.'
+            size += 1
+          else if c == "'" && identifier_char?(source[size + 1])
+            size += 2
+          else
+            break
+          end
+        end
+
+        var number = take(source, size)
+
+        return CXX::Token.new(:floating_literal, number) if floating?(number)
+
+        CXX::Token.new(:integer_literal, number)
+      end
+
+      fn exponent?(c)
+        c == 'e' || c == 'E' || c == 'p' || c == 'P'
+      end
+
+      fn sign?(c)
+        c == '+' || c == '-'
+      end
+
+      fn floating?(number)
+        var lower = number.lower
+
+        return true if lower.include?('.')
+
+        if lower.starts_with?('0x')
+          return lower.include?('p')
+        end
+
+        return lower.include?('e')
+      end
+    end
+  end
+end

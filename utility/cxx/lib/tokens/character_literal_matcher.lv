@@ -1,0 +1,17 @@
+namespace CXX
+  namespace Tokens
+    // Matcher for character literals, such as 'a', '\n' and L'x'.
+    class CharacterLiteralMatcher extends Matcher
+      fn match?(source)
+        starts_with_any(source, character_prefixes) != null
+      end
+
+      fn extract(source)
+        var prefix = starts_with_any(source, character_prefixes)
+        var size = quoted_size(source, prefix.size, "'")
+
+        CXX::Token.new(:character_literal, take(source, size))
+      end
+    end
+  end
+end

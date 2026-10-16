@@ -7,19 +7,16 @@ namespace CXX
       end
 
       fn extract(source)
+        var end_index = -1
+
         if source.starts_with?('/*')
-          source.erase!(0, 2) // Remove the opening '/*'
-          var end_index = source.find('*/')
-          if end_index == -1
-            end_index = source.size
-          else
-            end_index += 2
-          end
+          end_index = source.index('*/', 2)
+          end_index += 2 if end_index != -1
+        else
+          end_index = source.index("\n", 2)
         end
 
-        var comment_content = source.slice!(0, end_index)
-
-        CXX::Token.new(:comment, comment_content)
+        CXX::Token.new(:comment, take(source, end_index))
       end
     end
   end

@@ -1,9 +1,11 @@
+#include 'tokens/matcher'
+#include 'tokens/*'
+
 namespace CXX
   class Lexer
     var source = null
     var matchers = null
     var tokens = []
-    var tokenizers = null
 
     fn init(f)
       source = f
@@ -17,39 +19,17 @@ namespace CXX
       tokenize
     end
 
-    fn see_char
-      source.front
-    end
-
-    fn discard
-      source.pop_front
-    end
-
-    fn read
-      discard
-    end
-
-    fn whitespaces
-      {
-        " ": true,
-        "\t": true,
-        "\n": true,
-        "\r": true,
-      }
-    end
-
     fn whitespace?
-      whitespaces[see_char]
+      var c = source.front
+
+      return false if c == null
+      return c.space?
     end
 
     fn discard_whitespaces
       loop while whitespace?
-        discard
+        source.pop_front
       end
-    end
-
-    fn push_token(kind)
-      tokens.push(Token.new(kind))
     end
 
     fn find_matcher
@@ -58,28 +38,27 @@ namespace CXX
       end
     end
 
-    fn matching
-      var matcher = find_matcher
-
-      if matcher != null
-        tokens.push(matcher.extract(source))
-        return
-      end
-
-      throw "No matching token found for source: ${source.slice(0, 20).inspect}"
-    end
-
     fn read_next_token
       discard_whitespaces
 
-      matching
+      var matcher = find_matcher
+
+      if matcher == null
+        throw "No matching token found for source: ${source.slice(0, 20).inspect}"
+      end
+
+      matcher.extract(source)
     end
 
     fn tokenize
       tokens.reserve(300)
 
-      loop while !source.empty?
-        read_next_token
+      loop while true
+        var token = read_next_token
+
+        tokens.push(token)
+
+        break if token.end_of_file?
       end
     end
   end

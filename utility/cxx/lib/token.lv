@@ -1,15 +1,29 @@
 namespace CXX
   class Token
-    var content = null;
+    var content = null
 
     enum Kind
       comment
       preprocessor
+      keyword
+      identifier
+      integer_literal
+      floating_literal
+      character_literal
+      string_literal
+      boolean_literal
+      pointer_literal
+      punctuator
+      end_of_file
     end
 
     fn init(k, c)
       kind = k
       content = c
+    end
+
+    fn literal?
+      integer_literal? || floating_literal? || character_literal? || string_literal? || boolean_literal? || pointer_literal?
     end
 
     fn to_string

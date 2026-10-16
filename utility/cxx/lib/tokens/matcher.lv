@@ -1,6 +1,8 @@
 namespace CXX
   namespace Tokens
     // Base class for token matchers.
+    //
+    // Matchers must be mutually exclusive: the lexer uses the first one whose match? returns true.
     class Matcher
       fn match?(source)
         // To be implemented by subclasses.
@@ -10,6 +12,75 @@ namespace CXX
       fn extract(source)
         // To be implemented by subclasses.
         return null
+      end
+
+      // Removes the first size bytes from the source and returns them. A size of -1 takes everything.
+      fn take(source, size)
+        source.slice!(0, size)
+      end
+
+      // Returns the first candidate the source starts with, or null.
+      fn starts_with_any(source, candidates)
+        var i = 0
+
+        loop while i < candidates.size
+          return candidates[i] if source.starts_with?(candidates[i])
+          i += 1
+        end
+
+        return null
+      end
+
+      fn identifier_start?(c)
+        return false if c == null
+        return c.alpha? || c == '_'
+      end
+
+      fn identifier_char?(c)
+        return false if c == null
+        return c.alnum? || c == '_'
+      end
+
+      fn digit?(c)
+        return false if c == null
+        return c.digit?
+      end
+
+      // Encoding prefixes that can precede a character literal.
+      fn character_prefixes
+        ["u8'", "u'", "U'", "L'", "'"]
+      end
+
+      // Encoding prefixes that can precede a string literal. Raw strings end with R".
+      fn string_prefixes
+        ['u8R"', 'uR"', 'UR"', 'LR"', 'R"', 'u8"', 'u"', 'U"', 'L"', '"']
+      end
+
+      // Returns the size of a quoted literal starting at start (just after the opening quote),
+      // including the closing quote and any user-defined suffix. Returns -1 when it is not terminated.
+      fn quoted_size(source, start, quote)
+        var i = start
+
+        loop while true
+          var c = source[i]
+
+          return -1 if c == null
+          return -1 if c == "\n"
+
+          if c == "\\"
+            i += 2
+          else if c == quote
+            i += 1
+
+            loop while identifier_char?(source[i])
+              i += 1
+            end
+
+            return i
+          else
+            i += 1
+          end
+        end
       end
     end
   end

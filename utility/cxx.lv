@@ -1,0 +1,1 @@
+system("lavi project run ${__dir__}/cxx ${__args__[2]} ${__args__[3]}")

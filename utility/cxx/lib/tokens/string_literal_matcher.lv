@@ -1,0 +1,38 @@
+namespace CXX
+  namespace Tokens
+    // Matcher for string literals, including encoding prefixes (u8, u, U, L) and raw strings (R"delim(...)delim").
+    class StringLiteralMatcher extends Matcher
+      fn match?(source)
+        starts_with_any(source, string_prefixes) != null
+      end
+
+      fn extract(source)
+        var prefix = starts_with_any(source, string_prefixes)
+        var size = -1
+
+        if prefix.ends_with?('R"')
+          size = raw_size(source, prefix.size)
+        else
+          size = quoted_size(source, prefix.size, '"')
+        end
+
+        CXX::Token.new(:string_literal, take(source, size))
+      end
+
+      // Size of a raw string whose delimiter starts at start. Returns -1 when it is not terminated.
+      fn raw_size(source, start)
+        var open = source.index('(', start)
+
+        return -1 if open == -1
+
+        var delimiter = source.slice(start, open - start)
+        var closing = ')' + delimiter + '"'
+        var close = source.index(closing, open + 1)
+
+        return -1 if close == -1
+
+        return close + closing.size
+      end
+    end
+  end
+end

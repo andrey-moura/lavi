@@ -1,0 +1,35 @@
+namespace CXX
+  namespace Tokens
+    // Matcher for operators and punctuation. Always matches the longest punctuator.
+    class PunctuatorMatcher extends Matcher
+      var punctuators = {
+        "...": true, "<=>": true, "<<=": true, ">>=": true, "->*": true,
+        "::": true, "->": true, ".*": true, "++": true, "--": true, "<<": true, ">>": true,
+        "<=": true, ">=": true, "==": true, "!=": true, "&&": true, "||": true,
+        "+=": true, "-=": true, "*=": true, "/=": true, "%=": true, "&=": true, "|=": true, "^=": true,
+        "{": true, "}": true, "[": true, "]": true, "(": true, ")": true, ";": true, ":": true,
+        ",": true, ".": true, "?": true, "~": true, "!": true, "+": true, "-": true, "*": true,
+        "/": true, "%": true, "^": true, "&": true, "|": true, "=": true, "<": true, ">": true
+      }
+
+      fn match?(source)
+        // Comments and numbers such as .5 are handled by their own matchers.
+        return false if source.starts_with?('//') || source.starts_with?('/*')
+        return false if source.front == '.' && digit?(source[1])
+
+        return punctuators[source.front] == true
+      end
+
+      fn extract(source)
+        var size = 3
+
+        loop while size > 1
+          break if punctuators[source.slice(0, size)] == true
+          size -= 1
+        end
+
+        CXX::Token.new(:punctuator, take(source, size))
+      end
+    end
+  end
+end

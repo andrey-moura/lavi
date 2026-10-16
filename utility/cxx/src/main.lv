@@ -1,9 +1,9 @@
 if __args__.size < 4
-  out 'Usage: lavi --cxx <file>'
+  out 'Usage: lavi cxx <file> <output>'
   return 1
 end
 
-var cxx_file_path = __args__[3]
+var cxx_file_path = __args__[4]
 
 unless File.exists?(cxx_file_path)
   out "Input file '${cxx_file_path}' not found."
@@ -22,4 +22,8 @@ var lexer = CXX::Lexer.new(cxx_file)
 
 var tokens = lexer.tokens
 
-out "Tokens: ${tokens}"
+debug "${tokens.size} tokens:"
+
+tokens.each do (token)
+  debug "  ${token}"
+end

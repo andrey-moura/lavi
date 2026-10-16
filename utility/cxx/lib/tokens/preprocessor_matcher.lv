@@ -1,17 +1,32 @@
 namespace CXX
   namespace Tokens
-    // Base class for token matchers.
+    // Matcher for preprocessor directives. The whole logical line (including '\' continuations) is a single token.
     class PreprocessorMatcher extends Matcher
       fn match?(source)
         source.starts_with?("#")
       end
 
       fn extract(source)
-        var end_index = source.find(' ')
-        var content = source.slice!(0, end_index)
+        var end_index = source.index("\n", 0)
 
-        // out "Extracted preprocessor token: ${content.inspect}"
-        CXX::Token.new(:preprocessor, content)
+        loop while continued_line?(source, end_index)
+          end_index = source.index("\n", end_index + 1)
+        end
+
+        CXX::Token.new(:preprocessor, take(source, end_index))
+      end
+
+      // Whether the line ending at newline_index ends with a '\'.
+      fn continued_line?(source, newline_index)
+        return false if newline_index < 1
+
+        var previous = newline_index - 1
+
+        if source[previous] == "\r"
+          previous -= 1
+        end
+
+        return source[previous] == "\\"
       end
     end
   end

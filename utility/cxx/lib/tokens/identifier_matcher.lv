@@ -1,0 +1,50 @@
+namespace CXX
+  namespace Tokens
+    // Matcher for identifiers and keywords. Also handles the named literals true, false and nullptr.
+    class IdentifierMatcher extends Matcher
+      var keywords = {
+        "alignas": true, "alignof": true, "asm": true, "auto": true, "bool": true, "break": true,
+        "case": true, "catch": true, "char": true, "char8_t": true, "char16_t": true, "char32_t": true,
+        "class": true, "concept": true, "const": true, "consteval": true, "constexpr": true,
+        "constinit": true, "const_cast": true, "continue": true, "co_await": true, "co_return": true,
+        "co_yield": true, "decltype": true, "default": true, "delete": true, "do": true, "double": true,
+        "dynamic_cast": true, "else": true, "enum": true, "explicit": true, "export": true,
+        "extern": true, "float": true, "for": true, "friend": true, "goto": true, "if": true,
+        "inline": true, "int": true, "long": true, "mutable": true, "namespace": true, "new": true,
+        "noexcept": true, "operator": true, "private": true, "protected": true, "public": true,
+        "register": true, "reinterpret_cast": true, "requires": true, "return": true, "short": true,
+        "signed": true, "sizeof": true, "static": true, "static_assert": true, "static_cast": true,
+        "struct": true, "switch": true, "template": true, "this": true, "thread_local": true,
+        "throw": true, "try": true, "typedef": true, "typeid": true, "typename": true, "union": true,
+        "unsigned": true, "using": true, "virtual": true, "void": true, "volatile": true,
+        "wchar_t": true, "while": true
+      }
+
+      fn match?(source)
+        return false unless identifier_start?(source.front)
+
+        // Encoding prefixes such as L"..." or u8'...' belong to literals.
+        return false if starts_with_any(source, string_prefixes) != null
+        return false if starts_with_any(source, character_prefixes) != null
+
+        return true
+      end
+
+      fn extract(source)
+        var size = 0
+
+        loop while identifier_char?(source[size])
+          size += 1
+        end
+
+        var word = take(source, size)
+
+        return CXX::Token.new(:boolean_literal, word) if word == 'true' || word == 'false'
+        return CXX::Token.new(:pointer_literal, word) if word == 'nullptr'
+        return CXX::Token.new(:keyword, word) if keywords[word] == true
+
+        CXX::Token.new(:identifier, word)
+      end
+    end
+  end
+end
