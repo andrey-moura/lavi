@@ -778,14 +778,14 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_while(const
     bool match_condition = source_code.decl_type() == "until";
 
     while(lavi::lang::api::is_truthy(this, execute(*source_code.condition())) != match_condition) {
-        execute(*source_code.context());
+        execute_inline(*source_code.context());
 
-        if(current_context->did_break) {
+        if(finish_loop_iteration()) {
             break;
         }
     }
 
-    return nullptr;
+    return current_context->did_return ? current_context->return_value : nullptr;
 }
 
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_loop_control(const lavi::lang::parser::ast_node& source_code)
@@ -800,25 +800,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_loop_contro
 
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_context(const lavi::lang::parser::ast_node& source_code)
 {
-    std::shared_ptr<lavi::lang::object> ret = nullptr;
-
-    if(current_context->self) {
-        push_context_with_object(current_context->self->shared_from_this());
-    } else {
-        push_block_context();
-    }
-
-    ret = execute_inline(source_code);
-
-    bool did_break = current_context->did_break;
-
-    pop_context();
-
-    if(did_break) {
-        current_context->did_break = true;
-    }
-
-    return ret;
+    return execute_inline(source_code);
 }
 
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_condition(const lavi::lang::parser::ast_node& source_code)
@@ -861,13 +843,15 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_for(const l
     int current = 0;
 
     while(current < max) {
-        push_block_context();
         execute_inline(*source_code.context());
-        pop_context();
         current++;
+
+        if(finish_loop_iteration()) {
+            break;
+        }
     }
 
-    return nullptr;
+    return current_context->did_return ? current_context->return_value : nullptr;
 }
 
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_yield(const lavi::lang::parser::ast_node& source_code)
@@ -1007,7 +991,7 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_try(const l
         current_context->catching_exception = true;
 
         auto context = source_code.child_from_type(lavi::lang::parser::ast_node_type::ast_node_context);
-        execute(*context);
+        execute_inline(*context);
     } catch(const lavi::lang::exception& e) {
         // Go back to the push_context on the beginning of this function
         while(current_context && !current_context->catching_exception) {
@@ -1032,13 +1016,13 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_try(const l
         auto catch_context = catcher->second->child_from_type(lavi::lang::parser::ast_node_type::ast_node_context);
         push_block_context();
         current_context->variables[std::string(catcher->second->decname())] = e.exception_object;
-        execute(*catch_context);
-        pop_context();
+        execute_inline(*catch_context);
+        pop_block_context();
     }
 
-    pop_context();
+    pop_block_context();
 
-    return nullptr;
+    return current_context->did_return ? current_context->return_value : nullptr;
 }
 
 std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_throw(const lavi::lang::parser::ast_node& source_code)
@@ -1124,7 +1108,11 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_inline(cons
     for(auto& child : source_code.childrens()) {
         ret = execute(child);
 
-        if(current_context->did_next || current_context->did_break || current_context->did_return) {
+        if(current_context->did_return) {
+            return current_context->return_value;
+        }
+
+        if(current_context->did_next || current_context->did_break) {
             break;
         }
     }
@@ -1308,6 +1296,45 @@ void lavi::lang::interpreter::pop_context()
 
     stack.pop_back();
     update_current_context();
+}
+
+void lavi::lang::interpreter::pop_block_context()
+{
+    auto block_context = current_context;
+
+    pop_context();
+
+    if(block_context->did_break) {
+        current_context->did_break = true;
+    }
+
+    if(block_context->did_next) {
+        current_context->did_next = true;
+    }
+
+    if(block_context->did_return) {
+        current_context->did_return = true;
+        current_context->return_value = block_context->return_value;
+    }
+}
+
+bool lavi::lang::interpreter::finish_loop_iteration()
+{
+    if(current_context->did_return) {
+        // Keep did_return set, so the enclosing function stops too
+        return true;
+    }
+
+    // next only skips the rest of the current iteration
+    current_context->did_next = false;
+
+    if(current_context->did_break) {
+        // The break is consumed by the loop, it must not stop the code after it
+        current_context->did_break = false;
+        return true;
+    }
+
+    return false;
 }
 
 void lavi::lang::interpreter::update_current_context()

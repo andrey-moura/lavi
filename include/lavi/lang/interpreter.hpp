@@ -94,6 +94,11 @@ namespace lavi
             void push_block_context();
             void push_context(std::shared_ptr<lavi::lang::object> object);
             void pop_context();
+            /// @brief Pops a block context, propagating its control flow (break, next and return) to the parent context.
+            void pop_block_context();
+            /// @brief Handles the control flow after an iteration of a loop body.
+            /// @return Whether the loop must stop.
+            bool finish_loop_iteration();
             void set_current_context_object(std::shared_ptr<lavi::lang::object> object);
             void push_context_with_object(std::shared_ptr<lavi::lang::object> object);
         protected:
