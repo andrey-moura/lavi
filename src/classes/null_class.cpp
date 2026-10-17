@@ -1,5 +1,6 @@
 #include <lavi/lang/lang.hpp>
 #include <lavi/lang/interpreter.hpp>
+#include <lavi/lang/api.hpp>
 
 void create_null_class()
 {
