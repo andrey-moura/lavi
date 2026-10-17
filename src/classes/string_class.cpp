@@ -334,6 +334,11 @@ void create_string_class()
 
   lavi::lang::string_class->instance_functions["front"] = std::make_shared<lavi::lang::function>("front", [](lavi::lang::interpreter* interpreter) {
     const std::string& value = interpreter->current_context->self->as<std::string>();
+
+    if(value.empty()) {
+      return lavi::lang::object::instantiate(interpreter, lavi::lang::null_class);
+    }
+
     std::string result;
     result.push_back(value.front());
 
@@ -342,7 +347,10 @@ void create_string_class()
 
   lavi::lang::string_class->instance_functions["pop_front"] = std::make_shared<lavi::lang::function>("pop_front", [](lavi::lang::interpreter* interpreter) {
     std::string& value = interpreter->current_context->self->as<std::string>();
-    value.erase(value.begin());
+
+    if(!value.empty()) {
+      value.erase(value.begin());
+    }
 
     return nullptr;
   });
