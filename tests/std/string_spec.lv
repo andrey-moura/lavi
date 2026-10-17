@@ -145,4 +145,9 @@ describe 'String' do
       expect(''.space?).to eq(false)
     end
   end
+  describe 'front' do
+    it 'returns null for an empty string' do
+      expect(''.front).to eq(null)
+    end
+  end
 end
