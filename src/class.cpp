@@ -196,7 +196,7 @@ std::shared_ptr<lavi::lang::klass> lavi::lang::klass::create(std::string_view na
     auto eq_instance_function = klass->instance_functions.find("==");
 
     if(eq_instance_function == klass->instance_functions.end()) {
-        klass->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", [klass](lavi::lang::interpreter* interpreter) {
+        klass->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{ "other" }, [klass](lavi::lang::interpreter* interpreter) {
             auto object = interpreter->current_context->self.get();
             auto other_object = interpreter->current_context->positional_params[0].get();
 
