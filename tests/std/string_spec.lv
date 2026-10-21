@@ -102,18 +102,6 @@ describe 'String' do
       expect('abc'.find('a', 10)).to eq(-1)
     end
   end
-  describe 'character class predicates' do
-    it 'checks every character' do
-      expect('abc'.alpha?).to eq(true)
-      expect('ab1'.alpha?).to eq(false)
-      expect('123'.digit?).to eq(true)
-      expect('1f'.xdigit?).to eq(true)
-      expect('a1'.alnum?).to eq(true)
-      expect('_'.alnum?).to eq(false)
-      expect(" \t\n".space?).to eq(true)
-    end
-    it 'returns false for an empty string' do
-      expect(''.alpha?).to eq(false)
   describe '#alpha?' do
     it 'returns true when every character is one of the letters' do
       expect('abcXYZ'.alpha?).to eq(true)
