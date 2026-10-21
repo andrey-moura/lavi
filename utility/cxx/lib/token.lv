@@ -1,6 +1,7 @@
 namespace CXX
   class Token
     var content = null
+    var line = 0
 
     enum Kind
       comment

@@ -10,10 +10,10 @@ namespace CXX
         var end_index = -1
 
         if source.starts_with?('/*')
-          end_index = source.index('*/', 2)
+          end_index = source.find('*/', 2)
           end_index += 2 if end_index != -1
         else
-          end_index = source.index("\n", 2)
+          end_index = source.find("\n", 2)
         end
 
         CXX::Token.new(:comment, take(source, end_index))

@@ -1,0 +1,99 @@
+namespace CXX
+  namespace AST
+    // A node of the C++ abstract syntax tree. Modeled after the AST of the Lavi language: a type,
+    // an optional token where the node starts, its content and its children.
+    class Node
+      var token = null
+      var content = null
+      var children = []
+
+      enum Type
+        unit
+        preprocessor
+        context
+        namespacedecl
+        linkagedecl
+        classdecl
+        classdecl_base
+        access
+        frienddecl
+        enumdecl
+        enumerator
+        usingdecl
+        typedefdecl
+        fn_decl
+        fn_params
+        fn_qualifier
+        fn_body
+        vardecl
+        decltype
+        declname
+        declspec
+        valuedecl
+        bitfield
+      end
+
+      fn init(t)
+        type = t
+      end
+
+      // Creates a node starting at a token, using its content.
+      static fn from_token(t, tok)
+        var node = CXX::AST::Node.new(t)
+
+        node.token = tok
+        node.content = tok.content
+
+        return node
+      end
+
+      // Creates a node with a text content, such as a type or an expression.
+      static fn from_content(t, c)
+        var node = CXX::AST::Node.new(t)
+
+        node.content = c
+
+        return node
+      end
+
+      // Adds a copy of the node (objects have value semantics), so the node must be complete before being added.
+      fn add_child(node)
+        children.push(node)
+      end
+
+      // The first child of the given type, or null.
+      fn child_from_type(t)
+        children.find do (child)
+          child.type == t
+        end
+      end
+
+      // The content of the declname child, or null.
+      fn decname
+        var name = child_from_type('declname')
+
+        return null if name == null
+        return name.content
+      end
+
+      fn to_string
+        dump(0)
+      end
+
+      // The node and its children as an indented tree, one node per line.
+      fn dump(indent)
+        var text = '  ' * indent
+        text += type
+
+        text += " ${content.inspect}" if content != null
+
+        children.each do (child)
+          text += "\n"
+          text += child.dump(indent + 1)
+        end
+
+        return text
+      end
+    end
+  end
+end

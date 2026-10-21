@@ -7,10 +7,10 @@ namespace CXX
       end
 
       fn extract(source)
-        var end_index = source.index("\n", 0)
+        var end_index = source.find("\n", 0)
 
         loop while continued_line?(source, end_index)
-          end_index = source.index("\n", end_index + 1)
+          end_index = source.find("\n", end_index + 1)
         end
 
         CXX::Token.new(:preprocessor, take(source, end_index))

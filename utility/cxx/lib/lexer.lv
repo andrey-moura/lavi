@@ -6,6 +6,7 @@ namespace CXX
     var source = null
     var matchers = null
     var tokens = []
+    var line = 1
 
     fn init(f)
       source = f
@@ -28,7 +29,18 @@ namespace CXX
 
     fn discard_whitespaces
       loop while whitespace?
+        line += 1 if source.front == "\n"
         source.pop_front
+      end
+    end
+
+    // Counts the line breaks inside a token, such as in comments, preprocessor directives and raw strings.
+    fn count_lines(content)
+      var position = content.find("\n", 0)
+
+      loop while position != -1
+        line += 1
+        position = content.find("\n", position + 1)
       end
     end
 
@@ -47,7 +59,12 @@ namespace CXX
         throw "No matching token found for source: ${source.slice(0, 20).inspect}"
       end
 
-      matcher.extract(source)
+      var token = matcher.extract(source)
+
+      token.line = line
+      count_lines(token.content)
+
+      return token
     end
 
     fn tokenize

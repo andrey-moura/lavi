@@ -22,8 +22,10 @@ var lexer = CXX::Lexer.new(cxx_file)
 
 var tokens = lexer.tokens
 
-debug "${tokens.size} tokens:"
+debug "${tokens.size} tokens"
 
-tokens.each do (token)
-  debug "  ${token}"
-end
+debug "Parsing CXX file ${cxx_file_path}..."
+
+var parser = CXX::Parser.new(tokens)
+
+debug parser.unit

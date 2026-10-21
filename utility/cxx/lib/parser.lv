@@ -1,0 +1,904 @@
+#include 'ast/node'
+
+namespace CXX
+  // Parses the tokens of a C++ source into an AST of CXX::AST::Node.
+  //
+  // Only declarations are parsed. Expressions (initializers and default values) and function bodies are kept
+  // as text. Templates are not supported.
+  //
+  // Objects have value semantics (adding a node to another stores a copy), so every node is completely built
+  // before being added to its parent.
+  class Parser
+    var tokens = []
+    var position = 0
+    var unit = null
+
+    var declaration_specifiers = {
+      "static": true, "virtual": true, "inline": true, "explicit": true, "constexpr": true, "consteval": true,
+      "constinit": true, "extern": true, "friend": true, "mutable": true, "thread_local": true, "register": true
+    }
+
+    var fundamental_types = {
+      "void": true, "bool": true, "char": true, "char8_t": true, "char16_t": true, "char32_t": true,
+      "wchar_t": true, "short": true, "int": true, "long": true, "float": true, "double": true,
+      "signed": true, "unsigned": true, "auto": true
+    }
+
+    var cv_qualifiers = { "const": true, "volatile": true }
+
+    var pointer_operators = { "*": true, "&": true, "&&": true }
+
+    var access_specifiers = { "public": true, "private": true, "protected": true }
+
+    var class_keys = { "class": true, "struct": true, "union": true }
+
+    // Qualifiers that can follow the parameters of a function.
+    var function_qualifiers = { "const": true, "volatile": true, "&": true, "&&": true, "override": true, "final": true }
+
+    var opening_brackets = { "(": true, "[": true, "{": true }
+
+    var closing_brackets = { ")": true, "]": true, "}": true }
+
+    // Tokens that are not separated from the previous token by a space when joined as text.
+    var no_space_before = { "::": true, "(": true, ")": true, "[": true, "]": true, ",": true, ";": true, ".": true, "->": true }
+
+    // Tokens after which pointer operators are part of a type, such as 'char*' or 'int(*)', and not of an
+    // expression, such as 'a == &b'.
+    var pointer_suffixable = { ")": true, "]": true, ">": true, "*": true, "&": true, "&&": true }
+
+    // Tokens that are not separated from the next token by a space when joined as text.
+    var no_space_after = { "::": true, "(": true, "[": true, "~": true, "!": true, ".": true, "->": true }
+
+    fn init(all_tokens)
+      // Comments are not part of the AST
+      all_tokens.each do (token)
+        tokens.push(token) unless token.comment?
+      end
+
+      unit = parse_unit
+    end
+
+    // Tokens
+
+    fn current
+      tokens[position]
+    end
+
+    // The token at the given offset from the current one. Past the end, it is the end of file token.
+    fn peek(offset)
+      var index = position + offset
+
+      return tokens[tokens.size - 1] if index >= tokens.size
+      return tokens[index]
+    end
+
+    fn advance
+      var token = current
+
+      position += 1 unless token.end_of_file?
+
+      return token
+    end
+
+    fn check?(content)
+      current.content == content
+    end
+
+    fn accept?(content)
+      return false unless check?(content)
+
+      advance
+
+      return true
+    end
+
+    fn expect(content)
+      error("expected '${content}'") unless check?(content)
+
+      advance
+    end
+
+    fn error(message)
+      var token = current
+      var found = "'${token.content}'"
+
+      found = 'end of file' if token.end_of_file?
+
+      throw "line ${token.line}: ${message}, found ${found}"
+    end
+
+    fn in?(set, token)
+      set[token.content] == true
+    end
+
+    // Text
+
+    // Joins the contents of tokens as source code, such as 'const std::string&'.
+    fn join(contents)
+      var text = ''
+      var previous = ''
+
+      contents.each do (content)
+        var separate = text.present?
+
+        separate = false if no_space_before[content] == true
+        separate = false if no_space_after[previous] == true
+        separate = false if pointer_operators[content] == true && pointer_suffix?(previous)
+
+        text += ' ' if separate
+        text += content
+
+        previous = content
+      end
+
+      return text
+    end
+
+    fn pointer_suffix?(previous)
+      return true if pointer_suffixable[previous] == true
+
+      var first = previous.front
+
+      return false if first == null
+      return first.alnum? || first == '_'
+    end
+
+    // Joins tokens as source code.
+    fn text(token_list)
+      var contents = []
+
+      token_list.each do (token)
+        contents.push(token.content)
+      end
+
+      return join(contents)
+    end
+
+    // Consumes the tokens until one of the stop tokens at the same nesting level, and returns them.
+    // Used for expressions, which are not parsed.
+    fn read_until(stops)
+      var read = []
+      var depth = 0
+
+      loop while !current.end_of_file?
+        break if depth == 0 && stops[current.content] == true
+
+        if in?(opening_brackets, current)
+          depth += 1
+        else if in?(closing_brackets, current)
+          depth -= 1
+        end
+
+        read.push(advance)
+      end
+
+      return read
+    end
+
+    // Consumes a bracketed group, such as '(...)' or '{...}', and returns its tokens.
+    fn read_group
+      var read = []
+      var depth = 0
+
+      loop while true
+        error('unterminated group') if current.end_of_file?
+
+        if in?(opening_brackets, current)
+          depth += 1
+        else if in?(closing_brackets, current)
+          depth -= 1
+        end
+
+        read.push(advance)
+
+        break if depth == 0
+      end
+
+      return read
+    end
+
+    // Declarations
+
+    fn parse_unit
+      var node = CXX::AST::Node.new(:unit)
+
+      loop while !current.end_of_file?
+        parse_declaration(node, null)
+      end
+
+      return node
+    end
+
+    // Parses the declarations until the closing '}' of a block into a context node.
+    fn parse_context(class_name)
+      var node = CXX::AST::Node.new(:context)
+
+      expect('{')
+
+      loop while !check?('}')
+        error("expected '}'") if current.end_of_file?
+        parse_declaration(node, class_name)
+      end
+
+      expect('}')
+
+      return node
+    end
+
+    // Parses a declaration and adds it to the parent. class_name is the name of the class being declared, if any.
+    fn parse_declaration(parent, class_name)
+      var token = current
+
+      if token.preprocessor?
+        parent.add_child(CXX::AST::Node.from_token(:preprocessor, advance))
+      else if accept?(';')
+        // Empty declaration
+      else if check?('template')
+        error('templates are not supported')
+      else if check?('namespace')
+        parent.add_child(parse_namespace)
+      else if check?('using')
+        parent.add_child(parse_using)
+      else if check?('typedef')
+        parent.add_child(parse_typedef)
+      else if check?('static_assert')
+        // Not part of the interface, so it's skipped
+        read_until({ ";": true })
+        expect(';')
+      else if linkage_specification?
+        parent.add_child(parse_linkage(class_name))
+      else if check?('enum')
+        parent.add_child(parse_enum)
+      else if class_declaration?
+        parent.add_child(parse_class)
+      else if access_specifier?
+        parent.add_child(CXX::AST::Node.from_token(:access, advance))
+        expect(':')
+      else if friend_class?
+        parent.add_child(parse_friend_class)
+      else
+        parse_simple_declaration(parent, class_name)
+      end
+    end
+
+    fn linkage_specification?
+      return false unless check?('extern')
+      return peek(1).string_literal?
+    end
+
+    // A class definition or a forward declaration, such as 'class a { ... };' or 'class a;'. Other uses of
+    // the class keys, such as 'struct a* p;', are simple declarations.
+    fn class_declaration?
+      return false unless in?(class_keys, current)
+      return false unless peek(1).identifier?
+
+      var following = peek(2)
+
+      return true if following.content == '{' || following.content == ':' || following.content == ';' || following.content == 'final'
+      return false
+    end
+
+    fn access_specifier?
+      return false unless in?(access_specifiers, current)
+      return peek(1).content == ':'
+    end
+
+    fn friend_class?
+      return false unless check?('friend')
+      return in?(class_keys, peek(1))
+    end
+
+    // namespace a::b { ... }
+    fn parse_namespace
+      var node = CXX::AST::Node.from_token(:namespacedecl, advance)
+
+      // Anonymous namespaces have no name
+      node.add_child(CXX::AST::Node.from_content(:declname, parse_qualified_name)) unless check?('{')
+      node.add_child(parse_context(null))
+
+      return node
+    end
+
+    // extern "C" { ... } or extern "C" declaration
+    fn parse_linkage(class_name)
+      advance
+
+      var node = CXX::AST::Node.from_token(:linkagedecl, advance)
+
+      if check?('{')
+        node.add_child(parse_context(class_name))
+      else
+        parse_declaration(node, class_name)
+      end
+
+      return node
+    end
+
+    // using namespace a; using a = b; using a::b;
+    fn parse_using
+      var node = CXX::AST::Node.from_token(:usingdecl, advance)
+
+      if accept?('namespace')
+        node.content = 'using namespace'
+        node.add_child(CXX::AST::Node.from_content(:declname, parse_qualified_name))
+      else if peek(1).content == '='
+        node.add_child(CXX::AST::Node.from_content(:declname, advance.content))
+        expect('=')
+        node.add_child(CXX::AST::Node.from_content(:decltype, text(read_until({ ";": true }))))
+      else
+        node.add_child(CXX::AST::Node.from_content(:declname, parse_qualified_name))
+      end
+
+      expect(';')
+
+      return node
+    end
+
+    // typedef type name; The name is the identifier of the declarator, the type is everything else, such as
+    // 'void(*)(int)' in 'typedef void (*callback)(int);'.
+    fn parse_typedef
+      var node = CXX::AST::Node.from_token(:typedefdecl, advance)
+      var declaration = read_until({ ";": true })
+      var name_index = typedef_name_index(declaration)
+
+      error('expected the name of the typedef') if name_index == -1
+
+      var type_tokens = []
+      var i = 0
+
+      loop while i < declaration.size
+        type_tokens.push(declaration[i]) unless i == name_index
+        i += 1
+      end
+
+      node.add_child(CXX::AST::Node.from_content(:decltype, text(type_tokens)))
+      node.add_child(CXX::AST::Node.from_content(:declname, declaration[name_index].content))
+
+      expect(';')
+
+      return node
+    end
+
+    // The index of the declared name in a typedef: the identifier after '(*' in function pointers, otherwise
+    // the last identifier.
+    fn typedef_name_index(declaration)
+      var name_index = -1
+      var i = 0
+
+      loop while i < declaration.size
+        if function_pointer_at?(declaration, i)
+          return i + 2
+        end
+
+        name_index = i if declaration[i].identifier?
+
+        i += 1
+      end
+
+      return name_index
+    end
+
+    // Whether the tokens at index are '(' '*', which start the name of a function pointer.
+    fn function_pointer_at?(declaration, index)
+      return false if index + 1 >= declaration.size
+      return false unless declaration[index].content == '('
+
+      return declaration[index + 1].content == '*'
+    end
+
+    // enum name : type { a, b = 1 }; or enum class name : type { ... };
+    fn parse_enum
+      var node = CXX::AST::Node.from_token(:enumdecl, advance)
+
+      if in?(class_keys, current)
+        node.content = "enum ${advance.content}"
+      end
+
+      // Anonymous enums have no name
+      node.add_child(CXX::AST::Node.from_content(:declname, advance.content)) if current.identifier?
+
+      if accept?(':')
+        node.add_child(CXX::AST::Node.from_content(:decltype, parse_type))
+      end
+
+      if check?('{')
+        node.add_child(parse_enumerators)
+      end
+
+      expect(';')
+
+      return node
+    end
+
+    fn parse_enumerators
+      var node = CXX::AST::Node.new(:context)
+
+      expect('{')
+
+      loop while !check?('}')
+        error('expected the name of the enumerator') unless current.identifier?
+
+        var enumerator = CXX::AST::Node.from_token(:enumerator, advance)
+
+        enumerator.add_child(CXX::AST::Node.from_content(:declname, enumerator.content))
+
+        if accept?('=')
+          enumerator.add_child(CXX::AST::Node.from_content(:valuedecl, text(read_until({ ",": true, "}": true }))))
+        end
+
+        node.add_child(enumerator)
+
+        break unless accept?(',')
+      end
+
+      expect('}')
+
+      return node
+    end
+
+    // class name final : public base { ... }; or class name;
+    fn parse_class
+      var node = CXX::AST::Node.from_token(:classdecl, advance)
+      var name = advance.content
+
+      node.add_child(CXX::AST::Node.from_content(:declname, name))
+
+      if check?('final')
+        node.add_child(CXX::AST::Node.from_token(:declspec, advance))
+      end
+
+      if accept?(':')
+        parse_bases(node)
+      end
+
+      // Forward declarations have no body
+      if check?('{')
+        node.add_child(parse_context(name))
+      end
+
+      expect(';')
+
+      return node
+    end
+
+    // public base, virtual protected other
+    fn parse_bases(node)
+      loop while true
+        var base = CXX::AST::Node.new(:classdecl_base)
+
+        loop while check?('virtual') || in?(access_specifiers, current)
+          base.add_child(CXX::AST::Node.from_token(:declspec, advance))
+        end
+
+        base.add_child(CXX::AST::Node.from_content(:decltype, parse_qualified_name))
+
+        node.add_child(base)
+
+        break unless accept?(',')
+      end
+    end
+
+    // friend class name;
+    fn parse_friend_class
+      var node = CXX::AST::Node.from_token(:frienddecl, advance)
+      node.add_child(CXX::AST::Node.from_content(:decltype, text(read_until({ ";": true }))))
+
+      expect(';')
+
+      return node
+    end
+
+    // Names
+
+    // a::b::c, ::a or a::~a
+    fn parse_qualified_name
+      var contents = []
+
+      contents.push(advance.content) if check?('::')
+
+      loop while true
+        // Out of class definitions of operators, such as 'a::operator==', are completed by the caller
+        break if check?('operator')
+
+        contents.push(advance.content) if check?('~')
+
+        error('expected a name') unless current.identifier?
+
+        contents.push(advance.content)
+
+        error('templates are not supported') if check?('<')
+
+        break unless check?('::')
+
+        contents.push(advance.content)
+      end
+
+      return join(contents)
+    end
+
+    // operator+, operator(), operator[], operator new[], operator bool
+    fn parse_operator_name
+      var contents = []
+
+      contents.push(advance.content)
+
+      if check?('(') || check?('[')
+        contents.push(advance.content)
+        contents.push(advance.content)
+      else if check?('new') || check?('delete')
+        contents.push(advance.content)
+
+        if check?('[')
+          contents.push(advance.content)
+          contents.push(advance.content)
+        end
+      else if current.punctuator?
+        contents.push(advance.content)
+      else
+        // Conversion operator, such as 'operator bool'
+        return "operator ${parse_type}"
+      end
+
+      return contents.join('')
+    end
+
+    // The name of a declarator, such as 'a', 'a::b', '~a', 'a::~a' or 'operator=='.
+    fn parse_declarator_name
+      return parse_operator_name if check?('operator')
+
+      var name = parse_qualified_name
+
+      // Out of class definitions of operators, such as 'a::operator=='
+      if name.ends_with?('::')
+        name += parse_operator_name
+      end
+
+      return name
+    end
+
+    // Types
+
+    // A type without the pointer operators, such as 'const unsigned long', 'std::string' or 'struct a'.
+    fn parse_type
+      var contents = []
+
+      loop while in?(cv_qualifiers, current)
+        contents.push(advance.content)
+      end
+
+      if in?(class_keys, current) || check?('enum') || check?('typename')
+        contents.push(advance.content)
+      end
+
+      if in?(fundamental_types, current)
+        loop while in?(fundamental_types, current) || in?(cv_qualifiers, current)
+          contents.push(advance.content)
+        end
+      else if check?('decltype')
+        contents.push(advance.content)
+
+        read_group.each do (token)
+          contents.push(token.content)
+        end
+      else if current.identifier? || check?('::')
+        contents.push(parse_qualified_name)
+      else
+        error('expected a type')
+      end
+
+      loop while in?(cv_qualifiers, current)
+        contents.push(advance.content)
+      end
+
+      return join(contents)
+    end
+
+    // Pointer and reference operators, such as '*', '&', '* const' or '**'.
+    fn parse_pointer_operators
+      var contents = []
+
+      loop while in?(pointer_operators, current) || in?(cv_qualifiers, current)
+        contents.push(advance.content)
+      end
+
+      return contents
+    end
+
+    // Joins a base type and its pointer operators, such as 'const char' and '*' into 'const char*'.
+    fn pointer_type(base_type, operators)
+      var contents = []
+
+      contents.push(base_type)
+
+      operators.each do (operator)
+        contents.push(operator)
+      end
+
+      return join(contents)
+    end
+
+    // Declarations of functions and variables
+
+    // specifiers type declarator, declarator, ...;
+    fn parse_simple_declaration(parent, class_name)
+      var specifiers = parse_declaration_specifiers
+
+      if constructor_or_destructor?(class_name)
+        parent.add_child(parse_function(specifiers, null, parse_declarator_name))
+        return
+      end
+
+      // Conversion operators have no return type
+      if check?('operator')
+        parent.add_child(parse_function(specifiers, null, parse_operator_name))
+        return
+      end
+
+      var base_type = parse_type
+
+      loop while true
+        var operators = parse_pointer_operators
+        var type = pointer_type(base_type, operators)
+
+        if check?('(') && peek(1).content == '*'
+          parent.add_child(parse_function_pointer(specifiers, type))
+        else if check?('(') && operators.empty? && out_of_class_constructor?(base_type)
+          // Out of class definitions of constructors, such as 'a::a(int)', which were read as a type
+          parent.add_child(parse_function(specifiers, null, base_type))
+          return
+        else
+          var name = parse_declarator_name
+
+          if check?('(') && !direct_initialization?
+            parent.add_child(parse_function(specifiers, type, name))
+            return
+          end
+
+          parent.add_child(parse_variable(specifiers, type, name))
+        end
+
+        break unless accept?(',')
+      end
+
+      expect(';')
+    end
+
+    fn parse_declaration_specifiers
+      var specifiers = []
+
+      loop while in?(declaration_specifiers, current)
+        specifiers.push(CXX::AST::Node.from_token(:declspec, advance))
+      end
+
+      return specifiers
+    end
+
+    // A constructor or destructor inside its class, such as 'a(int)', 'explicit a()' or '~a()'.
+    fn constructor_or_destructor?(class_name)
+      return true if check?('~')
+      return false if class_name == null
+      return false unless check?(class_name)
+
+      return peek(1).content == '('
+    end
+
+    // Whether a type read is actually the name of a constructor or destructor, such as 'a::a' or 'a::~a'.
+    fn out_of_class_constructor?(type)
+      var parts = type.split('::')
+
+      return false if parts.size < 2
+
+      var last = parts[parts.size - 1]
+      var previous = parts[parts.size - 2]
+
+      return true if last == previous
+      return last == "~${previous}"
+    end
+
+    // Whether a '(' after a name is the initializer of a variable instead of the parameters of a function,
+    // such as 'int a(5);'. Parameters start with a type, so a literal means an initializer.
+    fn direct_initialization?
+      return peek(1).literal?
+    end
+
+    fn add_children(node, children)
+      children.each do (child)
+        node.add_child(child)
+      end
+    end
+
+    // The parameters, qualifiers and body of a function. type is null for constructors, destructors and
+    // conversion operators.
+    fn parse_function(specifiers, type, name)
+      var node = CXX::AST::Node.new(:fn_decl)
+
+      add_children(node, specifiers)
+
+      node.add_child(CXX::AST::Node.from_content(:decltype, type)) if type != null
+      node.add_child(CXX::AST::Node.from_content(:declname, name))
+      node.add_child(parse_parameters)
+
+      loop while true
+        if in?(function_qualifiers, current)
+          node.add_child(CXX::AST::Node.from_token(:fn_qualifier, advance))
+        else if check?('noexcept')
+          var noexcept = []
+
+          noexcept.push(advance.content)
+
+          if check?('(')
+            read_group.each do (token)
+              noexcept.push(token.content)
+            end
+          end
+
+          node.add_child(CXX::AST::Node.from_content(:fn_qualifier, join(noexcept)))
+        else if accept?('->')
+          // Trailing return type, such as 'auto f() -> int'
+          node.add_child(CXX::AST::Node.from_content(:fn_qualifier, "-> ${pointer_type(parse_type, parse_pointer_operators)}"))
+        else
+          break
+        end
+      end
+
+      // = 0, = default or = delete
+      if accept?('=')
+        node.add_child(CXX::AST::Node.from_content(:fn_qualifier, "= ${advance.content}"))
+      end
+
+      // Member initializers of constructors, such as ': a(1), b{2}'
+      if accept?(':')
+        parse_member_initializers
+      end
+
+      if check?('{')
+        node.add_child(CXX::AST::Node.from_content(:fn_body, text(read_group)))
+      else
+        expect(';')
+      end
+
+      return node
+    end
+
+    fn parse_member_initializers
+      loop while true
+        parse_qualified_name
+
+        error("expected '(' or '{'") unless check?('(') || check?('{')
+
+        read_group
+
+        break unless accept?(',')
+      end
+    end
+
+    // (type name = default, ...)
+    fn parse_parameters
+      var node = CXX::AST::Node.new(:fn_params)
+
+      expect('(')
+
+      // (void) declares no parameters
+      if check?('void') && peek(1).content == ')'
+        advance
+      end
+
+      loop while !check?(')')
+        node.add_child(parse_parameter)
+
+        break unless accept?(',')
+      end
+
+      expect(')')
+
+      return node
+    end
+
+    fn parse_parameter
+      if check?('...')
+        var variadic = CXX::AST::Node.new(:vardecl)
+
+        variadic.add_child(CXX::AST::Node.from_token(:decltype, advance))
+
+        return variadic
+      end
+
+      var type = pointer_type(parse_type, parse_pointer_operators)
+
+      if check?('(') && peek(1).content == '*'
+        return parse_function_pointer([], type)
+      end
+
+      var node = CXX::AST::Node.new(:vardecl)
+
+      // The name of parameters is optional
+      if current.identifier?
+        var name = advance.content
+
+        type = append_array_dimensions(type)
+
+        node.add_child(CXX::AST::Node.from_content(:decltype, type))
+        node.add_child(CXX::AST::Node.from_content(:declname, name))
+      else
+        node.add_child(CXX::AST::Node.from_content(:decltype, type))
+      end
+
+      if accept?('=')
+        node.add_child(CXX::AST::Node.from_content(:valuedecl, text(read_until({ ",": true, ")": true }))))
+      end
+
+      return node
+    end
+
+    // Array dimensions after a name, such as '[4]' in 'int a[4]', are part of the type.
+    fn append_array_dimensions(type)
+      var contents = []
+
+      contents.push(type)
+
+      loop while check?('[')
+        read_group.each do (token)
+          contents.push(token.content)
+        end
+      end
+
+      return join(contents)
+    end
+
+    // A variable whose type is a pointer to function, such as 'void (*callback)(int)'.
+    fn parse_function_pointer(specifiers, return_type)
+      var node = CXX::AST::Node.new(:vardecl)
+
+      add_children(node, specifiers)
+
+      expect('(')
+      expect('*')
+
+      var name = advance.content
+
+      expect(')')
+
+      var contents = []
+
+      contents.push(return_type)
+      contents.push('(')
+      contents.push('*')
+      contents.push(')')
+
+      read_group.each do (token)
+        contents.push(token.content)
+      end
+
+      node.add_child(CXX::AST::Node.from_content(:decltype, join(contents)))
+      node.add_child(CXX::AST::Node.from_content(:declname, name))
+
+      if accept?('=')
+        node.add_child(CXX::AST::Node.from_content(:valuedecl, text(read_until({ ",": true, ";": true, ")": true }))))
+      end
+
+      return node
+    end
+
+    // name[4] = value, name{value}, name(value) or name : bits
+    fn parse_variable(specifiers, type, name)
+      var node = CXX::AST::Node.new(:vardecl)
+
+      add_children(node, specifiers)
+
+      node.add_child(CXX::AST::Node.from_content(:decltype, append_array_dimensions(type)))
+      node.add_child(CXX::AST::Node.from_content(:declname, name))
+
+      if accept?(':')
+        node.add_child(CXX::AST::Node.from_content(:bitfield, text(read_until({ ",": true, ";": true, "=": true, "{": true }))))
+      end
+
+      if accept?('=')
+        node.add_child(CXX::AST::Node.from_content(:valuedecl, text(read_until({ ",": true, ";": true }))))
+      else if check?('{') || check?('(')
+        node.add_child(CXX::AST::Node.from_content(:valuedecl, text(read_group)))
+      end
+
+      return node
+    end
+  end
+end
