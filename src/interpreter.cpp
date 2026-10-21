@@ -991,7 +991,12 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_try(const l
 
         current_context->catching_exception = false;
 
-        auto catcher = catchers.find(e.exception_object->klass->name);
+        auto catcher = catchers.end();
+
+        for(auto klass = e.exception_object->klass; klass && catcher == catchers.end(); klass = klass->base) {
+            catcher = catchers.find(klass->name);
+        }
+
         if(catcher == catchers.end()) {
             // If we don't have a catcher for the exception type, we have to throw it again to be caught by an outer
             // try...catch or to terminate the program if it's uncaught.
