@@ -166,6 +166,11 @@ void create_string_class()
     });
 
         lavi::lang::string_class->instance_functions["=="] = std::make_shared<lavi::lang::function>("==", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
+            // A string is never equal to an object of other class, such as null
+            if(interpreter->current_context->positional_params[0]->klass != lavi::lang::string_class) {
+                return lavi::lang::api::to_object(interpreter, false);
+            }
+
             const std::string& value = interpreter->current_context->self->as<std::string>();
             const std::string& other = interpreter->current_context->positional_params[0]->as<std::string>();
 
@@ -173,6 +178,10 @@ void create_string_class()
         });
 
         lavi::lang::string_class->instance_functions["!="] = std::make_shared<lavi::lang::function>("!=", std::initializer_list<std::string>{"other"}, [](lavi::lang::interpreter* interpreter) {
+            if(interpreter->current_context->positional_params[0]->klass != lavi::lang::string_class) {
+                return lavi::lang::api::to_object(interpreter, true);
+            }
+
             const std::string& value = interpreter->current_context->self->as<std::string>();
             const std::string& other = interpreter->current_context->positional_params[0]->as<std::string>();
 

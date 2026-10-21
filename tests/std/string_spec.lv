@@ -23,4 +23,16 @@ describe 'String' do
       expect(''.front).to eq(null)
     end
   end
+  describe 'operator==' do
+    it 'returns false when comparing with an object of other class' do
+      expect('a' == null).to eq(false)
+      expect('1' == 1).to eq(false)
+    end
+  end
+  describe 'operator!=' do
+    it 'returns true when comparing with an object of other class' do
+      expect('a' != null).to eq(true)
+      expect('1' != 1).to eq(true)
+    end
+  end
 end
