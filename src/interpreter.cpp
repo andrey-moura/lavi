@@ -590,7 +590,11 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
         if(current_context->positional_params.size() < method_to_call->positional_params.size()) {
             for(size_t i = current_context->positional_params.size(); i < method_to_call->positional_params.size(); i++) {
                 if(!method_to_call->positional_params[i].default_value_node.is_undefined()) {
-                    current_context->positional_params.push_back(execute(method_to_call->positional_params[i].default_value_node.childrens().front()));
+                    current_context->positional_params.push_back(node_to_object(
+                        method_to_call->positional_params[i].default_value_node,
+                        current_context->klass,
+                        current_context->self ? current_context->self->shared_from_this() : nullptr
+                    ));
                     continue;
                 }
                 // Found 1 or more missing positional parameters without default values, throw an error.
@@ -1000,7 +1004,12 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_try(const l
 
         current_context->catching_exception = false;
 
-        auto catcher = catchers.find(e.exception_object->klass->name);
+        auto catcher = catchers.end();
+
+        for(auto klass = e.exception_object->klass; klass && catcher == catchers.end(); klass = klass->base) {
+            catcher = catchers.find(klass->name);
+        }
+
         if(catcher == catchers.end()) {
             // If we don't have a catcher for the exception type, we have to throw it again to be caught by an outer
             // try...catch or to terminate the program if it's uncaught.

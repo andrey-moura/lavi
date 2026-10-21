@@ -60,10 +60,7 @@ void create_std_class()
 
     lavi::lang::std_class->functions["system"] = std::make_shared<lavi::lang::function>("system",std::initializer_list<std::string>{"command"}, [](lavi::lang::interpreter* interpreter) {
         auto argument = interpreter->current_context->positional_params[0];
-//        std::shared_ptr<lavi::lang::object> command = argument->klass->instance_functions["to_string"]->call(argument);
-        lavi::lang::error::internal("Temporary disabled code reached at " + std::string(__FILE__) + ":" + std::to_string(__LINE__));
-        auto command = std::make_shared<lavi::lang::object>(lavi::lang::string_class);
-        int code = std::system(command->as<std::string>().c_str());
+        int code = std::system(argument->as<std::string>().c_str());
 #ifdef __linux__
         code = WEXITSTATUS(code);
 #endif

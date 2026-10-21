@@ -114,6 +114,59 @@ describe 'String' do
     end
     it 'returns false for an empty string' do
       expect(''.alpha?).to eq(false)
+  describe '#alpha?' do
+    it 'returns true when every character is one of the letters' do
+      expect('abcXYZ'.alpha?).to eq(true)
+    end
+    it 'returns false when the string has a non letter' do
+      expect('ab1'.alpha?).to eq(false)
+    end
+    it 'returns false for an empty string' do
+      expect(''.alpha?).to eq(false)
+    end
+  end
+  describe '#digit?' do
+    it 'returns true when every character is one of the decimal digits' do
+      expect('0123456789'.digit?).to eq(true)
+    end
+    it 'returns false when the string has a non digit' do
+      expect('12a'.digit?).to eq(false)
+    end
+    it 'returns false for an empty string' do
+      expect(''.digit?).to eq(false)
+    end
+  end
+  describe '#xdigit?' do
+    it 'returns true when every character is one of the hexadecimal digits' do
+      expect('09afAF'.xdigit?).to eq(true)
+    end
+    it 'returns false when the string has a non hexadecimal digit' do
+      expect('1g'.xdigit?).to eq(false)
+    end
+    it 'returns false for an empty string' do
+      expect(''.xdigit?).to eq(false)
+    end
+  end
+  describe '#alnum?' do
+    it 'returns true when every character is one of the letters or digits' do
+      expect('abc123'.alnum?).to eq(true)
+    end
+    it 'returns false when the string has a character that is not a letter or digit' do
+      expect('a_1'.alnum?).to eq(false)
+    end
+    it 'returns false for an empty string' do
+      expect(''.alnum?).to eq(false)
+    end
+  end
+  describe '#space?' do
+    it 'returns true when every character is one of the whitespaces' do
+      expect(" \t\n\r".space?).to eq(true)
+    end
+    it 'returns false when the string has a non whitespace' do
+      expect(' a '.space?).to eq(false)
+    end
+    it 'returns false for an empty string' do
+      expect(''.space?).to eq(false)
     end
   end
   describe 'front' do

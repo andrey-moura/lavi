@@ -62,6 +62,26 @@ describe 'functions' do
     end
   end
 
+  context 'with default positional parameters' do
+    fn add_with_default(a, b = 7)
+      return a + b
+    end
+
+    it 'uses the default value when the parameter is not provided' do
+      expect(add_with_default(1)).to eq(8)
+    end
+    it 'uses the provided value instead of the default' do
+      expect(add_with_default(1, 2)).to eq(3)
+    end
+    it 'evaluates expressions as default values' do
+      fn default_expression(a = 1 + 2)
+        return a
+      end
+
+      expect(default_expression).to eq(3)
+    end
+  end
+
   context 'with named parameters' do
     context 'with default parameters' do
       context 'when no parameters are provided' do
