@@ -199,4 +199,9 @@ void create_directory_class()
         }
         return lavi::lang::object::instantiate(interpreter, directory_class, std::move(path));
     });
+
+    directory_class->functions["temp"] = std::make_shared<lavi::lang::function>("temp", [directory_class](lavi::lang::interpreter* interpreter) {
+        std::filesystem::path path = std::filesystem::temp_directory_path();
+        return lavi::lang::object::instantiate(interpreter, directory_class, std::move(path));
+    });
 }

@@ -51,4 +51,11 @@ describe 'Dir' do
       end
     end
   end
+  describe '.temp' do
+    it 'returns the temporary directory' do
+      var dir = Dir.temp
+      expect(dir).to be_a(Dir)
+      expect(Dir.exists?(dir.path)).to eq(true)
+    end
+  end
 end

@@ -29,4 +29,13 @@ describe 'Hash' do
       end
     end
   end
+  describe 'declaration' do
+    it 'accepts delimiters as string keys' do
+      var hash = { "{": 1, "}": 2, ",": 3 }
+
+      expect(hash["{"]).to eq(1)
+      expect(hash["}"]).to eq(2)
+      expect(hash[","]).to eq(3)
+    end
+  end
 end

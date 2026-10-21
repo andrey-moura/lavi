@@ -698,13 +698,18 @@ lavi::lang::parser::ast_node lavi::lang::parser::parse_identifier_or_literal(
 
                     const lavi::lang::lexer::token& comma_token = lexer.next_token();
 
-                    if(comma_token.content == ",") {
-                        if(lexer.see_next().content == "}") {
+                    // Check the type too, so string keys such as "}" are not mistaken for delimiters
+                    auto is_delimiter = [](const lavi::lang::lexer::token& t, std::string_view content) {
+                        return t.type == lavi::lang::lexer::token_type::token_delimiter && t.content == content;
+                    };
+
+                    if(is_delimiter(comma_token, ",")) {
+                        if(is_delimiter(lexer.see_next(), "}")) {
                             lexer.next_token();
                             break;
                         }
                     } else {
-                        if(comma_token.content == "}") {
+                        if(is_delimiter(comma_token, "}")) {
                             break;
                         } else if(comma_token.is_eof()) {
                             throw std::runtime_error(comma_token.error_message_at_current_position("Expected '}'"));

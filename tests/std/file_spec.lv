@@ -1,11 +1,16 @@
 #include 'std/tests.lv'
 
+// Files created by the specs are kept in the temporary directory
+fn spec_file_path
+  Dir.temp.path / "lavi_spec_${Random.integer}.txt"
+end
+
 describe 'File' do
   describe '#write' do
     it 'writes content to a file' do
-      var seed = Random.integer
-      File.create("${seed}.txt").write("Hello, World!")
-      var content = File.read("${seed}.txt")
+      var path = spec_file_path
+      File.create(path).write("Hello, World!")
+      var content = File.read(path)
       expect(content).to eq("Hello, World!")
     end
   end
@@ -24,16 +29,16 @@ describe 'File' do
   end
   describe '.create' do
     it 'creates a new file' do
-      var seed = Random.integer
-      expect(File.exists?("${seed}.txt")).to eq(false)
-      File.create("${seed}.txt")
-      expect(File.exists?("${seed}.txt")).to eq(true)
+      var path = spec_file_path
+      expect(File.exists?(path)).to eq(false)
+      File.create(path)
+      expect(File.exists?(path)).to eq(true)
     end
     it 'returns a file object' do
-      var seed = Random.integer
-      var file = File.create("${seed}.txt")
+      var path = spec_file_path
+      var file = File.create(path)
       expect(file).to be_a(File)
-      expect(File.exists?("${seed}.txt")).to eq(true)
+      expect(File.exists?(path)).to eq(true)
     end
   end
   describe '.read' do

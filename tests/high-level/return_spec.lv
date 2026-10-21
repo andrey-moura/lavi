@@ -7,9 +7,38 @@ fn function_which_returns_1
   value_which_should_be_1 = 2
 end
 
+fn first_greater_than(values, limit)
+  var i = 0
+  loop while i < values.size
+    return values[i] if values[i] > limit
+    i += 1
+  end
+  return null
+end
+
+fn return_inside_if(condition)
+  if condition
+    return 'inside'
+    throw 'should not run after return'
+  end
+  return 'outside'
+end
+
 describe 'Return statement' do
   it 'stops the function execution' do
     function_which_returns_1
     expect(value_which_should_be_1).to eq(1)
+  end
+  describe 'inside blocks' do
+    it 'stops a loop and returns the value from the function' do
+      expect(first_greater_than([1, 5, 9], 4)).to eq(5)
+    end
+    it 'returns the fallback when the loop finishes' do
+      expect(first_greater_than([1, 2], 4)).to eq(null)
+    end
+    it 'stops the execution of the remaining lines of an if' do
+      expect(return_inside_if(true)).to eq('inside')
+      expect(return_inside_if(false)).to eq('outside')
+    end
   end
 end
