@@ -475,12 +475,15 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
         }
     }
 
+    std::shared_ptr<lavi::lang::object> lexical_self = nullptr;
+
     // Search the lexical_parent chain for the function if not found yet.
     if(!method_to_call) {
         for(auto ctx = current_context->lexical_parent; ctx != nullptr; ctx = ctx->lexical_parent) {
             auto it = ctx->functions.find(function_name);
             if(it != ctx->functions.end()) {
                 method_to_call = it->second.get();
+                lexical_self = ctx->self;
                 break;
             }
         }
@@ -569,6 +572,8 @@ std::shared_ptr<lavi::lang::object> lavi::lang::interpreter::execute_fn_call(con
     if(!source_code.fn_object()) {
         if(calling_function_same_object) {
             push_context_with_object(current_context->self->shared_from_this());
+        } else if(lexical_self) {
+            push_context_with_object(lexical_self);
         } else {
             // Creates a clean new context
             push_context();
