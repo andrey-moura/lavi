@@ -32,3 +32,28 @@ describe 'block' do
     end
   end
 end
+
+class BlockMethodCaller
+  var value = 42
+
+  fn helper
+    value
+  end
+
+  fn call_helper_from_block
+    var result = null
+    var items = [1]
+
+    items.each do (item)
+      result = helper
+    end
+
+    return result
+  end
+end
+
+describe 'method called inside a block' do
+  it 'runs on the object of the method where the block was written' do
+    expect(BlockMethodCaller.new.call_helper_from_block).to eq(42)
+  end
+end
