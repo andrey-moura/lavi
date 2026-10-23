@@ -1,22 +1,2 @@
 system('cmake -S . -B build')
 system('cmake --build build')
-
-system("lavi project run")
-
-return
-
-var root_dir = Dir.current.path
-
-var project_file = root_dir / 'package.yaml'
-
-throw RuntimeError.new("Could not find package.yaml in ${root_dir}") unless project_file.exists?
-
-var project = YAML.parse(project_file)
-
-return unless project.cmake_path.present?
-
-var cmake_path = Dir.new(project.cmake_path)
-
-cmake_paths.glob('*.lv').each do (file)
-  out "Found CMake file: ${file}"
-end

@@ -1,1 +1,10 @@
-system("lavi project run ${__dir__}/cxx ${__args__[2]} ${__args__[3]}")
+// Runs the cxx project with all the arguments: lavi cxx <module> <output directory> <header>...
+var arguments = ''
+var i = 2
+
+loop while i < __args__.size
+  arguments += " \"${__args__[i]}\""
+  i += 1
+end
+
+system("lavi project run \"${__dir__}/cxx\"${arguments}")

@@ -72,7 +72,11 @@ fn run
       require file
     end
   end
-  
+
+  if project.bindings.present?
+    system("lavi cmake")
+  end
+
   throw RuntimeError.new('Missing main entry point in package.yaml') unless project.entry.present?
 
   require root_dir / project.entry

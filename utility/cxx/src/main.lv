@@ -1,31 +1,70 @@
-if __args__.size < 4
-  out 'Usage: lavi cxx <file> <output>'
+// Called as 'lavi project run <project> <name> <output directory> <header>...'
+//
+// Generates <output directory>/<header name>.cpp for each header, with the Lavi classes of the classes it
+// declares, and <output directory>/bindings.cpp, with the extension loaded by 'import :<name>'.
+if __args__.size < 7
+  out 'Usage: lavi cxx <name> <output directory> <header>...'
   return 1
 end
 
-var cxx_file_path = __args__[4]
-
-unless File.exists?(cxx_file_path)
-  out "Input file '${cxx_file_path}' not found."
-  return 1
-end
-
-var cxx_file = File.read(cxx_file_path)
+var name = __args__[4]
+var output_directory = Path.new(__args__[5])
 
 fn debug(message)
   out message
 end
 
-debug "Tokenizing CXX file ${cxx_file_path}..."
+// The name of the header without the directories and the extensions, like NAME_WE of CMake.
+fn header_name(header_path)
+  var parts = header_path.split('/')
+  var file_name = parts[parts.size - 1]
 
-var lexer = CXX::Lexer.new(cxx_file)
+  return file_name.split('.')[0]
+end
 
-var tokens = lexer.tokens
+// Generates the source of a header and returns the bindings of its classes.
+fn generate_header(header_path)
+  unless File.exists?(header_path)
+    throw "Input file '${header_path}' not found."
+  end
 
-debug "${tokens.size} tokens"
+  debug "Parsing ${header_path}..."
 
-debug "Parsing CXX file ${cxx_file_path}..."
+  var lexer = CXX::Lexer.new(File.read(header_path))
+  var parser = CXX::Parser.new(lexer.tokens)
 
-var parser = CXX::Parser.new(tokens)
+  // The generated source includes the header by its absolute path
+  var absolute_header_path = Dir.current.path / header_path
+  var generator = CXX::Generator.new(parser.unit, absolute_header_path.to_string)
+  var output_path = output_directory / "${header_name(header_path)}.cpp"
 
-debug parser.unit
+  generator.bindings.each do (binding)
+    debug "  class ${binding.name}"
+  end
+
+  debug "Generating ${output_path}..."
+
+  File.create(output_path).write(generator.generate)
+
+  return generator.bindings
+end
+
+var bindings = []
+var i = 6
+
+loop while i < __args__.size
+  generate_header(__args__[i]).each do (binding)
+    bindings.push(binding)
+  end
+
+  i += 1
+end
+
+var bindings_path = output_directory / 'bindings.cpp'
+
+debug "Generating ${bindings_path}..."
+
+File.create(bindings_path).write(CXX::ExtensionGenerator.new(name, bindings).generate)
+
+// The value of the last expression is the exit code
+0
