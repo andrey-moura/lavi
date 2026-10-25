@@ -93,11 +93,11 @@ void create_string_class()
             return lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, value);
         });
 
-        lavi::lang::string_class->instance_functions["find"] = std::make_shared<lavi::lang::function>("find", std::initializer_list<std::string>{"what", "start = 0"}, [](lavi::lang::interpreter* interpreter) {
+        lavi::lang::string_class->instance_functions["find"] = std::make_shared<lavi::lang::function>("find", std::initializer_list<std::string>{"what", "start: 0"}, [](lavi::lang::interpreter* interpreter) {
             const std::string& value = interpreter->current_context->self->as<std::string>();
             const auto& params = interpreter->current_context->positional_params;
             const std::string& what = params[0]->as<std::string>();
-            int32_t start = params[1]->as<int32_t>();
+            int32_t start = interpreter->current_context->named_params["start"]->as<int32_t>();
 
             if(start < 0 || (size_t)start > value.size()) {
                 return lavi::lang::object::instantiate(interpreter, lavi::lang::integer_class, (int32_t)-1);
