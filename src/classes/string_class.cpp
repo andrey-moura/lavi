@@ -199,6 +199,26 @@ void create_string_class()
             return lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, value);
         });
 
+        lavi::lang::string_class->instance_functions["upper!"] = std::make_shared<lavi::lang::function>("upper!", [](lavi::lang::interpreter* interpreter) {
+            std::string& value = interpreter->current_context->self->as<std::string>();
+
+            for(char & c : value) {
+                c = std::toupper(c);
+            }
+
+            return nullptr;
+        });
+
+        lavi::lang::string_class->instance_functions["upper"] = std::make_shared<lavi::lang::function>("upper", [](lavi::lang::interpreter* interpreter) {
+            std::string value = interpreter->current_context->self->as<std::string>();
+
+            for(char & c : value) {
+                c = std::toupper(c);
+            }
+
+            return lavi::lang::object::instantiate(interpreter, lavi::lang::string_class, value);
+        });
+
         lavi::lang::string_class->instance_functions["strip"] = std::make_shared<lavi::lang::function>("strip", [](lavi::lang::interpreter* interpreter) {
             const std::string& value = interpreter->current_context->self->as<std::string>();
             std::string result;
