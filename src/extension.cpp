@@ -42,52 +42,21 @@ lavi::lang::extension* find_builtin(std::map<std::string_view, std::shared_ptr<l
     return nullptr;
 }
 
-std::filesystem::path find_module_path(
-    std::map<std::string_view, std::shared_ptr<lavi::lang::extension>>& builtins,
-    std::string_view module,
-    std::filesystem::path& current_path
-)
+// The path of a non builtin extension: <directory>/build/liblavi-<module>.so (lavi-<module>.dll on Windows),
+// where directory is the one where lavi was invoked.
+std::filesystem::path find_module_path(std::string_view module, const std::filesystem::path& directory)
 {
-    std::filesystem::path executable_path;
-#ifdef __linux__
-    executable_path = std::filesystem::read_symlink("/proc/self/exe");
-#elif _WIN32
-    char buffer[MAX_PATH];
-    GetModuleFileNameA(NULL, buffer, MAX_PATH);
-    executable_path = std::filesystem::path(buffer);
-#else
-    throw std::runtime_error("unsupported platform");
-#endif
-    std::filesystem::path module_path = executable_path;
-
     std::string library_name = std::string(module);
 
-    std::string_view module_extension;
-
 #if defined(__linux__)
-    library_name = "libandylang-" + library_name;
-    module_extension = ".so";
+    library_name = "liblavi-" + library_name + ".so";
 #elif defined(_WIN32)
-    library_name = "andylang-" + library_name;
-    module_extension = ".dll";
+    library_name = "lavi-" + library_name + ".dll";
 #else
     throw std::runtime_error("unsupported platform");
 #endif
 
-    module_path.replace_filename(library_name);
-    module_path.replace_extension(module_extension);
-
-    if(!std::filesystem::exists(module_path)) {
-        std::filesystem::path provided_extension_path = current_path;
-        provided_extension_path /= "lib";
-        provided_extension_path /= "bin";
-        provided_extension_path /= library_name;
-        provided_extension_path.replace_extension(module_extension);
-
-        return provided_extension_path;
-    }
-
-    return module_path;
+    return directory / "build" / library_name;
 }
 
 bool lavi::lang::extension::exists(std::filesystem::path current_dir, std::string_view module)
@@ -97,7 +66,7 @@ bool lavi::lang::extension::exists(std::filesystem::path current_dir, std::strin
         return true;
     }
 
-    std::filesystem::path module_path = find_module_path(builtins, module, current_dir);
+    std::filesystem::path module_path = find_module_path(module, current_dir);
 
     if(!std::filesystem::exists(module_path)) {
         return false;
@@ -120,7 +89,7 @@ void lavi::lang::extension::import(lavi::lang::interpreter* interpreter, std::st
         return;
     }
 
-    std::filesystem::path module_path = find_module_path(builtins, module, interpreter->input_file_path);
+    std::filesystem::path module_path = find_module_path(module, std::filesystem::current_path());
 
     if(!std::filesystem::exists(module_path)) {
         throw std::runtime_error("Module " + std::string(module) + " not found. Expect it to be builtin or to be located at " + module_path.string());

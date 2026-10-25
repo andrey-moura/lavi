@@ -3,17 +3,22 @@
 #include <string>
 #include <vector>
 
-#include <andy.hpp>
 #include <lavi/lang/parser.hpp>
 
+#ifdef _MSC_VER 
+    #define LAVI_EXPORT_SYMBOL __declspec(dllexport)
+#else
+    #define LAVI_EXPORT_SYMBOL __attribute__((visibility("default")))
+#endif
+
 #ifdef _WIN32
-    #define ANDY_EXTENSION(name) \
+    #define LAVI_EXTENSION(name) \
     extern "C" __declspec(dllexport) lavi::lang::extension* create_extension()\
     {\
         return new name ();\
     }
 #else
-    #define ANDY_EXTENSION(name) \
+    #define LAVI_EXTENSION(name) \
     extern "C" lavi::lang::extension* create_extension()\
     {\
         return new name ();\
@@ -26,7 +31,7 @@ namespace lavi {
         class extension : public std::enable_shared_from_this<extension>
         {
         protected:
-            ANDY_EXPORT_SYMBOL extension(const std::string& name);
+            LAVI_EXPORT_SYMBOL extension(const std::string& name);
         public:
             static void add_builtin(std::shared_ptr<lavi::lang::extension> extension);
             static void import(lavi::lang::interpreter* interpreter, std::string_view module);
