@@ -5,10 +5,14 @@ namespace CXX
     // The C++ type the argument is cast to, without the top level const and the reference, such as 'bool' for
     // 'const bool&'.
     var type = null
+    // The default value, such as 'false' for 'bool maximized = false', or null. A parameter with a default value is
+    // a named parameter of the Lavi function, such as 'maximized: false'.
+    var default_value = null
 
-    fn init(n, t)
+    fn init(n, t, d)
       name = n
       type = t
+      default_value = d
     end
   end
 
@@ -16,17 +20,20 @@ namespace CXX
   class Method
     // The C++ name, such as 'show' or 'operator=='.
     var name = null
-    // The Lavi name, such as 'show' or '=='.
+    // The Lavi name, such as 'show', '==' or 'open?' for 'bool is_open()'.
     var lavi_name = null
     // Whether the method is static, so it is a function of the Lavi class.
     var class_function = false
     var parameters = []
+    // The C++ return type, without the top level const and the reference, such as 'bool'.
+    var return_type = null
 
-    fn init(n, l, c, p)
+    fn init(n, l, c, p, r)
       name = n
       lavi_name = l
       class_function = c
       parameters = p
+      return_type = r
     end
   end
 end

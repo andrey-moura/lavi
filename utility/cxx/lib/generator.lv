@@ -153,7 +153,6 @@ namespace CXX
     // functions and friends.
     fn method_from(member, class_name)
       var name = member.decname
-      out "METHOD NAME: ${name}"
       var where = "${class_name}::${name}"
 
       return null if has_specifier?(member, 'friend')
@@ -167,7 +166,15 @@ namespace CXX
         throw "${where}: conversion operators are not supported"
       end
 
-      return CXX::Method.new(name, lavi_name_of(name, where), has_specifier?(member, 'static'), parameters_of(member, where))
+      var return_type = cast_type(member.child_from_type(:decltype).content)
+      var lavi_name = lavi_name_of(name, where)
+
+      // Predicates are named with a question mark in Lavi, such as 'open?' for 'bool is_open()'
+      if return_type == 'bool' && name.starts_with?('is_') && name.size > 3
+        lavi_name = "${name.slice(3, name.size)}?"
+      end
+
+      return CXX::Method.new(name, lavi_name, has_specifier?(member, 'static'), parameters_of(member, where), return_type)
     end
 
     // The parameters of the constructor, which are the parameters of init. A Lavi class has a single init, so
@@ -209,7 +216,11 @@ namespace CXX
           throw "${where}: unnamed parameters are not supported"
         end
 
-        parameters.push(CXX::Parameter.new(parameter.decname, cast_type(type)))
+        var default_value = parameter.child_from_type(:valuedecl)
+
+        default_value = default_value.content if default_value != null
+
+        parameters.push(CXX::Parameter.new(parameter.decname, cast_type(type), default_value))
       end
 
       return parameters
@@ -217,7 +228,7 @@ namespace CXX
 
     // The type an argument is cast to: the type of the parameter without the reference and the top level const,
     // such as 'bool' for 'const bool&' and 'char*' for 'char* const'. The const of the pointed type, such as in
-    // 'const char*', is kept.
+    // 'const char*', is kept. A 'std::string_view' is cast to a 'std::string'.
     fn cast_type(type)
       var result = type.strip
 
@@ -229,6 +240,10 @@ namespace CXX
       unless result.ends_with?('*')
         result = result.slice(6, result.size).strip if result.starts_with?('const ')
       end
+
+      // A string_view does not own its characters, so the argument is cast to a std::string, which lives until the
+      // end of the call and converts to the std::string_view of the parameter.
+      result = 'std::string' if result == 'std::string_view'
 
       return result
     end
@@ -356,7 +371,7 @@ namespace CXX
       source += "[](lavi::lang::interpreter* interpreter) {\n"
       source += "    auto object = interpreter->current_context->self;\n"
 
-      unless names.empty?
+      if positional_parameters?(binding.constructor_parameters)
         source += "    auto& params = interpreter->current_context->positional_params;\n"
       end
 
@@ -391,42 +406,87 @@ namespace CXX
         source += "    auto& native = interpreter->current_context->self->as<std::shared_ptr<${binding.cxx_name}>>();\n"
       end
 
-      unless names.empty?
+      if positional_parameters?(method.parameters)
         source += "    auto& params = interpreter->current_context->positional_params;\n"
       end
 
       source += "\n" unless method.class_function && names.empty?
-      source += "    ${function}(${arguments.join(', ')});\n"
-      source += "\n"
-      source += "    return nullptr;\n"
+
+      // Only bool is returned for now, the other values are discarded
+      if method.return_type == 'bool'
+        source += "    return lavi::lang::api::to_object(interpreter, ${function}(${arguments.join(', ')}));\n"
+      else
+        source += "    ${function}(${arguments.join(', ')});\n"
+        source += "\n"
+        source += "    return nullptr;\n"
+      end
+
       source += "  });\n"
 
       return source
     end
 
-    // The names of the parameters of a Lavi function, quoted for the C++ source.
+    // The names of the parameters of a Lavi function, quoted for the C++ source. A parameter with a default value is
+    // named, such as 'maximized: false'.
     fn parameter_names(parameters)
       var names = []
 
       parameters.each do (parameter)
-        names.push("\"${parameter.name}\"")
+        if parameter.default_value == null
+          names.push("\"${parameter.name}\"")
+        else
+          names.push("\"${parameter.name}: ${escape(parameter.default_value)}\"")
+        end
       end
 
       return names
     end
 
-    // The arguments of the C++ call, casting each Lavi argument to the type of its parameter.
+    // Whether any parameter is positional, that is, has no default value.
+    fn positional_parameters?(parameters)
+      var positional = parameters.find do (parameter)
+        parameter.default_value == null
+      end
+
+      return positional != null
+    end
+
+    // The arguments of the C++ call, casting each Lavi argument to the type of its parameter. The positional
+    // arguments are indexed in the order of the parameters, the named ones are found by name.
     fn cast_arguments(parameters)
       var arguments = []
       var index = 0
 
       parameters.each do (parameter)
-        arguments.push("lavi::lang::api::cast<${parameter.type}>(interpreter, params[${index}])")
+        var argument = "interpreter->current_context->named_params[\"${parameter.name}\"]"
+
+        if parameter.default_value == null
+          argument = "params[${index}]"
+
+          index += 1
+        end
+
+        arguments.push("lavi::lang::api::cast<${parameter.type}>(interpreter, ${argument})")
+      end
+
+      return arguments
+    end
+
+    // Escapes the text for a C++ string literal.
+    fn escape(text)
+      var result = ''
+      var index = 0
+
+      loop while index < text.size
+        var character = text.slice(index, 1)
+
+        result += "\\" if character == "\"" || character == "\\"
+        result += character
 
         index += 1
       end
 
-      return arguments
+      return result
     end
   end
 end

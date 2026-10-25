@@ -11,7 +11,7 @@ var name = __args__[4]
 var output_directory = Path.new(__args__[5])
 
 fn debug(message)
-  out message
+  // out message
 end
 
 // The name of the header without the directories and the extensions, like NAME_WE of CMake.
