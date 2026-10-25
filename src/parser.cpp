@@ -494,7 +494,8 @@ static lavi::lang::parser::ast_node chain_if_exists(
                         right_min_precedence = is_right_associative_operator(operator_token.content) ? precedence - 1 : precedence;
                     }
 
-                    lavi::lang::parser::ast_node right_node = parser.parse_identifier_or_literal(lexer, true, true, {}, true, right_min_precedence);
+                    // The line modifier, such as 'if' in 'a = b.c if d', applies to the whole expression, not to the right operand
+                    lavi::lang::parser::ast_node right_node = parser.parse_identifier_or_literal(lexer, true, true, {}, false, right_min_precedence);
 
                     lavi::lang::parser::ast_node params_node(lavi::lang::parser::ast_node_type::ast_node_fn_params);
                     params_node.add_child(std::move(right_node));

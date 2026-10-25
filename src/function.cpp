@@ -46,7 +46,8 @@ lavi::lang::fn_parameter::fn_parameter(std::string_view __name)
             name = node.token().content;
             break;
         case lavi::lang::parser::ast_node_type::ast_node_pair:
-            name = node.child_content_from_type(lavi::lang::parser::ast_node_type::ast_node_declname);
+            // The key of the pair is the child of the declname, see lavi::lang::parser::extract_pair
+            name = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_declname)->childrens().front().token().content;
             named = true;
             // Keep the value itself, like the parameters of functions declared in Lavi
             default_value_node = node.child_from_type(lavi::lang::parser::ast_node_type::ast_node_valuedecl)->childrens().front();
