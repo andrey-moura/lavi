@@ -55,6 +55,7 @@ namespace lavi
     std::shared_ptr<lavi::lang::klass> no_function_error_class;
     std::shared_ptr<lavi::lang::klass> runtime_error_class;
     std::shared_ptr<lavi::lang::klass> undefined_class_error_class;
+    std::shared_ptr<lavi::lang::klass> type_error_class;
     std::shared_ptr<lavi::lang::klass> random_class;
   }
 }
