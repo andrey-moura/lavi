@@ -57,6 +57,24 @@ namespace lavi
                 return ret;
             }
 
+            bool responds_to(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> object, std::string_view function_name)
+            {
+                if(!object) {
+                    object = lavi::lang::object::instantiate(interpreter, lavi::lang::null_class);
+                }
+
+                auto klass = object->klass;
+
+                while(klass) {
+                    if(klass->functions.find(function_name) != klass->functions.end()) {
+                        return true;
+                    }
+                    klass = klass->base;
+                }
+
+                return false;
+            }
+
             std::shared_ptr<lavi::lang::object> call(
                 lavi::lang::interpreter* interpreter,
                 std::string_view function_name,
