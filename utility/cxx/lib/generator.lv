@@ -7,11 +7,18 @@ namespace CXX
     var cxx_path = []
     // The Lavi names of the namespaces and the class, such as ['GUI', 'Window'].
     var lavi_path = []
+    // The public methods (CXX::Method).
+    var methods = []
+    // The parameters of the constructor (CXX::Parameter), which are the parameters of init. Empty when the
+    // class declares no constructor.
+    var constructor_parameters = []
 
-    fn init(s, c, l)
+    fn init(s, c, l, m, p)
       cxx_scope = s
       cxx_path = c
       lavi_path = l
+      methods = m
+      constructor_parameters = p
     end
 
     // The name of the Lavi class, such as 'GUI::Window'.
@@ -99,10 +106,175 @@ namespace CXX
       class_cxx_path.push(class_node.decname)
       class_lavi_path.push(pascal_case(class_node.decname))
 
-      bindings.push(CXX::Binding.new(class_cxx_scope, class_cxx_path, class_lavi_path))
+      var methods = collect_methods(class_node, body)
+      var constructor_parameters = collect_constructor_parameters(class_node, body)
+
+      bindings.push(CXX::Binding.new(class_cxx_scope, class_cxx_path, class_lavi_path, methods, constructor_parameters))
 
       // Nested classes
       collect(body, class_cxx_scope, class_cxx_path, class_lavi_path)
+    end
+
+    // Methods
+
+    // The public methods of the class, which are bound as Lavi functions. Constructors are bound by init.
+    fn collect_methods(class_node, body)
+      var class_name = class_node.decname
+      var methods = []
+      // The bound names, to find overloads
+      var names = []
+      var access = 'private'
+
+      access = 'public' unless class_node.content == 'class'
+
+      body.children.each do (member)
+        if member.access?
+          access = member.content
+        else if member.fn_decl? && access == 'public'
+          var method = method_from(member, class_name)
+
+          if method != null
+            var key = "${method.class_function} ${method.lavi_name}"
+
+            if names.include?(key)
+              throw "${class_name}::${method.name}: overloaded methods are not supported"
+            end
+
+            names.push(key)
+            methods.push(method)
+          end
+        end
+      end
+
+      return methods
+    end
+
+    // The method of a member function, or null when it is not bound: constructors, destructors, deleted
+    // functions and friends.
+    fn method_from(member, class_name)
+      var name = member.decname
+      out "METHOD NAME: ${name}"
+      var where = "${class_name}::${name}"
+
+      return null if has_specifier?(member, 'friend')
+      return null if has_qualifier?(member, '= delete')
+
+      // Constructors, destructors and conversion operators have no return type
+      if member.child_from_type(:decltype) == null
+        return null if name == class_name
+        return null if name == "~${class_name}"
+
+        throw "${where}: conversion operators are not supported"
+      end
+
+      return CXX::Method.new(name, lavi_name_of(name, where), has_specifier?(member, 'static'), parameters_of(member, where))
+    end
+
+    // The parameters of the constructor, which are the parameters of init. A Lavi class has a single init, so
+    // more than one constructor is an error. Without a constructor, init has no parameters.
+    fn collect_constructor_parameters(class_node, body)
+      var class_name = class_node.decname
+      var constructors = []
+
+      body.children.each do (member)
+        if member.fn_decl?
+          // Constructors have no return type and the name of the class
+          if member.child_from_type(:decltype) == null && member.decname == class_name
+            constructors.push(member)
+          end
+        end
+      end
+
+      if constructors.size > 1
+        throw "${class_name}: multiple constructors are not supported"
+      end
+
+      return [] if constructors.empty?
+
+      return parameters_of(constructors[0], "${class_name}::${class_name}")
+    end
+
+    // The parameters of a function.
+    fn parameters_of(function_node, where)
+      var parameters = []
+
+      function_node.child_from_type(:fn_params).children.each do (parameter)
+        var type = parameter.child_from_type(:decltype).content
+
+        if type == '...'
+          throw "${where}: variadic functions are not supported"
+        end
+
+        if parameter.decname == null
+          throw "${where}: unnamed parameters are not supported"
+        end
+
+        parameters.push(CXX::Parameter.new(parameter.decname, cast_type(type)))
+      end
+
+      return parameters
+    end
+
+    // The type an argument is cast to: the type of the parameter without the reference and the top level const,
+    // such as 'bool' for 'const bool&' and 'char*' for 'char* const'. The const of the pointed type, such as in
+    // 'const char*', is kept.
+    fn cast_type(type)
+      var result = type.strip
+
+      result = remove_suffix(result, '&')
+      result = remove_suffix(result, '&')
+      result = remove_suffix(result, ' const')
+
+      // In pointers, the leading const belongs to the pointed type
+      unless result.ends_with?('*')
+        result = result.slice(6, result.size).strip if result.starts_with?('const ')
+      end
+
+      return result
+    end
+
+    fn remove_suffix(text, suffix)
+      return text unless text.ends_with?(suffix)
+
+      return text.slice(0, text.size - suffix.size).strip
+    end
+
+    // The Lavi name of a method: the same name, or the symbol of operators, such as '==' for 'operator=='.
+    fn lavi_name_of(name, where)
+      return name unless name.starts_with?('operator')
+
+      var symbol = name.slice(8, name.size).strip
+      var first = symbol.front
+
+      // Identifiers which start with 'operator', such as 'operators'
+      return name if first == null
+      return name if first.alnum? || first == '_'
+
+      if symbol == '()' || symbol.starts_with?('new') || symbol.starts_with?('delete')
+        throw "${where}: the operator is not supported"
+      end
+
+      return symbol
+    end
+
+    fn has_specifier?(function_node, specifier)
+      var found = false
+
+      function_node.children.each do (child)
+        found = true if child.declspec? && child.content == specifier
+      end
+
+      return found
+    end
+
+    fn has_qualifier?(function_node, qualifier)
+      var found = false
+
+      function_node.children.each do (child)
+        found = true if child.fn_qualifier? && child.content == qualifier
+      end
+
+      return found
     end
 
     // Names
@@ -161,6 +333,11 @@ namespace CXX
       source += "  auto ${klass} = lavi::lang::klass::create_builtin(\"${binding.name}\");\n"
       source += "\n"
       source += generate_init(binding, klass)
+
+      binding.methods.each do (method)
+        source += generate_method(binding, klass, method)
+      end
+
       source += "\n"
       source += "  return ${klass};\n"
       source += "}\n"
@@ -170,16 +347,86 @@ namespace CXX
 
     // The init creates the native object and sets it on the Lavi object.
     fn generate_init(binding, klass)
+      var names = parameter_names(binding.constructor_parameters)
+      var arguments = cast_arguments(binding.constructor_parameters)
       var source = ''
 
-      source += "  ${klass}->instance_functions[\"init\"] = std::make_shared<lavi::lang::function>(\"init\", [](lavi::lang::interpreter* interpreter) {\n"
+      source += "  ${klass}->instance_functions[\"init\"] = std::make_shared<lavi::lang::function>(\"init\", "
+      source += "std::initializer_list<std::string>{ ${names.join(', ')} }, " unless names.empty?
+      source += "[](lavi::lang::interpreter* interpreter) {\n"
       source += "    auto object = interpreter->current_context->self;\n"
-      source += "    object->set_native<std::shared_ptr<${binding.cxx_name}>>(std::make_shared<${binding.cxx_name}>());\n"
+
+      unless names.empty?
+        source += "    auto& params = interpreter->current_context->positional_params;\n"
+      end
+
+      source += "    object->set_native<std::shared_ptr<${binding.cxx_name}>>(std::make_shared<${binding.cxx_name}>(${arguments.join(', ')}));\n"
       source += "\n"
       source += "    return nullptr;\n"
       source += "  });\n"
 
       return source
+    end
+
+    // A method calls the native object, or the class for static methods.
+    fn generate_method(binding, klass, method)
+      var functions = 'instance_functions'
+      var function = "native->${method.name}"
+
+      if method.class_function
+        functions = 'functions'
+        function = "${binding.cxx_name}::${method.name}"
+      end
+
+      var source = "\n"
+
+      var names = parameter_names(method.parameters)
+      var arguments = cast_arguments(method.parameters)
+
+      source += "  ${klass}->${functions}[\"${method.lavi_name}\"] = std::make_shared<lavi::lang::function>(\"${method.lavi_name}\", "
+      source += "std::initializer_list<std::string>{ ${names.join(', ')} }, " unless names.empty?
+      source += "[](lavi::lang::interpreter* interpreter) {\n"
+
+      unless method.class_function
+        source += "    auto& native = interpreter->current_context->self->as<std::shared_ptr<${binding.cxx_name}>>();\n"
+      end
+
+      unless names.empty?
+        source += "    auto& params = interpreter->current_context->positional_params;\n"
+      end
+
+      source += "\n" unless method.class_function && names.empty?
+      source += "    ${function}(${arguments.join(', ')});\n"
+      source += "\n"
+      source += "    return nullptr;\n"
+      source += "  });\n"
+
+      return source
+    end
+
+    // The names of the parameters of a Lavi function, quoted for the C++ source.
+    fn parameter_names(parameters)
+      var names = []
+
+      parameters.each do (parameter)
+        names.push("\"${parameter.name}\"")
+      end
+
+      return names
+    end
+
+    // The arguments of the C++ call, casting each Lavi argument to the type of its parameter.
+    fn cast_arguments(parameters)
+      var arguments = []
+      var index = 0
+
+      parameters.each do (parameter)
+        arguments.push("lavi::lang::api::cast<${parameter.type}>(interpreter, params[${index}])")
+
+        index += 1
+      end
+
+      return arguments
     end
   end
 end

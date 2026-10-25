@@ -40,6 +40,10 @@ fn generate_header(header_path)
 
   generator.bindings.each do (binding)
     debug "  class ${binding.name}"
+
+    binding.methods.each do (method)
+      debug "    ${method.lavi_name}"
+    end
   end
 
   debug "Generating ${output_path}..."

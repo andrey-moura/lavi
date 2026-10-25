@@ -1,0 +1,32 @@
+namespace CXX
+  // A parameter of a bound method.
+  class Parameter
+    var name = null
+    // The C++ type the argument is cast to, without the top level const and the reference, such as 'bool' for
+    // 'const bool&'.
+    var type = null
+
+    fn init(n, t)
+      name = n
+      type = t
+    end
+  end
+
+  // A public method of a bound class.
+  class Method
+    // The C++ name, such as 'show' or 'operator=='.
+    var name = null
+    // The Lavi name, such as 'show' or '=='.
+    var lavi_name = null
+    // Whether the method is static, so it is a function of the Lavi class.
+    var class_function = false
+    var parameters = []
+
+    fn init(n, l, c, p)
+      name = n
+      lavi_name = l
+      class_function = c
+      parameters = p
+    end
+  end
+end
