@@ -49,6 +49,28 @@ describe 'conditional expressions' do
           result = 'yes' if false
           expect(result).to eq('no')
         end
+
+        context 'with a function call on the right side' do
+          it 'executes the assignment when condition is true' do
+            var result = 'no'
+            result = 'yes'.slice(0, 2) if true
+            expect(result).to eq('ye')
+          end
+
+          it 'skips the assignment when condition is false' do
+            var result = 'no'
+            result = 'yes'.slice(0, 2) if false
+            expect(result).to eq('no')
+          end
+        end
+
+        context 'with an expression on the right side' do
+          it 'skips the assignment when condition is false' do
+            var result = 1
+            result = 1 + 2 if false
+            expect(result).to eq(1)
+          end
+        end
       end
 
       context 'of function call' do
