@@ -82,3 +82,28 @@ describe 'control flow inside try' do
     expect(result).to eq([1, 3])
   end
 end
+
+describe 'TypeError' do
+  it 'is caught by its own type' do
+    var caught = null
+
+    try
+      throw TypeError.new('Cannot cast Integer to bool')
+    catch(TypeError e)
+      caught = e
+    end
+
+    expect(caught.message).to eq('Cannot cast Integer to bool')
+  end
+  it 'is caught as an Exception' do
+    var caught = null
+
+    try
+      throw TypeError.new('Cannot cast Integer to bool')
+    catch(Exception e)
+      caught = e
+    end
+
+    expect(caught.message).to eq('Cannot cast Integer to bool')
+  end
+end

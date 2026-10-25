@@ -42,6 +42,12 @@ namespace lavi
                     throw std::runtime_error("Unsupported type for to_object: " + std::string(typeid(T).name()));
                 }
             }
+            /// @brief Checks if the object responds to a function.
+            /// @param interpreter The interpreter.
+            /// @param object The object to check.
+            /// @param function_name The function name to check.
+            /// @return Returns true if the object responds to the function, false otherwise.
+            bool responds_to(lavi::lang::interpreter* interpreter, std::shared_ptr<lavi::lang::object> object, std::string_view function_name);
             /// @brief Call a function.
             /// @param interpreter The interpreter.
             /// @param function_name The function name.
