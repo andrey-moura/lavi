@@ -258,6 +258,23 @@ std::shared_ptr<lavi::lang::klass> lavi::lang::klass::create(std::string_view na
         });
     }
 
+    auto present_instance_function = klass->instance_functions.find("present?");
+
+    if(present_instance_function == klass->instance_functions.end()) {
+        klass->instance_functions["present?"] = std::make_shared<lavi::lang::function>("present?", [klass](lavi::lang::interpreter* interpreter) {
+            auto object = interpreter->current_context->self;
+
+            // Default presence: objects that define empty? are present when not empty
+            if(klass->instance_functions.find("empty?") != klass->instance_functions.end()) {
+                auto empty = lavi::lang::api::call(interpreter, "empty?", object);
+                return lavi::lang::api::to_object(interpreter, !lavi::lang::api::is_truthy(interpreter, empty));
+            }
+
+            // Otherwise, an object is present unless it is false or null
+            return lavi::lang::api::to_object(interpreter, lavi::lang::api::is_truthy(interpreter, object));
+        });
+    }
+
     auto to_string_function = klass->functions.find("to_string");
 
     if(to_string_function == klass->functions.end()) {
