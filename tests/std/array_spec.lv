@@ -17,6 +17,22 @@ describe 'array' do
       end
     end
   end
+  describe '#present?' do
+    context 'when the array is empty' do
+      it 'returns false' do
+        var arr = []
+
+        expect(arr.present?).to eq(false)
+      end
+    end
+    context 'when the array is not empty' do
+      it 'returns true' do
+        var arr = [1, 2, 3]
+
+        expect(arr.present?).to eq(true)
+      end
+    end
+  end
   describe '#include?' do
     context 'when the array includes the element' do
       it 'returns true' do
